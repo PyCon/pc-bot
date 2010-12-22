@@ -43,7 +43,7 @@ class PyConBot(irc.IRCClient):
         if not message.startswith(","):
             if self.state_handler is not None:
                 self.state_handler(channel, user, message)
-                return
+            return
         if user not in self.accepted_users:
             return
         message = message[1:]
