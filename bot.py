@@ -1,5 +1,6 @@
 import re
 import sys
+import json
 
 from twisted.internet import protocol, reactor
 from twisted.python import log
@@ -10,14 +11,7 @@ class PyConBot(irc.IRCClient):
     accepted_users = ["Alex_Gaynor", "jnoller", "VanL", "brettcannon"]
     commands = frozenset(["next", "debate", "vote", "report"])
     vote_re = re.compile(r"[, ]")
-    talk_groups = [
-        {
-            "name": "Storage",
-            "talks": [156, 157, 220],
-#            "discussion_time": 5,
-#            "debate_time": 5,
-        }
-    ]
+    talk_groups = json.load(open('talks.json'))
 
     def __init__(self):
         self.idx = -1
@@ -64,12 +58,17 @@ class PyConBot(irc.IRCClient):
             self.msg(channel, "Out of talk groups")
             return
         self.msg(channel, "Group: %s up next.  Talks: %s" % (
-            group["name"], ", ".join(map(str, group["talks"]))
+            str(group["name"]), ", ".join(map(str, group["talks"]))
         ))
+        self.msg(channel, "The following group is on deck. You have 2 minutes "
+                "to review the group and collect your thoughts prior to open "
+                "debate (5 minutes). Once the debate is  completed, you will be "
+                "asked to vote for the talk(s) you feel strongly should continue "
+                "on to the final PyCon program.")
         for talk in group["talks"]:
             self.msg(channel, "Talk %s: %s" % (talk, self.talk_url(talk)))
-        self.msg(channel, "We will now talk %d minutes to review the talks "
-            "before debate" % (group.get("discussion_time", 5))
+        self.msg(channel, "We will now have %d minutes to review the talks "
+            "before debate" % (group.get("discussion_time", 2))
         )
 
     def handle_debate(self, channel):
@@ -103,7 +102,7 @@ class PyConBot(irc.IRCClient):
                 else:
                     if vote in talk_votes:
                         talk_votes[vote] += 1
-        self.msg(channel, "The scores are in! From the East German judge...: %s" % (
+        self.msg(channel, "Talk Vote Scores: %s" % (
             ", ".join(
                 "talk #%s: %s votes" % (k, v)
                 for k, v in sorted(talk_votes.iteritems(), key=lambda (k, v): v, reverse=True)
