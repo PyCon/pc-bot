@@ -9,7 +9,7 @@ class BasePyConBot(irc.IRCClient):
     accepted_users = ["Alex_Gaynor", "jnoller", "VanL", "tlesher", "jacobkm"]
 
     def __init__(self):
-        self.state_hanlder = None
+        self.state_handler = None
 
     def talk_url(self, talk):
         return "http://us.pycon.org/2012/review/%s/" % talk

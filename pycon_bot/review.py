@@ -1,4 +1,5 @@
 import json
+import os
 
 from pycon_bot.base import main, BasePyConBot
 
