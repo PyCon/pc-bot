@@ -12,7 +12,7 @@ class BasePyConBot(irc.IRCClient):
         self.state_hanlder = None
 
     def talk_url(self, talk):
-        return "http://us.pycon.org/2011/review/%s/" % talk
+        return "http://us.pycon.org/2012/review/%s/" % talk
 
     @property
     def nickname(self):
@@ -25,6 +25,7 @@ class BasePyConBot(irc.IRCClient):
     def joined(self, channel):
         log.msg("Joined %s" % channel)
         self.msg(channel, "Hello denizens of %s, I am your god." % channel)
+        self.msg(channel, "To contribute to me: https://github.com/alex/THUNDERDOME-BOT")
 
     def privmsg(self, user, channel, message):
         user = user.split("!")[0]
