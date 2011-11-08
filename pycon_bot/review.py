@@ -71,6 +71,7 @@ class PyConReviewBot(BasePyConBot):
             self.msg(channel, "%s: please vote yay, nay, or abstain." % user)
 
     def handle_report(self, channel):
+        talk = self.talks[self.idx]
         yay, nay, abstain = 0, 0, 0
         for vote in self.current_votes.itervalues():
             if vote == 'yay':
@@ -79,7 +80,7 @@ class PyConReviewBot(BasePyConBot):
                 nay += 1
             elif vote == 'abstain':
                 abstain += 1
-        self.msg(channel, "Talk Votes: %s yays, %s nays, %s abstentions" % (yay, nay, abstain))
+        self.msg(channel, "Talk Votes on #%s: %s yays, %s nays, %s abstentions" % (talk['id'], yay, nay, abstain))
         if yay > nay:
             msg = "The yays have it."
         elif nay > yay:
@@ -90,12 +91,14 @@ class PyConReviewBot(BasePyConBot):
         self.state_handler = None
 
     def handle_accept(self, channel):
-        self.msg(channel, "==== Chair decision: talk accepted, moves on to thunderdome. ====")
+        talk = self.talks[self.idx]
+        self.msg(channel, "==== Chair decision: talk #%s accepted, moves on to thunderdome. ====" % talk['id'])
         self.talks[self.idx]["decision"] = "accepted"
         self.handle_next(channel)
 
     def handle_reject(self, channel):
-        self.msg(channel, "==== Chair decision: talk rejected. ====")
+        talk = self.talks[self.idx]
+        self.msg(channel, "==== Chair decision: talk #%s rejected. ====" % talk['id'])
         self.talks[self.idx]["decision"] = "rejected"
         self.handle_next(channel)
 
