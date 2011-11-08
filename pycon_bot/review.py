@@ -27,7 +27,7 @@ class PyConReviewBot(BasePyConBot):
         # Dump the state if this isn't the first time we've next'd
         if self.idx > -1:
             with open(self.jsonfile, 'w') as fp:
-                json.dump(self.talks, fp, indent=2)
+                json.dump(self.talks, fp, indent=4)
 
         self.idx += 1
         self.state_handler = None
