@@ -4,7 +4,8 @@ import os
 from pycon_bot.base import main, BasePyConBot
 
 class PyConReviewBot(BasePyConBot):
-    commands = frozenset(["start", "next", "debate", "vote", "report", "accept", "reject", "final_report"])
+    commands = frozenset(["start", "next", "debate", "vote", "report", "accept",
+                          "reject"])
     jsonfile = os.path.join(os.path.dirname(__file__), 'talks.json')
     with open(jsonfile) as f:
         talks = json.load(f)
@@ -36,12 +37,21 @@ class PyConReviewBot(BasePyConBot):
         except IndexError:
             self.msg(channel, "Out of talks")
             return
-        self.msg(channel, str("==== Talk %d: %s now, %s ====" % (
+
+        self.msg(channel, str("==== Talk %d: %s - %s ====" % (
             talk["id"], talk["name"], self.talk_url(talk["id"])
         )))
-        self.msg(channel, "If you are (a/the) champion for this talk, or "
-            "willing to champion the talk, please type a succinct argument for "
-            "inclusion of this talk. (2 Minutes). State when you are done.")
+
+        try:
+            next = self.talks[self.idx+1]
+        except IndexError:
+            pass
+        else:
+            self.msg(channel, "(%s will be next)" % self.talk_url(next['id']))
+
+        self.msg(channel, "If you are (a/the) champion for #%s, or "
+            "willing to champion the it, please type a succinct argument for "
+            "inclusion of this talk. (2 Minutes). Say 'done' when you are finished." % talk['id'])
 
     def handle_debate(self, channel):
         talk = self.talks[self.idx]
