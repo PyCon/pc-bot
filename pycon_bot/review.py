@@ -3,17 +3,32 @@ import os
 
 from pycon_bot.base import main, BasePyConBot
 
-
 class PyConReviewBot(BasePyConBot):
-    commands = frozenset(["next", "debate", "vote", "report"])
-    with open(os.path.join(os.path.dirname(__file__), 'talks.json')) as f:
+    commands = frozenset(["start", "next", "debate", "vote", "report", "accept", "reject", "final_report"])
+    jsonfile = os.path.join(os.path.dirname(__file__), 'talks.json')
+    with open(jsonfile) as f:
         talks = json.load(f)
 
     def __init__(self):
         BasePyConBot.__init__(self)
         self.idx = -1
 
+    def handle_start(self, channel):
+        for i, talk in enumerate(self.talks):
+            if "decision" not in talk:
+                break
+        if i > 0:
+            self.idx = i - 1
+            self.msg(channel, "==== Skipped to just after #%d ===" % self.talks[i-1]["id"])
+        else:
+            self.msg(channel, "==== Ready (no talks to skip). ===")
+
     def handle_next(self, channel):
+        # Dump the state if this isn't the first time we've next'd
+        if self.idx > -1:
+            with open(self.jsonfile, 'w') as fp:
+                json.dump(self.talks, fp, indent=2)
+
         self.idx += 1
         self.state_handler = None
         try:
@@ -73,6 +88,16 @@ class PyConReviewBot(BasePyConBot):
             msg = "It's a tie"
         self.msg(channel, msg)
         self.state_handler = None
+
+    def handle_accept(self, channel):
+        self.msg(channel, "==== Chair decision: talk accepted, moves on to thunderdome. ====")
+        self.talks[self.idx]["decision"] = "accepted"
+        self.handle_next(channel)
+
+    def handle_reject(self, channel):
+        self.msg(channel, "==== Chair decision: talk rejected. ====")
+        self.talks[self.idx]["decision"] = "rejected"
+        self.handle_next(channel)
 
 if __name__ == "__main__":
     main(PyConReviewBot)
