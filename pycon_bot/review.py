@@ -94,13 +94,11 @@ class PyConReviewBot(BasePyConBot):
         talk = self.talks[self.idx]
         self.msg(channel, "==== Chair decision: talk #%s accepted, moves on to thunderdome. ====" % talk['id'])
         self.talks[self.idx]["decision"] = "accepted"
-        self.handle_next(channel)
 
     def handle_reject(self, channel):
         talk = self.talks[self.idx]
         self.msg(channel, "==== Chair decision: talk #%s rejected. ====" % talk['id'])
         self.talks[self.idx]["decision"] = "rejected"
-        self.handle_next(channel)
 
 if __name__ == "__main__":
     main(PyConReviewBot)
