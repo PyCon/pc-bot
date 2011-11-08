@@ -61,11 +61,11 @@ class PyConReviewBot(BasePyConBot):
 
     def handle_user_vote(self, channel, user, message):
         message = message.strip().lower()
-        if message in ("y", "yes", "yay", "+1"):
+        if message in ("y", "yes", "yay", "yea", "+1", ":)", ":-)"):
             self.current_votes[user] = "yay"
-        elif message in ("n", "no", "nay", "-1"):
+        elif message in ("n", "no", "nay", "-1", ":(", ":-("):
             self.current_votes[user] = "nay"
-        elif message in ("a", "abstain", "0"):
+        elif message in ("a", "abs", "abstain", "0", ":/", ":-/"):
             self.current_votes[user] = "abstain"
         else:
             self.msg(channel, "%s: please vote yay, nay, or abstain." % user)
