@@ -21,22 +21,22 @@ class PyConReviewBot(BasePyConBot):
         except IndexError:
             self.msg(channel, "Out of talks")
             return
-        self.msg(channel, "==== Talk %d: %s now, %s ====" % (
-            talk["id"], talk["title"], self.talk_url(talk["id"])
-        ))
+        self.msg(channel, str("==== Talk %d: %s now, %s ====" % (
+            talk["id"], talk["name"], self.talk_url(talk["id"])
+        )))
         self.msg(channel, "If you are (a/the) champion for this talk, or "
             "willing to champion the talk, please type a succinct argument for "
             "inclusion of this talk. (2 Minutes). State when you are done.")
 
     def handle_debate(self, channel):
         talk = self.talks[self.idx]
-        self.msg(channel, "==== General Debate (3 minutes) for Talk: #%d" % (
+        self.msg(channel, "==== General Debate (3 minutes) for Talk: #%d ====" % (
             talk["id"]
         ))
 
     def handle_vote(self, channel):
         talk = self.talks[self.idx]
-        self.msg(channel, "==== Voting time! yay/nay votes for talk #%d" % (
+        self.msg(channel, "==== Voting time! yay/nay votes for talk #%d ====" % (
             talk["id"]
         ))
         self.msg(channel, "Please do not speak after voting until we've gotten "
