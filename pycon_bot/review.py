@@ -45,24 +45,34 @@ class PyConReviewBot(BasePyConBot):
         self.state_handler = self.handle_user_vote
 
     def handle_user_vote(self, channel, user, message):
-        self.current_votes[user] = message
+        message = message.strip().lower()
+        if message in ("y", "yes", "yay", "+1"):
+            self.current_votes[user] = "yay"
+        elif message in ("n", "no", "nay", "-1"):
+            self.current_votes[user] = "nay"
+        elif message in ("a", "abstain", "0"):
+            self.current_votes[user] = "abstain"
+        else:
+            self.msg(channel, "%s: please vote yay, nay, or abstain." % user)
 
     def handle_report(self, channel):
-        talk = self.talks[self.idx]
-        yay, nay = 0, 0
+        yay, nay, abstain = 0, 0, 0
         for vote in self.current_votes.itervalues():
-            if vote.lower() in ("yay", "+1"):
+            if vote == 'yay':
                 yay += 1
-            elif vote.lower() in ("nay", "-1"):
+            elif vote == 'nay':
                 nay += 1
-        self.msg(channel, "Talk Votes: %s yays, %s nays" % (yay, nay))
+            elif vote == 'abstain':
+                abstain += 1
+        self.msg(channel, "Talk Votes: %s yays, %s nays, %s abstentions" % (yay, nay, abstain))
         if yay > nay:
-            msg = "The yays have it"
+            msg = "The yays have it."
         elif nay > yay:
-            msg = "The nays have it"
+            msg = "The nays have it."
         elif yay == nay:
-            msg = "Mother of god. It's a tie"
+            msg = "It's a tie"
         self.msg(channel, msg)
+        self.state_handler = None
 
 if __name__ == "__main__":
     main(PyConReviewBot)
