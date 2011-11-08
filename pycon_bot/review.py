@@ -5,7 +5,7 @@ from pycon_bot.base import main, BasePyConBot
 
 class PyConReviewBot(BasePyConBot):
     commands = frozenset(["start", "next", "debate", "vote", "report", "accept",
-                          "reject"])
+                          "reject", "poster"])
     jsonfile = os.path.join(os.path.dirname(__file__), 'talks.json')
     with open(jsonfile) as f:
         talks = json.load(f)
@@ -13,6 +13,10 @@ class PyConReviewBot(BasePyConBot):
     def __init__(self):
         BasePyConBot.__init__(self)
         self.idx = -1
+
+    def save_state(self):
+        with open(self.jsonfile, 'w') as fp:
+            json.dump(self.talks, fp, indent=4)
 
     def handle_start(self, channel):
         for i, talk in enumerate(self.talks):
@@ -25,11 +29,6 @@ class PyConReviewBot(BasePyConBot):
             self.msg(channel, "==== Ready (no talks to skip). ===")
 
     def handle_next(self, channel):
-        # Dump the state if this isn't the first time we've next'd
-        if self.idx > -1:
-            with open(self.jsonfile, 'w') as fp:
-                json.dump(self.talks, fp, indent=4)
-
         self.idx += 1
         self.state_handler = None
         try:
@@ -101,14 +100,19 @@ class PyConReviewBot(BasePyConBot):
         self.state_handler = None
 
     def handle_accept(self, channel):
-        talk = self.talks[self.idx]
-        self.msg(channel, "==== Chair decision: talk #%s accepted, moves on to thunderdome. ====" % talk['id'])
-        self.talks[self.idx]["decision"] = "accepted"
+        self._make_decision(channel, 'accepted', 'talk #{id} accepted, moves on to thunderdome.')
 
     def handle_reject(self, channel):
+        self._make_decision(channel, 'rejected', 'talk #{id} rejected.')
+
+    def handle_poster(self, channel):
+        self._make_decision(channel, 'poster', 'talk #{id} rejected; suggest re-submission as poster.')
+
+    def _make_decision(self, channel, decision, message):
         talk = self.talks[self.idx]
-        self.msg(channel, "==== Chair decision: talk #%s rejected. ====" % talk['id'])
-        self.talks[self.idx]["decision"] = "rejected"
+        self.msg(channel, "==== Chair decision: %s ====" % message.format(**talk))
+        self.talks[self.idx]["decision"] = decision
+        self.save_state()
 
 if __name__ == "__main__":
     main(PyConReviewBot)
