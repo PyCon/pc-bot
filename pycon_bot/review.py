@@ -5,7 +5,7 @@ from pycon_bot.base import main, BasePyConBot
 
 class PyConReviewBot(BasePyConBot):
     commands = frozenset(["start", "next", "debate", "vote", "report", "accept",
-                          "reject", "poster"])
+                          "reject", "poster", "rules"])
     jsonfile = os.path.join(os.path.dirname(__file__), 'talks.json')
     with open(jsonfile) as f:
         talks = json.load(f)
@@ -117,6 +117,11 @@ class PyConReviewBot(BasePyConBot):
         self.msg(channel, "==== Chair decision: %s ====" % message.format(**talk))
         self.talks[self.idx]["decision"] = decision
         self.save_state()
+
+    def handle_rules(self, channel):
+        """Remind participants where they can find the rules."""
+        self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
+        self.msg(channel, "Notes about process: http://bit.ly/pyon-pc-format")
 
 if __name__ == "__main__":
     main(PyConReviewBot)
