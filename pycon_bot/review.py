@@ -99,6 +99,10 @@ class PyConReviewBot(BasePyConBot):
         self.msg(channel, msg)
         self.state_handler = None
 
+        # Save the votes for posterity
+        self.talks[self.idx]["votes"] = {"yay": yay, "nay": nay, "abstain": abstain}
+        self.save_state()
+
     def handle_accept(self, channel):
         self._make_decision(channel, 'accepted', 'talk #{id} accepted, moves on to thunderdome.')
 
