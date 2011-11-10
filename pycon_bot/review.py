@@ -10,7 +10,8 @@ DEBATE_SECONDS = 3*60
 
 class PyConReviewBot(BasePyConBot):
     commands = frozenset(["start", "next", "debate", "vote", "report", "accept",
-                          "reject", "poster", "rules"])
+                          "reject", "poster", "rules", "pester", "voter",
+                          "nonvoter"])
     jsonfile = os.path.join(os.path.dirname(__file__), 'talks.json')
     with open(jsonfile) as f:
         talks = json.load(f)
@@ -19,6 +20,7 @@ class PyConReviewBot(BasePyConBot):
         BasePyConBot.__init__(self)
         self.idx = -1
         self.timer = None
+        self.nonvoters = set() 
 
     def save_state(self):
         with open(self.jsonfile, 'w') as fp:
@@ -79,6 +81,23 @@ class PyConReviewBot(BasePyConBot):
             talk["id"]
         ))
 
+    def handle_nonvoter(self, channel, user):
+        if user == self.nickname:
+            self.msg(channel, "I am above such mortal things.")
+            return
+        self.nonvoters.add(user)
+        self.msg(channel, "Will no longer pester %s." % user)
+
+    def handle_voter(self, channel, user):
+        if user == self.nickname:
+            self.msg(channel, "I am above such mortal things.")
+            return
+        try:
+            self.nonvoters.remove(user)
+        except KeyError:
+            pass
+        self.msg(channel, "Will now pester %s." % user)
+
     def handle_vote(self, channel):
         self.clear_timer()
         talk = self.talks[self.idx]
@@ -101,6 +120,17 @@ class PyConReviewBot(BasePyConBot):
         else:
             self.msg(channel, "%s: please vote yay, nay, or abstain." % user)
 
+    def handle_pester(self, channel):
+        def names_callback(names):
+            laggards = (set(names) - set(self.current_votes.keys()) -
+                        self.nonvoters)
+            laggards.remove(self.nickname)
+            if laggards:
+                self.msg(channel, "Didn't vote: %s." % (", ".join(laggards)))
+            else:
+                self.msg(channel, "Everyone voted.")
+        self.names(channel).addCallback(names_callback)
+        
     def handle_report(self, channel):
         talk = self.talks[self.idx]
         yay, nay, abstain = 0, 0, 0
