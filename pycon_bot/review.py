@@ -20,7 +20,7 @@ class PyConReviewBot(BasePyConBot):
         BasePyConBot.__init__(self)
         self.idx = -1
         self.timer = None
-        self.nonvoters = set() 
+        self.nonvoters = set()
 
     def save_state(self):
         with open(self.jsonfile, 'w') as fp:
@@ -38,7 +38,7 @@ class PyConReviewBot(BasePyConBot):
         if self.timer:
             self.timer.cancel()
             self.timer = None
-            
+
     def handle_start(self, channel):
         for i, talk in enumerate(self.talks):
             if "decision" not in talk:
@@ -111,11 +111,11 @@ class PyConReviewBot(BasePyConBot):
 
     def handle_user_vote(self, channel, user, message):
         message = message.strip().lower()
-        if message in ("y", "yes", "yay", "yea", "+1", ":)", ":-)"):
+        if message in ("y", "yes", "yay", "yea", "+1"):
             self.current_votes[user] = "yay"
-        elif message in ("n", "no", "nay", "-1", ":(", ":-("):
+        elif message in ("n", "no", "nay", "-1"):
             self.current_votes[user] = "nay"
-        elif message in ("a", "abs", "abstain", "0", ":/", ":-/"):
+        elif message in ("a", "abs", "abstain", "0"):
             self.current_votes[user] = "abstain"
         else:
             self.msg(channel, "%s: please vote yay, nay, or abstain." % user)
@@ -130,7 +130,7 @@ class PyConReviewBot(BasePyConBot):
             else:
                 self.msg(channel, "Everyone voted.")
         self.names(channel).addCallback(names_callback)
-        
+
     def handle_report(self, channel):
         talk = self.talks[self.idx]
         yay, nay, abstain = 0, 0, 0
