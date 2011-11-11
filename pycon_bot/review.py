@@ -28,7 +28,7 @@ class PyConReviewBot(BasePyConBot):
 
     def say_time(self, channel):
         self.timer = None
-        self.msg(channel, "==== Time has ended. ===")
+        self.msg(channel, "=== Time has ended. ===")
 
     def set_timer(self, channel, seconds):
         self.clear_timer()
@@ -45,9 +45,10 @@ class PyConReviewBot(BasePyConBot):
                 break
         if i > 0:
             self.idx = i - 1
-            self.msg(channel, "==== Skipped to just after #%d ===" % self.talks[i-1]["id"])
+            next_id = self.talks[i]['id']
+            self.msg(channel, "=== Skipped %s talks; next will be #%d ===" % (i, next_id))
         else:
-            self.msg(channel, "==== Ready (no talks to skip). ===")
+            self.msg(channel, "=== Ready (no talks to skip). ===")
 
     def handle_next(self, channel):
         self.idx += 1
@@ -59,7 +60,7 @@ class PyConReviewBot(BasePyConBot):
             return
 
         self.set_timer(channel, CHAMPION_SECONDS)
-        self.msg(channel, str("==== Talk %d: %s - %s ====" % (
+        self.msg(channel, str("=== Talk %d: %s - %s ===" % (
             talk["id"], talk["name"], self.talk_url(talk["id"])
         )))
 
@@ -77,7 +78,7 @@ class PyConReviewBot(BasePyConBot):
     def handle_debate(self, channel):
         self.set_timer(channel, DEBATE_SECONDS)
         talk = self.talks[self.idx]
-        self.msg(channel, "==== General Debate (3 minutes) for Talk: #%d ====" % (
+        self.msg(channel, "=== General Debate (3 minutes) for Talk: #%d ===" % (
             talk["id"]
         ))
 
@@ -101,7 +102,7 @@ class PyConReviewBot(BasePyConBot):
     def handle_vote(self, channel):
         self.clear_timer()
         talk = self.talks[self.idx]
-        self.msg(channel, "==== Voting time! yay/nay votes for talk #%d ====" % (
+        self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===" % (
             talk["id"]
         ))
         self.msg(channel, "Please do not speak after voting until we've gotten "
@@ -141,7 +142,7 @@ class PyConReviewBot(BasePyConBot):
                 nay += 1
             elif vote == 'abstain':
                 abstain += 1
-        self.msg(channel, "Talk Votes on #%s: %s yays, %s nays, %s abstentions" % (talk['id'], yay, nay, abstain))
+        self.msg(channel, "=== Talk Votes on #%s: %s yays, %s nays, %s abstentions ===" % (talk['id'], yay, nay, abstain))
         if yay > nay:
             msg = "The yays have it."
         elif nay > yay:
@@ -167,7 +168,7 @@ class PyConReviewBot(BasePyConBot):
     def _make_decision(self, channel, decision, message):
         self.clear_timer()
         talk = self.talks[self.idx]
-        self.msg(channel, "==== Chair decision: %s ====" % message.format(**talk))
+        self.msg(channel, "=== Chair decision: %s ===" % message.format(**talk))
         self.talks[self.idx]["decision"] = decision
         self.save_state()
 
