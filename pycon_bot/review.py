@@ -148,7 +148,7 @@ class PyConReviewBot(BasePyConBot):
         elif nay > yay:
             msg = "The nays have it."
         elif yay == nay:
-            msg = "It's a tie"
+            msg = "It's a tie: http://i.imgur.com/Cw3lg.jpg"
         self.msg(channel, msg)
         self.state_handler = None
 
