@@ -11,7 +11,7 @@ DEBATE_SECONDS = 3*60
 class PyConReviewBot(BasePyConBot):
     commands = frozenset(["start", "next", "debate", "vote", "report", "accept",
                           "reject", "poster", "rules", "pester", "voter",
-                          "nonvoter", "table"])
+                          "nonvoter", "table", "goto"])
     jsonfile = os.path.join(os.path.dirname(__file__), 'talks.json')
     with open(jsonfile) as f:
         talks = json.load(f)
@@ -53,6 +53,27 @@ class PyConReviewBot(BasePyConBot):
             self.msg(channel, "=== Skipped %s talks; next will be #%d ===" % (i, next_id))
         else:
             self.msg(channel, "=== Ready (no talks to skip). ===")
+
+    def handle_goto(self, channel, talk_id):
+        try:
+            talk_id = int(talk_id)
+        except ValueError:
+            self.msg(channel, "Erm, %s doesn't seem to be a talk ID." % talk_id)
+            return
+        for i, talk in enumerate(self.talks):
+            if talk['id'] == talk_id:
+                self.idx = i - 1
+                next_talk = self.talks[i]
+                msg = "OK, the next talk will be #{id}."
+                if 'decision' in next_talk:
+                    msg += " This talk was previously {decision}"
+                    if 'votes' in next_talk:
+                        msg += ' by a vote of {votes[yay]}/{votes[nay]}/{votes[abstain]}'
+                    msg += '.'
+                self.msg(channel, msg.format(**next_talk))
+                break
+        else:
+            self.msg(channel, "Uh oh, I couldn't find talk ID %s." % talk_id)
 
     def handle_next(self, channel):
         self.idx += 1
