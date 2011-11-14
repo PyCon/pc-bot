@@ -35,7 +35,7 @@ for talk in talks[index:]:
     if 'decision' not in talk:
         break
     else:
-        mark = {'rejected': 'reject', 'accepted': 'accept', 'poster': 'poster'}[talk['decision']]
+        mark = talk['decision'][0:6]
         votes = talk['votes'] if 'votes' in talk else dict(yay=0, nay=0, abstain=0)
         talk.update(votes)
         namelist = wrapper.wrap(talk['name'])

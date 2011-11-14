@@ -11,7 +11,7 @@ DEBATE_SECONDS = 3*60
 class PyConReviewBot(BasePyConBot):
     commands = frozenset(["start", "next", "debate", "vote", "report", "accept",
                           "reject", "poster", "rules", "pester", "voter",
-                          "nonvoter"])
+                          "nonvoter", "table"])
     jsonfile = os.path.join(os.path.dirname(__file__), 'talks.json')
     with open(jsonfile) as f:
         talks = json.load(f)
@@ -25,7 +25,7 @@ class PyConReviewBot(BasePyConBot):
     @property
     def nonvoter_list(self):
         return ', '.join(self.nonvoters) if self.nonvoters else 'none'
-    
+
     def save_state(self):
         with open(self.jsonfile, 'w') as fp:
             json.dump(self.talks, fp, indent=4)
@@ -173,6 +173,9 @@ class PyConReviewBot(BasePyConBot):
 
     def handle_poster(self, channel):
         self._make_decision(channel, 'poster', 'talk #{id} rejected; suggest re-submission as poster.')
+
+    def handle_table(self, channel):
+        self._make_decision(channel, 'tabled', 'talk #{id} tabled, will be reviewed at a future meeting.')
 
     def _make_decision(self, channel, decision, message):
         self.clear_timer()
