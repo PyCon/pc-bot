@@ -22,6 +22,10 @@ class PyConReviewBot(BasePyConBot):
         self.timer = None
         self.nonvoters = set()
 
+    @property
+    def nonvoter_list(self):
+        return ', '.join(self.nonvoters) if self.nonvoters else 'none'
+    
     def save_state(self):
         with open(self.jsonfile, 'w') as fp:
             json.dump(self.talks, fp, indent=4)
@@ -82,22 +86,27 @@ class PyConReviewBot(BasePyConBot):
             talk["id"]
         ))
 
-    def handle_nonvoter(self, channel, user):
-        if user == self.nickname:
-            self.msg(channel, "I am above such mortal things.")
+    def handle_nonvoter(self, channel, *users):
+        users = set(users)
+        users.discard(self.nickname)
+        if not users:
+            self.msg(channel, "Nonvoters: %s." % self.nonvoter_list)
             return
-        self.nonvoters.add(user)
-        self.msg(channel, "Will no longer pester %s." % user)
+        self.nonvoters.update(users)
+        self.msg(channel, "Will no longer pester %s." % ', '.join(users))
 
-    def handle_voter(self, channel, user):
-        if user == self.nickname:
-            self.msg(channel, "I am above such mortal things.")
+    def handle_voter(self, channel, *users):
+        users = set(users)
+        users.discard(self.nickname)
+        if not users:
+            self.msg(channel, "Nonvoters: %s." % self.nonvoter_list)
             return
-        try:
-            self.nonvoters.remove(user)
-        except KeyError:
-            pass
-        self.msg(channel, "Will now pester %s." % user)
+        if '*' in users:
+            self.nonvoters.clear()
+            self.msg(channel, "Will now pester everyone.")
+        else:
+            self.nonvoters.difference_update(users)
+            self.msg(channel, "Will now pester %s." % ', '.join(users))
 
     def handle_vote(self, channel):
         self.clear_timer()
