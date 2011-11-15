@@ -97,7 +97,7 @@ class PyConReviewBot(BasePyConBot):
             self.msg(channel, "(%s will be next)" % self.talk_url(next['id']))
 
         self.msg(channel, "If you are (a/the) champion for #%s, or "
-            "willing to champion the it, please type a succinct argument for "
+            "willing to champion the it, please say 'me'. Then, please type a succinct argument for "
             "inclusion of this talk. (2 Minutes). Say 'done' when you are finished." % talk['id'])
 
     def handle_debate(self, channel):
