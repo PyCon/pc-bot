@@ -23,4 +23,4 @@ while "decision" in talks[index]:
     index += 1
 
 for talk in talks[index:index+num_talks]:
-    print 'http://us.pycon.org/2012/review/{id} - {name}'.format(**talk)
+    print u'http://us.pycon.org/2012/review/{id} - {name}'.format(**talk)
