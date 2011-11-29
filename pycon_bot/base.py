@@ -6,7 +6,7 @@ from twisted.words.protocols import irc
 
 
 class BasePyConBot(irc.IRCClient):
-    accepted_users = ["Alex_Gaynor", "jnoller", "VanL", "tlesher", "jacobkm"]
+    accepted_users = ["Alex_Gaynor", "VanL", "tlesher", "jacobkm"]
 
     def __init__(self):
         self.state_handler = None
@@ -67,7 +67,7 @@ class BasePyConBot(irc.IRCClient):
         for cb in callbacks:
             cb.callback(namelist)
         del self._namescallback[channel]
-        
+
 class BasePyConBotFactory(protocol.ClientFactory):
     def __init__(self, channels, nickname):
         self.channels = channels
