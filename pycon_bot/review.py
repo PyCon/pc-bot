@@ -1,8 +1,6 @@
 import json
 import os
 
-from twisted.internet import reactor
-
 from pycon_bot.base import main, BasePyConBot
 
 CHAMPION_SECONDS = 2*60
@@ -19,29 +17,10 @@ class PyConReviewBot(BasePyConBot):
     def __init__(self):
         BasePyConBot.__init__(self)
         self.idx = -1
-        self.timer = None
-        self.nonvoters = set()
-
-    @property
-    def nonvoter_list(self):
-        return ', '.join(self.nonvoters) if self.nonvoters else 'none'
 
     def save_state(self):
         with open(self.jsonfile, 'w') as fp:
             json.dump(self.talks, fp, indent=4)
-
-    def say_time(self, channel):
-        self.timer = None
-        self.msg(channel, "=== Time has ended. ===")
-
-    def set_timer(self, channel, seconds):
-        self.clear_timer()
-        self.timer = reactor.callLater(seconds, self.say_time, channel)
-
-    def clear_timer(self):
-        if self.timer:
-            self.timer.cancel()
-            self.timer = None
 
     def handle_start(self, channel):
         for i, talk in enumerate(self.talks):
@@ -131,13 +110,13 @@ class PyConReviewBot(BasePyConBot):
 
     def handle_vote(self, channel):
         self.clear_timer()
+        self.current_votes = {}
         talk = self.talks[self.idx]
         self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===" % (
             talk["id"]
         ))
         self.msg(channel, "Please do not speak after voting until we've gotten "
             "our report.")
-        self.current_votes = {}
         self.state_handler = self.handle_user_vote
 
     def handle_user_vote(self, channel, user, message):
@@ -150,17 +129,6 @@ class PyConReviewBot(BasePyConBot):
             self.current_votes[user] = "abstain"
         else:
             self.msg(channel, "%s: please vote yay, nay, or abstain." % user)
-
-    def handle_pester(self, channel):
-        def names_callback(names):
-            laggards = (set(names) - set(self.current_votes.keys()) -
-                        self.nonvoters)
-            laggards.remove(self.nickname)
-            if laggards:
-                self.msg(channel, "Didn't vote: %s." % (", ".join(laggards)))
-            else:
-                self.msg(channel, "Everyone voted.")
-        self.names(channel).addCallback(names_callback)
 
     def handle_report(self, channel):
         talk = self.talks[self.idx]
@@ -208,7 +176,7 @@ class PyConReviewBot(BasePyConBot):
     def handle_rules(self, channel):
         """Remind participants where they can find the rules."""
         self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
-        self.msg(channel, "Notes about process: http://bit.ly/pyon-pc-format")
+        self.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
 
 if __name__ == "__main__":
     main(PyConReviewBot)

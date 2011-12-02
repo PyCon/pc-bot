@@ -4,13 +4,43 @@ from twisted.internet import defer, protocol, reactor
 from twisted.python import log
 from twisted.words.protocols import irc
 
-
 class BasePyConBot(irc.IRCClient):
     accepted_users = ["Alex_Gaynor", "VanL", "tlesher", "jacobkm"]
 
     def __init__(self):
         self.state_handler = None
         self._namescallback = {}
+        self.nonvoters = set()
+        self.current_votes = {}
+        self.timer = None
+
+    @property
+    def nonvoter_list(self):
+        return ', '.join(self.nonvoters) if self.nonvoters else 'none'
+
+    def handle_pester(self, channel):
+        def names_callback(names):
+            laggards = (set(names) - set(self.current_votes.keys()) -
+                        self.nonvoters)
+            laggards.remove(self.nickname)
+            if laggards:
+                self.msg(channel, "Didn't vote: %s." % (", ".join(laggards)))
+            else:
+                self.msg(channel, "Everyone voted.")
+        self.names(channel).addCallback(names_callback)
+
+    def say_time(self, channel):
+        self.timer = None
+        self.msg(channel, "=== Time has ended. ===")
+
+    def set_timer(self, channel, seconds):
+        self.clear_timer()
+        self.timer = reactor.callLater(seconds, self.say_time, channel)
+
+    def clear_timer(self):
+        if self.timer:
+            self.timer.cancel()
+            self.timer = None
 
     def talk_url(self, talk):
         return "http://us.pycon.org/2012/review/%s/" % talk
