@@ -37,7 +37,7 @@ Talk group JSON format, for reference:
 
 class PyConThunderdomeBot(BasePyConBot):
     commands = frozenset(["next", "debate", "vote", "report", "pester", "start",
-                          "in", "out", "dam"])
+                          "in", "out", "dam", 'voter', 'nonvoter'])
 
     jsonfile = os.path.join(os.path.dirname(__file__), 'talk_groups.json')
     with open(jsonfile) as f:
