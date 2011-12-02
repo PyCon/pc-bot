@@ -112,13 +112,13 @@ class PyConThunderdomeBot(BasePyConBot):
             votes = iter(ast.literal_eval(message))
         except (ValueError, TypeError):
             self.msg(channel, "{}: Couldn't parse '{}' as a vote, please enter a valid vote.".format(user, message))
-
-        for vote in votes:
-            if vote not in valid_talks:
-                valid_ids = ", ".join(map(str, valid_talks))
-                self.msg(channel, "%s: '%s' isn't a talk ID under review. Valid IDs: %s" % (user, vote, valid_ids))
-                return
-            votes.append(vote)
+        else:
+            for vote in votes:
+                if vote not in valid_talks:
+                    valid_ids = ", ".join(map(str, valid_talks))
+                    self.msg(channel, "%s: '%s' isn't a talk ID under review. Valid IDs: %s" % (user, vote, valid_ids))
+                    return
+                votes.append(vote)
 
     def handle_report(self, channel):
         group = self.talk_groups[self.idx]
