@@ -1,6 +1,9 @@
-import os
+import ast
 import json
+import os
+
 from pycon_bot.base import main, BasePyConBot
+
 
 REVIEW_SECONDS = 2 * 60     # Length of "quiet review" before debate.
 DEBATE_SECONDS = 5 * 60     # Length of debate.
@@ -105,12 +108,12 @@ class PyConThunderdomeBot(BasePyConBot):
         if message.strip() in ('-', 'none', '[]', '{}'):
             return
 
-        for vote in message.split(','):
-            try:
-                vote = int(vote.strip())
-            except ValueError:
-                self.msg(channel, "%s: '%s' isn't an integer. Please enter a valid vote." % (user, vote))
-                return
+        try:
+            votes = iter(ast.literal_eval(message))
+        except (ValueError, TypeError):
+            self.msg(channel, "{}: Couldn't parse '{}' as a vote, please enter a valid vote.".format(user, message))
+
+        for vote in votes:
             if vote not in valid_talks:
                 valid_ids = ", ".join(map(str, valid_talks))
                 self.msg(channel, "%s: '%s' isn't a talk ID under review. Valid IDs: %s" % (user, vote, valid_ids))
