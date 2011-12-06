@@ -110,7 +110,7 @@ class PyConThunderdomeBot(BasePyConBot):
 
         try:
             votes = iter(ast.literal_eval(message))
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, SyntaxError):
             self.msg(channel, "{}: Couldn't parse '{}' as a vote, please enter a valid vote.".format(user, message))
         else:
             for vote in votes:
