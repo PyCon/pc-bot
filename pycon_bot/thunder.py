@@ -1,9 +1,7 @@
-import ast
+import re
 import json
 import os
-
 from pycon_bot.base import main, BasePyConBot
-
 
 REVIEW_SECONDS = 2 * 60     # Length of "quiet review" before debate.
 DEBATE_SECONDS = 5 * 60     # Length of debate.
@@ -62,7 +60,7 @@ class PyConThunderdomeBot(BasePyConBot):
         if i > 0:
             self.idx = i - 1
             next_name = self.talk_groups[i]['name']
-            self.msg(channel, '=== Skipped %s groups; next will be "%s" ===' % (i, next_name))
+            self.msg(channel, '=== Skipped {0} groups; next will be "{1}" ==='.format(i, next_name))
         else:
             self.msg(channel, "=== Ready (no groups to skip). ===")
 
@@ -108,16 +106,17 @@ class PyConThunderdomeBot(BasePyConBot):
         if message.strip() in ('-', 'none', '[]', '{}'):
             return
 
-        try:
-            votes = iter(ast.literal_eval(message))
-        except (ValueError, TypeError, SyntaxError):
-            self.msg(channel, "{}: Couldn't parse '{}' as a vote, please enter a valid vote.".format(user, message))
-        else:
+        for vote in re.split(r'[, ]+', message):
+            try:
+                vote = int(vote)
+            except ValueError:
+                self.msg(channel, "{0}: '{1}' isn't an int; please enter a valid vote.".format(user, vote))
+                return
+            if vote not in valid_talks:
+                valid_ids = ", ".join(map(str, valid_talks))
+                self.msg(channel, "{0}: '{1}' isn't a talk ID under review. Valid IDs: {2}".format(user, vote, valid_ids))
+                return
             for vote in votes:
-                if vote not in valid_talks:
-                    valid_ids = ", ".join(map(str, valid_talks))
-                    self.msg(channel, "%s: '%s' isn't a talk ID under review. Valid IDs: %s" % (user, vote, valid_ids))
-                    return
                 votes.append(vote)
 
     def handle_report(self, channel):
