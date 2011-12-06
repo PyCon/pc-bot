@@ -132,7 +132,7 @@ class PyConThunderdomeBot(BasePyConBot):
         sorted_votes = list(sorted(talk_votes.items(), key=lambda t: t[1], reverse=True))
         winning_score = sorted_votes[0][1]
         for (talk_id, score) in sorted_votes:
-            score_pct = float(score) / num_voters if num_voters else 0
+            score_pct = float(score) / (num_voters if num_voters else 0)
             if score == winning_score and score_pct >= WINNING_THRESHOLD:
                 status = "WINNER"
             elif score_pct >= DAMAGED_THRESHOLD:
