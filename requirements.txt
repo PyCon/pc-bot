@@ -1,1 +1,2 @@
 twisted
+pytest==2.2.0

@@ -1,7 +1,9 @@
 import re
 import json
 import os
+
 from pycon_bot.base import main, BasePyConBot
+
 
 REVIEW_SECONDS = 2 * 60     # Length of "quiet review" before debate.
 DEBATE_SECONDS = 5 * 60     # Length of debate.
@@ -38,12 +40,15 @@ class PyConThunderdomeBot(BasePyConBot):
                           "in", "out", "dam", 'voter', 'nonvoter'])
 
     jsonfile = os.path.join(os.path.dirname(__file__), 'talk_groups.json')
-    with open(jsonfile) as f:
-        talk_groups = json.load(f)
 
     def __init__(self):
+        self.load_talk_groups()
         BasePyConBot.__init__(self)
         self.idx = -1
+
+    def load_talk_groups(self):
+        with open(self.jsonfile) as f:
+            self.talk_groups = json.load(f)
 
     @property
     def nonvoter_list(self):
@@ -116,8 +121,7 @@ class PyConThunderdomeBot(BasePyConBot):
                 valid_ids = ", ".join(map(str, valid_talks))
                 self.msg(channel, "{0}: '{1}' isn't a talk ID under review. Valid IDs: {2}".format(user, vote, valid_ids))
                 return
-            for vote in votes:
-                votes.append(vote)
+            votes.append(vote)
 
     def handle_report(self, channel):
         group = self.talk_groups[self.idx]
