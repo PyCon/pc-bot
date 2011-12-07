@@ -56,3 +56,16 @@ class TestBot(object):
         # Adding a talk to a status doesn't clear the existing ones
         bot.handle_in('#test', '2')
         assert bot.talk_groups[0]['decision']['accepted'] == [1, 2]
+
+    def test_handle_debate(self):
+        bot = MockThunderdomeBot()
+        bot.idx = 0
+        
+        # now assert that we can handle beginning debate with a custom time
+        bot.handle_debate("#test", 8)
+        assert "8 minutes" in bot.messages[-1][1]
+        
+        # assert further that we can handle beginning debate with
+        # no custom time specified
+        bot.handle_debate("#test")
+        assert "5 minutes" in bot.messages[-1][1]
