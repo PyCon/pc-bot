@@ -173,6 +173,9 @@ class PyConThunderdomeBot(BasePyConBot):
         group = self.talk_groups[self.idx]
         talk_ids = map(int, group['talks'])
 
+        if 'decision' not in group:
+            group['decision'] = {}
+
         # Validate decision
         for t in talks:
             try:
@@ -185,7 +188,18 @@ class PyConThunderdomeBot(BasePyConBot):
                 return
 
         self.msg(channel, '=== Chair decision: %s %s ===' % (decision, ', '.join(talks)))
-        group.setdefault('decision', {})[decision] = talks
+
+        # Remove each talk in question from any existing decisions, if needed,
+        # then add the talk to the apropriate decision group.
+        talks = map(int, talks)
+        for t in talks:
+            for d in group['decision'].values():
+                try:
+                    d.remove(t)
+                except ValueError:
+                    pass
+            group['decision'].setdefault(decision, []).append(t)
+
         self.save_state()
 
 if __name__ == "__main__":
