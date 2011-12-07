@@ -2,6 +2,10 @@ from pycon_bot.thunder import PyConThunderdomeBot
 
 
 class MockThunderdomeBot(PyConThunderdomeBot):
+    def __init__(self, *args, **kwargs):
+        PyConThunderdomeBot.__init__(self, *args, **kwargs)
+        self.messages = []
+
     def load_talk_groups(self):
         self.talk_groups = [
             {
@@ -14,7 +18,17 @@ class MockThunderdomeBot(PyConThunderdomeBot):
             }
         ]
 
+    def msg(self, channel, message):
+        self.messages.append((channel, message))
+
 class TestBot(object):
+    def test_start(self):
+        bot = MockThunderdomeBot()
+        bot.privmsg("jacobkm", "#pycon-pc", ",start")
+        assert bot.messages == [
+            ("#pycon-pc", "=== Ready (no groups to skip). ==="),
+        ]
+
     def test_handle_user_vote(self):
         bot = MockThunderdomeBot()
         bot.idx = 0
