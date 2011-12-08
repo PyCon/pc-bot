@@ -18,6 +18,9 @@ class MockThunderdomeBot(PyConThunderdomeBot):
             }
         ]
 
+    def save_state(self):
+        pass
+
     def msg(self, channel, message):
         self.messages.append((channel, message))
 
@@ -60,11 +63,11 @@ class TestBot(object):
     def test_handle_debate(self):
         bot = MockThunderdomeBot()
         bot.idx = 0
-        
+
         # now assert that we can handle beginning debate with a custom time
         bot.handle_debate("#test", 8)
         assert "8 minutes" in bot.messages[-1][1]
-        
+
         # assert further that we can handle beginning debate with
         # no custom time specified
         bot.handle_debate("#test")
