@@ -5,8 +5,8 @@ import os
 from pycon_bot.base import main, BasePyConBot
 
 
-REVIEW_SECONDS = 2 * 60     # Length of "quiet review" before debate.
-DEBATE_SECONDS = 5 * 60     # Length of debate.
+REVIEW_MINUTES = 2          # Length of "quiet review" before debate.
+DEBATE_MINUTES = 5          # Length of debate.
 WINNING_THRESHOLD = 0.75    # Min % votes for a winning talk.
 DAMAGED_THRESHOLD = 0.50    # Min % votes for a damaged talk.
 
@@ -69,7 +69,7 @@ class PyConThunderdomeBot(BasePyConBot):
         else:
             self.msg(channel, "=== Ready (no groups to skip). ===")
 
-    def handle_next(self, channel):
+    def handle_next(self, channel, minutes=REVIEW_MINUTES):
         self.idx += 1
         self.state_handler = None
         try:
@@ -81,15 +81,15 @@ class PyConThunderdomeBot(BasePyConBot):
         for talk_id, talk_title in group["talks"].items():
             self.msg(channel, "#{id}: {title} - {url}".format(
                 url=self.talk_url(talk_id), title=talk_title, id=talk_id))
-        self.msg(channel, "You now have 2 minutes to review these talks and "
-                          "collect your thoughts prior to debate. Please refrain "
-                          "from speaking until debate begins.")
-        self.set_timer(channel, REVIEW_SECONDS)
+        self.msg(channel, "You now have {minutes} minutes ".format(minutes=minutes) +
+                          "to review these talks and collect your thoughts prior to "
+                          "debate. Please refrain from speaking until debate begins.")
+        self.set_timer(channel, minutes * 60)
 
-    def handle_debate(self, channel):
+    def handle_debate(self, channel, minutes=DEBATE_MINUTES):
         group = self.talk_groups[self.idx]
-        self.msg(channel, '=== General debate (5 minutes) for "{name}" ==='.format(**group))
-        self.set_timer(channel, DEBATE_SECONDS)
+        self.msg(channel, '=== General debate ({minutes} minutes) for "{name}" ==='.format(minutes=minutes, **group))
+        self.set_timer(channel, minutes * 60)
 
     def handle_vote(self, channel):
         group = self.talk_groups[self.idx]
