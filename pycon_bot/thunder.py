@@ -80,7 +80,7 @@ class PyConThunderdomeBot(BasePyConBot):
         self.msg(channel, '=== Thunderdome for "{name}" begins now! ==='.format(**group))
         for talk_id, talk_title in group["talks"].items():
             self.msg(channel, "#{id}: {title} - {url}".format(
-                url=self.talk_url(talk_id), title=talk_title, id=talk_id))
+                url=self.talk_url(talk_id), title=talk_title.encode('ascii', 'ignore'), id=talk_id))
         self.msg(channel, "You now have {minutes} minutes ".format(minutes=minutes) +
                           "to review these talks and collect your thoughts prior to "
                           "debate. Please refrain from speaking until debate begins.")
