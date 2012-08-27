@@ -1,0 +1,1 @@
+irc: python runbot.py
