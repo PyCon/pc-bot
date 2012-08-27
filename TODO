@@ -1,0 +1,17 @@
+In rough priority order
+
+* Add facility to send every message to a Mode, for logging &c.
+* Review: while debating a talk, log to TalkProposal.debate_transcript
+  (should probably turn that field into a list so we can append to it)
+* Deploy to Heroku. Big question: security - if I can just /nick jacobkm we
+  can't leave this running 24x7.
+* Add a "Meeting" object so we can record start/stop times, attendance, talks
+  reviewed during each session, and also a complete transcript of the meeting.
+  ,start starts a new meeting, ,end ends the meeting.
+* Make scripts/report.py report on a particular Meeting.
+* Add a todo object and a ,todo command to record action items during each
+  meeting (should this be ReviewMode-specific, or global?)
+* Add an "edit" mode for messing with talk data. Alternatively, spin up
+  mongonaut or something similar.
+* Port over thunder mode (this is a big one, also requires more models and
+  scripts to handle tdome groupings)
