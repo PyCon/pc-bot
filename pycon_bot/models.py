@@ -28,8 +28,10 @@ class TalkProposal(mongoengine.Document):
         ('damaged',         'Damaged'),
     ]
 
-    id = mongoengine.IntField(unique=True)
+    talk_id = mongoengine.IntField(unique=True)
+    speaker = mongoengine.StringField()
     title = mongoengine.StringField()
+    category = mongoengine.StringField()
     status = mongoengine.StringField(choices=STATUSES)
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)
