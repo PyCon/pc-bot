@@ -1,26 +1,27 @@
 """
-Generate an agenda for the next meeting::
-
-    python agenda.py talks.json [number]
+Generate an agenda for the next meeting.
 
 Skips over any talks already reviewed, then prints out a simple agenda of the
 next [number] talks.
-
 """
+
 import sys
-import json
+import argparse
+import pycon_bot.mongo
+from pycon_bot.models import TalkProposal
 
-with open(sys.argv[1]) as fp:
-    talks = json.load(fp)
+p = argparse.ArgumentParser()
+p.add_argument('--dsn')
+p.add_argument('-n', '--num', type=int, default=12)
+args = p.parse_args()
+if not pycon_bot.mongo.connect(args.dsn):
+    sys.stderr.write("Need to pass --dsn or set env[MONGO_DSN].")
+    sys.exit(1)
 
-try:
-    num_talks = int(sys.argv[2])
-except (IndexError, ValueError):
-    num_talks = 12
-
-index = 0
-while "decision" in talks[index]:
-    index += 1
-
-for talk in talks[index:index+num_talks]:
-    print u'http://us.pycon.org/2012/review/{id} - {name}'.format(**talk)
+nr = args.num
+for p in TalkProposal.objects(status='unreviewed'):
+    if p.site_votes.total >= 3:
+        print u'http://us.pycon.org/2013/reviews/review/%s - %s' % (p.talk_id, p.title)
+        nr -= 1
+    if nr == 0:
+        break

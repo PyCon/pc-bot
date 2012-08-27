@@ -2,7 +2,7 @@ import os
 import urlparse
 import mongoengine
 
-def connect(dsn):
+def connect(dsn=None):
     """
     Connect to mongo from a given dsn flag or by reading env.
     """
