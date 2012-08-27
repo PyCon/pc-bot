@@ -1,0 +1,49 @@
+Tools for PyCon-PC IRC meetings
+===============================
+
+Primarily this runs some IRC bots (see `pycon_bot`), but there are also scripts
+for ingest and reporting on review data (in `scripts`).
+
+Setup
+=====
+
+First, the usual:
+
+    pip install -r requirements.txt
+
+Then, rhe best way to configure this thing is through some environ variables
+(there are flags, but env is easier)::
+
+    export MONGO_DSN=mongodb://...
+    export PYCONBOT_SUPERUSERS=list,of,irc,superusers
+
+Then to run the bot:
+
+    python runbot.py
+
+(See the `--help` for connecting to other channels).
+
+The scripts need to be able to import stuff from `pycon_bot`, so I usually
+
+    export PYTHONPATH=`pwd`
+    python scripts/agenda.py
+
+Or somesuch.
+
+Architecture
+============
+
+Some brief notes on how all the bits fit together:
+
+* `runbot.py` launches a "driver" (`pycon_bot.driver.PyConBot`). This bot
+  doesn't do much itself besides provide some utilities. Instead, almost
+  all bot commands get delegated down to a "mode" object.
+
+* A "mode" lives in `pycon_bot.modes.<whatever>` It should subclass
+  `pycon_bot.modes.base.BaseBotMode`, and the mode needs to be named, e.g.,
+  `WhateverBot` if it lives in `pycon_bot.modes.whatever`.
+
+* The ",mode" command switches between modes - see
+  `pycon_bot.driver.PyConBot.handle_mode`. Giving invalid modes fails in
+  predictable ways, and since it imports arbitrary code you probably want to
+  be careful about where you run this and who gets SU!
