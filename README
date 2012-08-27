@@ -41,7 +41,7 @@ Some brief notes on how all the bits fit together:
 
 * A "mode" lives in `pycon_bot.modes.<whatever>` It should subclass
   `pycon_bot.modes.base.BaseBotMode`, and the mode needs to be named, e.g.,
-  `WhateverBot` if it lives in `pycon_bot.modes.whatever`.
+  `WhateverMode` if it lives in `pycon_bot.modes.whatever`.
 
 * The ",mode" command switches between modes - see
   `pycon_bot.driver.PyConBot.handle_mode`. Giving invalid modes fails in

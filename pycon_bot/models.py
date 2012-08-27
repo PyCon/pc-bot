@@ -26,12 +26,13 @@ class KittendomeVotes(mongoengine.EmbeddedDocument):
     abstain = mongoengine.IntField(min_value=0, default=0)
 
     def __unicode__(self):
-        return u"%s/%s/ %s" (self.yay, self.nay, self.abstain)
+        return u"%s/%s/%s" % (self.yay, self.nay, self.abstain)
 
 class TalkProposal(mongoengine.Document):
     STATUSES = [
         ('unreviewed',      'Unreviewed'),
         ('hold',            'On hold'),
+        ('poster',          'Rejected, suggest poster session'),
         ('rejected',        'Rejected'),
         ('thunderdome',     'Accepted into Thunderdome'),
         ('accepted',        'Accepted'),
@@ -49,3 +50,7 @@ class TalkProposal(mongoengine.Document):
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
+
+    @property
+    def review_url(self):
+        return 'http://us.pycon.org/2013/reviews/review/%s/' % self.talk_id

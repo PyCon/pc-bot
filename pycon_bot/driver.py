@@ -77,9 +77,17 @@ class PyConBot(irc.IRCClient):
         newmode = args[0]
         try:
             mod = importlib.import_module('pycon_bot.modes.%s' % newmode)
-            self.mode = getattr(mod, '%sMode' % newmode.title())
+            self.mode = getattr(mod, '%sMode' % newmode.title())(self)
+            self.msg(channel, "OK, now in %s mode." % newmode)
         except (ImportError, AttributeError) as e:
             self.msg(channel, "Can't load mode %s: %s" % (newmode, e))
+
+    def handle_sleep(self, channel, *args):
+        """
+        Go to sleep (i.e. set no mode).
+        """
+        self.msg(channel, "Sleep tight, don't let the bedbugs bite.")
+        self.mode = None
 
     #
     # Internals

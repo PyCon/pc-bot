@@ -21,7 +21,7 @@ if not pycon_bot.mongo.connect(args.dsn):
 nr = args.num
 for p in TalkProposal.objects(status='unreviewed'):
     if p.site_votes.total >= 3:
-        print u'http://us.pycon.org/2013/reviews/review/%s - %s' % (p.talk_id, p.title)
+        print '%s - %s' % (p.review_url, p.title)
         nr -= 1
     if nr == 0:
         break

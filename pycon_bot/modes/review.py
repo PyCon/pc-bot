@@ -1,87 +1,75 @@
 from .base import BaseBotMode
 from ..models import TalkProposal, KittendomeVotes
 
-CHAMPION_SECONDS = 2*60
-DEBATE_SECONDS = 3*60
+CHAMPION_SECONDS = 2
+DEBATE_SECONDS = 3
 
-class ReviewBot(BaseBotMode):
+class ReviewMode(BaseBotMode):
 
     def __init__(self, bot):
-        super(ReviewBot, self).__init__(bot)
+        super(ReviewMode, self).__init__(bot)
+        self.next = None
+        self.current = None
 
     def handle_start(self, channel):
-        for i, talk in enumerate(self.talks):
-            if "decision" not in talk:
-                break
-        if i > 0:
-            self.idx = i - 1
-            next_id = self.talks[i]['id']
-            self.bot.msg(channel, "=== Skipped %s talks; next will be #%d ===" % (i, next_id))
-        else:
-            self.bot.msg(channel, "=== Ready (no talks to skip). ===")
+        try:
+            self.next = TalkProposal.objects(status='unreviewed')[0]
+        except IndexError:
+            self.msg(channel, "Out of talks!")
+            return
+        self.msg(channel, '=== Ready. Next talk will be #%s ===', self.next.talk_id)
 
     def handle_goto(self, channel, talk_id):
         try:
-            talk_id = int(talk_id)
-        except ValueError:
-            self.bot.msg(channel, "Erm, %s doesn't seem to be a talk ID." % talk_id)
+            self.next = TalkProposal.objects.get(talk_id=talk_id)
+        except TalkProposal.DoesNotExist:
+            self.msg(channel, "Erm, %s doesn't seem to be a talk ID.", talk_id)
             return
-        for i, talk in enumerate(self.talks):
-            if talk['id'] == talk_id:
-                self.idx = i - 1
-                next_talk = self.talks[i]
-                msg = "OK, the next talk will be #{id}."
-                if 'decision' in next_talk:
-                    msg += " This talk was previously {decision}"
-                    if 'votes' in next_talk:
-                        msg += ' by a vote of {votes[yay]}/{votes[nay]}/{votes[abstain]}'
-                    msg += '.'
-                self.bot.msg(channel, msg.format(**next_talk))
-                break
-        else:
-            self.bot.msg(channel, "Uh oh, I couldn't find talk ID %s." % talk_id)
+        msg = "OK, the next talk will be %s. This talk is %s." % \
+              (self.next.talk_id, self.next.get_status_display())
+        if self.next.kittendome_votes:
+            msg += " Previous vote was %s." % self.next.kittendome_votes
+        self.msg(channel, msg)
 
     def handle_next(self, channel):
-        self.idx += 1
+        # Clear out the state handler in case we're voting.
         self.bot.state_handler = None
-        try:
-            talk = self.talks[self.idx]
-        except IndexError:
-            self.bot.msg(channel, "Out of talks")
-            return
 
+        # Figure out which talk is up now.
+        if self.next:
+            t = self.current = self.next
+            self.next = None
+        else:
+            try:
+                t = self.current = TalkProposal.objects(status='unreviewed')[0]
+            except IndexError:
+                self.msg(channel, "Out of talks!")
+                return
+
+        # Announce the talk
         self.bot.set_timer(channel, CHAMPION_SECONDS)
-        self.bot.msg(channel, str("=== Talk %d: %s - %s ===" % (
-            talk["id"], talk["name"], self.talk_url(talk["id"])
-        )))
+        self.msg(channel, "=== Talk %d: %s - %s ===", t.talk_id, t.title, t.review_url)
 
         try:
-            next = self.talks[self.idx+1]
+            self.next = TalkProposal.objects(status='unreviewed', talk_id__ne=t.talk_id)[0]
         except IndexError:
             pass
         else:
-            self.bot.msg(channel, "(%s will be next)" % self.talk_url(next['id']))
+            self.msg(channel, "(%s will be next)", self.next.review_url)
 
-        self.bot.msg(channel, "If you are (a/the) champion for #%s, or "
+        self.msg(channel, "If you are (a/the) champion for #%s, or "
             "willing to champion the it, please say 'me'. Then, please type a succinct argument for "
-            "inclusion of this talk. (2 Minutes). Say 'done' when you are finished." % talk['id'])
+            "inclusion of this talk. (2 Minutes). Say 'done' when you are finished.", t.id)
 
     def handle_debate(self, channel):
         self.bot.set_timer(channel, DEBATE_SECONDS)
-        talk = self.talks[self.idx]
-        self.bot.msg(channel, "=== General Debate (3 minutes) for Talk: #%d ===" % (
-            talk["id"]
-        ))
+        self.msg(channel, "=== General Debate (3 minutes) for Talk: #%d ===", self.current.talk_id)
 
     def handle_vote(self, channel):
         self.bot.clear_timer()
         self.current_votes = {}
-        talk = self.talks[self.idx]
-        self.bot.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===" % (
-            talk["id"]
-        ))
-        self.bot.msg(channel, "Please do not speak after voting until we've gotten "
-            "our report.")
+        self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===", self.current.talk_id)
+        self.msg(channel, "Please do not speak after voting until we've gotten our report.")
         self.bot.state_handler = self.handle_user_vote
 
     def handle_user_vote(self, channel, user, message):
@@ -93,10 +81,12 @@ class ReviewBot(BaseBotMode):
         elif message in ("a", "abs", "abstain", "0"):
             self.current_votes[user] = "abstain"
         else:
-            self.bot.msg(channel, "%s: please vote yay, nay, or abstain." % user)
+            self.msg(channel, "%s: please vote yay, nay, or abstain.", user)
 
     def handle_report(self, channel):
-        talk = self.talks[self.idx]
+        if not self.current:
+            return
+
         yay, nay, abstain = 0, 0, 0
         for vote in self.current_votes.itervalues():
             if vote == 'yay':
@@ -105,40 +95,41 @@ class ReviewBot(BaseBotMode):
                 nay += 1
             elif vote == 'abstain':
                 abstain += 1
-        self.bot.msg(channel, "=== Talk Votes on #%s: %s yays, %s nays, %s abstentions ===" % (talk['id'], yay, nay, abstain))
+        self.msg(channel, "=== Talk Votes on #%s: %s yays, %s nays, %s abstentions ===", self.current.talk_id, yay, nay, abstain)
         if yay > nay:
             msg = "The yays have it."
         elif nay > yay:
             msg = "The nays have it."
         elif yay == nay:
             msg = "It's a tie: http://i.imgur.com/Cw3lg.jpg"
-        self.bot.msg(channel, msg)
+        self.msg(channel, msg)
         self.bot.state_handler = None
 
         # Save the votes for posterity
-        self.talks[self.idx]["votes"] = {"yay": yay, "nay": nay, "abstain": abstain}
-        self.save_state()
+        self.current.kittendome_votes = KittendomeVotes(yay=yay, nay=nay, abs=abstain)
+        self.current.save()
 
     def handle_accept(self, channel):
-        self._make_decision(channel, 'accepted', 'talk #{id} accepted, moves on to thunderdome.')
+        self._make_decision(channel, 'accepted', 'talk #%s accepted, moves on to thunderdome.')
 
     def handle_reject(self, channel):
-        self._make_decision(channel, 'rejected', 'talk #{id} rejected.')
+        self._make_decision(channel, 'rejected', 'talk #%s rejected.')
 
     def handle_poster(self, channel):
-        self._make_decision(channel, 'poster', 'talk #{id} rejected; suggest re-submission as poster.')
+        self._make_decision(channel, 'poster', 'talk #%s rejected; suggest re-submission as poster.')
 
-    def handle_table(self, channel):
-        self._make_decision(channel, 'tabled', 'talk #{id} tabled, will be reviewed at a future meeting.')
+    def handle_hold(self, channel):
+        self._make_decision(channel, 'hold', 'talk #%s put on hold, will be reviewed at a future meeting.')
 
     def _make_decision(self, channel, decision, message):
         self.bot.clear_timer()
-        talk = self.talks[self.idx]
-        self.bot.msg(channel, "=== Chair decision: %s ===" % message.format(**talk))
-        self.talks[self.idx]["decision"] = decision
-        self.save_state()
+        if not self.current:
+            return
+        self.msg(channel, "=== Chair decision: %s ===" % message, self.current.talk_id)
+        self.current.status = decision
+        self.current.save()
 
     def handle_rules(self, channel):
         """Remind participants where they can find the rules."""
-        self.bot.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
-        self.bot.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
+        self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
+        self.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
