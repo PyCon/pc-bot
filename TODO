@@ -1,6 +1,5 @@
 In rough priority order
 
-* Add facility to send every message to a Mode, for logging &c.
 * Review: while debating a talk, log to TalkProposal.debate_transcript
   (should probably turn that field into a list so we can append to it)
 * Deploy to Heroku. Big question: security - if I can just /nick jacobkm we

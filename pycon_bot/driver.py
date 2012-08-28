@@ -132,6 +132,11 @@ class PyConBot(irc.IRCClient):
         """
         user = user.split("!")[0]
 
+        # Modes can define a log_message function which'll be called for each
+        # message, command or not. This lets modes do logging.
+        if hasattr(self.mode, 'log_message'):
+            self.mode.log_message(user, channel, message)
+
         # Some times - voting - we want to record every command. In those cases,
         # the botmode will set state_handler and we'll call that. Othwewise,
         # we only care about ,-prefixed commands.
@@ -158,6 +163,12 @@ class PyConBot(irc.IRCClient):
             return
 
         action(channel, *command_args)
+
+    def msg(self, channel, message):
+        # Make sure things I say go into the transcript, too.
+        if hasattr(self.mode, 'log_message'):
+            self.mode.log_message(self.nickname, channel, message)
+        irc.IRCClient.msg(self, channel, message)  # Scumbag old-style class.
 
 class PyConBotFactory(protocol.ClientFactory):
     protocol = PyConBot
