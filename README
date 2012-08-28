@@ -47,3 +47,16 @@ Some brief notes on how all the bits fit together:
   `pycon_bot.driver.PyConBot.handle_mode`. Giving invalid modes fails in
   predictable ways, and since it imports arbitrary code you probably want to
   be careful about where you run this and who gets SU!
+
+Running IN THE CLOUDS!
+======================
+
+You can run this bad boy on Heroku::
+
+    heroku create <appname>
+    git push heroku master
+    heroku config:set MONGO_DSN=...
+    heroku config:set PYCONBOT_SUPERUSERS=me,myself,andI
+    heroku ps:scale web=0 irc=1
+
+Then to change code just do the standard `git push heroku master`.
