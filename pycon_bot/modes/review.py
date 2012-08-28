@@ -1,3 +1,4 @@
+import datetime
 from .base import BaseBotMode
 from ..models import TalkProposal, KittendomeVotes
 
@@ -133,3 +134,10 @@ class ReviewMode(BaseBotMode):
         """Remind participants where they can find the rules."""
         self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
         self.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
+
+    def log_message(self, user, channel, message):
+        """
+        Save a transcript for debate along with each talk.
+        """
+        if self.current:
+            self.current.add_to_transcript(datetime.datetime.now(), user, message)

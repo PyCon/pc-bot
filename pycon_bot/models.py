@@ -28,6 +28,17 @@ class KittendomeVotes(mongoengine.EmbeddedDocument):
     def __unicode__(self):
         return u"%s/%s/%s" % (self.yay, self.nay, self.abstain)
 
+class TranscriptMessage(mongoengine.EmbeddedDocument):
+    """
+    A single IRC message - used for transcripts.
+    """
+    timestamp = mongoengine.DateTimeField()
+    user = mongoengine.StringField()
+    message = mongoengine.StringField()
+
+    def __unicode__(self):
+        return u"[%s] <%s> %s" % (self.timestamp.strftime('%H:%I:%S'), self.user, self.message)
+
 class TalkProposal(mongoengine.Document):
     STATUSES = [
         ('unreviewed',      'Unreviewed'),
@@ -46,7 +57,7 @@ class TalkProposal(mongoengine.Document):
     status = mongoengine.StringField(choices=STATUSES)
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)
-    debate_transcript = mongoengine.StringField()
+    kittendome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
@@ -54,3 +65,10 @@ class TalkProposal(mongoengine.Document):
     @property
     def review_url(self):
         return 'http://us.pycon.org/2013/reviews/review/%s/' % self.talk_id
+
+    def add_to_transcript(self, timestamp, user, message):
+        """
+        Convienience function to append a line to the Kittendome transcript.
+        """
+        t = TranscriptMessage(timestamp=timestamp, user=user, message=message)
+        TalkProposal.objects(id=self.id).update_one(push__kittendome_transcript=t)
