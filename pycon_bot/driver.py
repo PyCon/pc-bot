@@ -5,23 +5,20 @@ that the bot can be switched among different running modes without restarting.
 """
 
 import os
+import re
 import importlib
 from twisted.internet import defer, protocol, reactor
 from twisted.python import log
 from twisted.words.protocols import irc
 
 class PyConBot(irc.IRCClient):
-    accepted_users = ["Alex_Gaynor", "VanL", "tlesher", "jacobkm"]
-
     def __init__(self):
         self.state_handler = None
         self._namescallback = {}
         self.timer = None
         self.mode = None
-
-        # Would be nice for this to be an argument instead of reading from env
-        # directly. Dunno how else that'd work with Twisted's indirection though.
-        self.superusers = set(os.environ.get('PYCONBOT_SUPERUSERS', '').split(','))
+        self.potential_superusers = os.environ.get('PYCONBOT_SUPERUSERS', '').split(',')
+        self.superusers = set()
 
     #
     # "Public" API - stuff to be called by drivers.
@@ -69,6 +66,8 @@ class PyConBot(irc.IRCClient):
         """
         Handle switching modes.
         """
+        self.check_auth()
+
         if not args:
             mname = (self.mode.__class__.__name__ if self.mode else "(none)")
             self.msg(channel, "Current mode: %s" % mname)
@@ -92,6 +91,41 @@ class PyConBot(irc.IRCClient):
     #
     # Internals
     #
+
+    # Auth.
+
+    def check_auth(self):
+        """
+        Check that everyone in set as a superuser in the env is actually
+        logged in (and not spoofing) by asking NickServ. This resets the
+        superuser list each time it's called.
+
+        NickServ will respond by sending a NOTICE (*not* a PRIVMSG), which
+        gets picked up by the callback below, see that.
+        """
+        for username in self.potential_superusers:
+            self.msg('NickServ', 'ACC %s' % username)
+
+    def noticed(self, user, channel, message):
+        # Only pay attention to ACC responses from NickServ
+        log.msg(' '.join((user, channel, message)))
+        user = user.split('!')[0]
+        if channel != self.nickname or user != 'NickServ':
+            return
+        try:
+            username, acc, status = message.split()[0:3]
+        except ValueError:
+            return
+        if acc != 'ACC':
+            return
+
+        # Now add or remove superusers depending on the response. A code of "3"
+        # means the user's identiied with services, so if they're in the allowed
+        # SUs and NickServ gives us a "3", then that user is auth'd.
+        if username in self.potential_superusers and status == '3':
+            self.superusers.add(username)
+        elif username in self.superusers and status != '3':
+            self.superusers.discard(username)
 
     # Support functions for the NAMES command.
 
@@ -121,15 +155,20 @@ class PyConBot(irc.IRCClient):
         log.msg("Joined %s" % channel)
         self.msg(channel, "Hello denizens of %s, I am your god." % channel)
         self.msg(channel, "To contribute to me: https://github.com/alex/THUNDERDOME-BOT")
+        self.check_auth()
 
     def privmsg(self, user, channel, message):
         """
-        Called whenever a message goes into a channel.
+        Called whenever a message is recived.
 
         if the message starts with ",<cmd>", then dispatch to a `handle_<cmd>`
         function, either on self or on the bot mode object, but only if the
         user is a superuser.
         """
+        # Ignore private messages.
+        if not channel.startswith('#'):
+            return
+
         user = user.split("!")[0]
 
         # Modes can define a log_message function which'll be called for each
@@ -166,7 +205,7 @@ class PyConBot(irc.IRCClient):
 
     def msg(self, channel, message):
         # Make sure things I say go into the transcript, too.
-        if hasattr(self.mode, 'log_message'):
+        if channel.startswith('#') and hasattr(self.mode, 'log_message'):
             self.mode.log_message(self.nickname, channel, message)
         irc.IRCClient.msg(self, channel, message)  # Scumbag old-style class.
 
