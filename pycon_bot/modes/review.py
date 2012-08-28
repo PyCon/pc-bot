@@ -60,7 +60,7 @@ class ReviewMode(BaseBotMode):
 
         self.msg(channel, "If you are (a/the) champion for #%s, or "
             "willing to champion the it, please say 'me'. Then, please type a succinct argument for "
-            "inclusion of this talk. (2 Minutes). Say 'done' when you are finished.", t.id)
+            "inclusion of this talk. (2 Minutes). Say 'done' when you are finished.", t.talk_id)
 
     def handle_debate(self, channel):
         self.bot.set_timer(channel, DEBATE_SECONDS)
