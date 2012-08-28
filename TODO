@@ -2,7 +2,6 @@ In rough priority order
 
 * Deploy to Heroku. Big question: security - if I can just /nick jacobkm we
   can't leave this running 24x7.
-* Make scripts/report.py report on a particular Meeting.
 * Add a todo object and a ,todo command to record action items during each
   meeting (should this be ReviewMode-specific, or global?)
 * Add an "edit" mode for messing with talk data. Alternatively, spin up
