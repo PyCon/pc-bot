@@ -1,6 +1,6 @@
 import datetime
 from .base import BaseBotMode
-from ..models import TalkProposal, KittendomeVotes
+from ..models import TalkProposal, KittendomeVotes, Meeting
 
 CHAMPION_SECONDS = 2
 DEBATE_SECONDS = 3
@@ -11,6 +11,7 @@ class ReviewMode(BaseBotMode):
         super(ReviewMode, self).__init__(bot)
         self.next = None
         self.current = None
+        self.meeting = None
 
     def handle_start(self, channel):
         try:
@@ -18,7 +19,14 @@ class ReviewMode(BaseBotMode):
         except IndexError:
             self.msg(channel, "Out of talks!")
             return
-        self.msg(channel, '=== Ready. Next talk will be #%s ===', self.next.talk_id)
+        self.meeting = Meeting.objects.create(start=datetime.datetime.now())
+        self.msg(channel, '=== Meeting #%s started. Next talk will be #%s ===', self.meeting.number, self.next.talk_id)
+
+    def handle_end(self, channel):
+        self.msg(channel, "=== Th-th-th-that's all folks! ===")
+        self.meeting.end = datetime.datetime.now()
+        self.meeting.save()
+        self.meeting = None
 
     def handle_goto(self, channel, talk_id):
         try:
@@ -129,6 +137,8 @@ class ReviewMode(BaseBotMode):
         self.msg(channel, "=== Chair decision: %s ===" % message, self.current.talk_id)
         self.current.status = decision
         self.current.save()
+        if self.meeting:
+            Meeting.objects(id=self.meeting.id).update_one(push__talks_decided=self.current)
 
     def handle_rules(self, channel):
         """Remind participants where they can find the rules."""
@@ -139,5 +149,7 @@ class ReviewMode(BaseBotMode):
         """
         Save a transcript for debate along with each talk.
         """
+        if self.meeting:
+            self.meeting.add_to_transcript(datetime.datetime.now(), user, message)
         if self.current:
             self.current.add_to_transcript(datetime.datetime.now(), user, message)

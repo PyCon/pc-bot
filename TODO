@@ -2,9 +2,6 @@ In rough priority order
 
 * Deploy to Heroku. Big question: security - if I can just /nick jacobkm we
   can't leave this running 24x7.
-* Add a "Meeting" object so we can record start/stop times, attendance, talks
-  reviewed during each session, and also a complete transcript of the meeting.
-  ,start starts a new meeting, ,end ends the meeting.
 * Make scripts/report.py report on a particular Meeting.
 * Add a todo object and a ,todo command to record action items during each
   meeting (should this be ReviewMode-specific, or global?)

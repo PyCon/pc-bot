@@ -72,3 +72,18 @@ class TalkProposal(mongoengine.Document):
         """
         t = TranscriptMessage(timestamp=timestamp, user=user, message=message)
         TalkProposal.objects(id=self.id).update_one(push__kittendome_transcript=t)
+
+class Meeting(mongoengine.Document):
+    """
+    Records details about a meeting - when it starts/stops, which talks were
+    debated, and the complete meeting transcript.
+    """
+    number = mongoengine.SequenceField()
+    start = mongoengine.DateTimeField()
+    end = mongoengine.DateTimeField()
+    talks_decided = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
+    transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
+
+    def add_to_transcript(self, timestamp, user, message):
+        t = TranscriptMessage(timestamp=timestamp, user=user, message=message)
+        Meeting.objects(id=self.id).update_one(push__transcript=t)
