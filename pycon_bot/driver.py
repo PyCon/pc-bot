@@ -108,7 +108,6 @@ class PyConBot(irc.IRCClient):
 
     def noticed(self, user, channel, message):
         # Only pay attention to ACC responses from NickServ
-        log.msg(' '.join((user, channel, message)))
         user = user.split('!')[0]
         if channel != self.nickname or user != 'NickServ':
             return
