@@ -2,8 +2,8 @@ import datetime
 from .base import BaseBotMode
 from ..models import TalkProposal, KittendomeVotes, Meeting
 
-CHAMPION_SECONDS = 2
-DEBATE_SECONDS = 3
+CHAMPION_SECONDS = 2*60
+DEBATE_SECONDS = 3*60
 
 class ReviewMode(BaseBotMode):
 
