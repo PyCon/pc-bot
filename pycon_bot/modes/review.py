@@ -119,7 +119,7 @@ class ReviewMode(BaseBotMode):
         self.current.save()
 
     def handle_accept(self, channel):
-        self._make_decision(channel, 'accepted', 'talk #%s accepted, moves on to thunderdome.')
+        self._make_decision(channel, 'thunderdome', 'talk #%s accepted, moves on to thunderdome.')
 
     def handle_reject(self, channel):
         self._make_decision(channel, 'rejected', 'talk #%s rejected.')
