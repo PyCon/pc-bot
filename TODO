@@ -1,10 +1,14 @@
 In rough priority order
 
+* Something's broken about the on-deck display, it's not going in the
+  same order as the agenda.
+* The initial "intros" should be handled by the bot so that we know who's
+  here and who's not. then handle "who is" requests
+  via PM.
+* ",start X "should re-start meeting X (in case the bot has to reboot)
 * Add a todo object and a ,todo command to record action items during each
   meeting (should this be ReviewMode-specific, or global?)
 * Add an "edit" mode for messing with talk data. Alternatively, spin up
   mongonaut or something similar.
 * Port over thunder mode (this is a big one, also requires more models and
   scripts to handle tdome groupings)
-* Ability for the bot to track people's names, and then handle "who is" requests
-  via PM.
