@@ -6,3 +6,5 @@ In rough priority order
   mongonaut or something similar.
 * Port over thunder mode (this is a big one, also requires more models and
   scripts to handle tdome groupings)
+* Ability for the bot to track people's names, and then handle "who is" requests
+  via PM.
