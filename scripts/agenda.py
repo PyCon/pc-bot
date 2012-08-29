@@ -19,7 +19,7 @@ if not pycon_bot.mongo.connect(args.dsn):
     sys.exit(1)
 
 nr = args.num
-for p in TalkProposal.objects(status='unreviewed'):
+for p in TalkProposal.objects(status='unreviewed').order_by('talk_id'):
     if p.site_votes.total >= 3:
         print '%s - %s' % (p.review_url, p.title)
         nr -= 1

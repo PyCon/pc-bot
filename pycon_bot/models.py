@@ -66,6 +66,10 @@ class TalkProposal(mongoengine.Document):
     def review_url(self):
         return 'http://us.pycon.org/2013/reviews/review/%s/' % self.talk_id
 
+    @classmethod
+    def next_unreviewed_talk(cls):
+        return cls.objects(status='unreviewed').order_by('talk_id')[0]
+
     def add_to_transcript(self, timestamp, user, message):
         """
         Convienience function to append a line to the Kittendome transcript.

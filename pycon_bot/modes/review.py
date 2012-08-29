@@ -15,7 +15,7 @@ class ReviewMode(BaseBotMode):
 
     def handle_start(self, channel):
         try:
-            self.next = TalkProposal.objects(status='unreviewed')[0]
+            self.next = TalkProposal.next_unreviewed_talk()
         except IndexError:
             self.msg(channel, "Out of talks!")
             return
@@ -50,7 +50,7 @@ class ReviewMode(BaseBotMode):
             self.next = None
         else:
             try:
-                t = self.current = TalkProposal.objects(status='unreviewed')[0]
+                t = self.current = TalkProposal.next_unreviewed_talk()
             except IndexError:
                 self.msg(channel, "Out of talks!")
                 return
