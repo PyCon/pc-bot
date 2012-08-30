@@ -1,8 +1,8 @@
 Tools for PyCon-PC IRC meetings
 ===============================
 
-Primarily this runs some IRC bots (see `pycon_bot`), but there are also scripts
-for ingest and reporting on review data (in `scripts`).
+Helpful tools for running the PyCon Program Commitee process. This runs and IRC
+bot we use during meetings, and a web interface to the review data.
 
 Setup
 =====
@@ -17,11 +17,22 @@ Then, rhe best way to configure this thing is through some environ variables
     export MONGO_DSN=mongodb://...
     export PYCONBOT_SUPERUSERS=list,of,irc,superusers
 
+If you want to protect the web interface with (basic) auth::
+
+    export PYCONBOT_BASIC_AUTH=username:password
+
+(Yeah it's kinda janky. What. Ev. Er.)
+
+The web app can be run in debug mode::
+
+    export PYCONBOT_DEBUG=1
+
 Then to run the bot:
 
     python runbot.py
 
-(See the `--help` for connecting to other channels).
+This runs both the IRC client and the web server. See the `--help` for
+connecting to other channels, listening on other HTTP ports, etc.
 
 The scripts need to be able to import stuff from `pycon_bot`, so I usually
 
@@ -35,9 +46,9 @@ Architecture
 
 Some brief notes on how all the bits fit together:
 
-* `runbot.py` launches a "driver" (`pycon_bot.driver.PyConBot`). This bot
-  doesn't do much itself besides provide some utilities. Instead, almost
-  all bot commands get delegated down to a "mode" object.
+* `runbot.py` launches an IRC "driver" (`pycon_bot.driver.PyConBot`). This bot
+  doesn't do much itself besides provide some utilities. Instead, almost all
+  bot commands get delegated down to a "mode" object.
 
 * A "mode" lives in `pycon_bot.modes.<whatever>` It should subclass
   `pycon_bot.modes.base.BaseBotMode`, and the mode needs to be named, e.g.,
@@ -48,6 +59,9 @@ Some brief notes on how all the bits fit together:
   predictable ways, and since it imports arbitrary code you probably want to
   be careful about where you run this and who gets SU!
 
+* `runbot.py` also launches a web app, written using Flask. See
+  `pycon_bot.web.app`.
+
 Running IN THE CLOUDS!
 ======================
 
@@ -55,8 +69,8 @@ You can run this bad boy on Heroku::
 
     heroku create <appname>
     git push heroku master
-    heroku config:set MONGO_DSN=...
+    heroku config:set MONGO_DSN=mongodb://...
     heroku config:set PYCONBOT_SUPERUSERS=me,myself,andI
-    heroku ps:scale web=0 irc=1
+    heroku config:set PYCONBOT_BASIC_AUTH=username:password
 
 Then to change code just do the standard `git push heroku master`.
