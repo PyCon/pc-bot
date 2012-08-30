@@ -60,11 +60,10 @@ class ReviewMode(BaseBotMode):
         self.msg(channel, "=== Talk %d: %s - %s ===", t.talk_id, t.title, t.review_url)
 
         try:
-            self.next = TalkProposal.objects(status='unreviewed', talk_id__ne=t.talk_id)[0]
+            self.next = TalkProposal.next_unreviewed_talk(after=t)
+            self.msg(channel, "(%s will be next)", self.next.review_url)
         except IndexError:
             pass
-        else:
-            self.msg(channel, "(%s will be next)", self.next.review_url)
 
         self.msg(channel, "If you are (a/the) champion for #%s, or "
             "willing to champion the it, please say 'me'. Then, please type a succinct argument for "

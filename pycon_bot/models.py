@@ -67,8 +67,11 @@ class TalkProposal(mongoengine.Document):
         return 'http://us.pycon.org/2013/reviews/review/%s/' % self.talk_id
 
     @classmethod
-    def next_unreviewed_talk(cls):
-        return cls.objects(status='unreviewed').order_by('talk_id')[0]
+    def next_unreviewed_talk(cls, after=None):
+        qs = cls.objects(status='unreviewed').order_by('talk_id')
+        if after:
+            qs = qs.filter(id__ne=after.id)
+        return qs[0]
 
     def add_to_transcript(self, timestamp, user, message):
         """

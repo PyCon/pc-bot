@@ -1,7 +1,5 @@
 In rough priority order
 
-* Something's broken about the on-deck display, it's not going in the
-  same order as the agenda.
 * The initial "intros" should be handled by the bot so that we know who's
   here and who's not. then handle "who is" requests
   via PM.
