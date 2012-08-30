@@ -8,7 +8,7 @@
     <h3>#{{ talk.talk_id }} - {{ talk.title }}</h3>
     <dl class="dl-horizontal">
       <dt>Status:</dt>
-      <dd>{{ talk.status }}</dd>
+      <dd>{{ talk.get_status_display() }}</dd>
       <dt>K'dome votes:</dt>
       <dd>{{ talk.kittendome_votes|default("-") }}</dd>
     </dl>
