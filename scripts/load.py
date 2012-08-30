@@ -17,6 +17,7 @@ p = argparse.ArgumentParser()
 p.add_argument('csvfile')
 p.add_argument('--dsn')
 p.add_argument('--clear', action='store_true', default=False)
+p.add_argument('--dry-run', action='store_true', default=False)
 p.add_argument('-v', '--verbose', action='store_true', default=False)
 args = p.parse_args()
 if not pycon_bot.mongo.connect(args.dsn):
@@ -27,12 +28,21 @@ if args.clear:
     TalkProposal.objects.delete()
 
 for r in csv.DictReader(open(args.csvfile)):
-    talk, created = TalkProposal.objects.get_or_create(talk_id=int(r['#']))
+    # We're not using get_or_create so that we can support --dry-run.
+    try:
+        talk = TalkProposal.objects.get(talk_id=int(r['#']))
+        created = False
+    except TalkProposal.DoesNotExist:
+        talk = TalkProposal(talk_id=int(r['#']), status='unreviewed')
+        created = True
+
     talk.category = r['Category']
     talk.speaker, talk.title = re.split(r'\s{4,}', r['Speaker / Title'], 1)
-    if created:
-        talk.status = 'unreviewed'
+
     talk.site_votes = SiteVotes(plus_1=r['+1'], plus_0=r['+0'], minus_0=r['-0'], minus_1=r['-1'])
-    talk.save()
+
+    if not args.dry_run:
+        talk.save()
+
     if args.verbose:
-        print talk.talk_id, talk.title
+        print "%s #%s - %s" % ("Created" if created else "Updated", talk.talk_id, talk.title)
