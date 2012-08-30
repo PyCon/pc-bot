@@ -34,6 +34,14 @@ class ReviewMode(BaseBotMode):
         self.meeting.save()
         self.meeting = None
 
+    def handle_agenda(self, channel, ntalks=10):
+        try:
+            ntalks = int(ntalks)
+        except ValueError:
+            return
+        next = TalkProposal.objects.order_by('talk_id')[:ntalks]
+        self.msg(channel, "Next talks: %s.", ", ".join(str(t.talk_id) for t in next))
+
     def handle_goto(self, channel, talk_id):
         try:
             self.next = TalkProposal.objects.get(talk_id=talk_id)
