@@ -9,11 +9,11 @@ from pycon_bot import mongo
 from pycon_bot.models import Meeting, TalkProposal
 
 app = flask.Flask(__name__)
-app.debug = 'DEBUG' in os.environ
+app.debug = 'PYCONBOT_DEBUG' in os.environ
 Bootstrap(app)
 mongo.connect()
-if 'PCBOT_AUTH' in os.environ:
-    users = [os.environ['PCBOT_AUTH'].split(':', 2)]
+if 'PYCONBOT_BASIC_AUTH' in os.environ:
+    users = [os.environ['PYCONBOT_BASIC_AUTH'].split(':', 2)]
     auth = barrel.cooper.basicauth(users=users, realm='PCbot')
     app.wsgi_app = auth(app.wsgi_app)
 
