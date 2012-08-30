@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block title %}
+  PCBot: #{{ talk.talk_id }} - {{ talk.title }}
+{% endblock %}
+
 {% block content %}
     <h3>#{{ talk.talk_id }} - {{ talk.title }}</h3>
     <dl class="dl-horizontal">

@@ -1,5 +1,9 @@
 {% extends "meeting_list.html" %}
 
+{% block title %}
+  PCBot: Meeting #{{ meeting.number }} - {{ meeting.start.strftime('%B %d') }}
+{% endblock %}
+
 {% block content %}
   <h3>Meeting #{{ meeting.number }} - {{ meeting.start.strftime('%B %d') }}</h3>
   <h4>Summary</h4>
