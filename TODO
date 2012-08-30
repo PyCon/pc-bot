@@ -3,7 +3,6 @@ In rough priority order
 * The initial "intros" should be handled by the bot so that we know who's
   here and who's not. then handle "who is" requests
   via PM.
-* ",start X "should re-start meeting X (in case the bot has to reboot)
 * Add a todo object and a ,todo command to record action items during each
   meeting (should this be ReviewMode-specific, or global?)
 * Add an "edit" mode for messing with talk data. Alternatively, spin up

@@ -13,14 +13,20 @@ class ReviewMode(BaseBotMode):
         self.current = None
         self.meeting = None
 
-    def handle_start(self, channel):
+    def handle_start(self, channel, meeting_num=None):
         try:
             self.next = TalkProposal.next_unreviewed_talk()
         except IndexError:
             self.msg(channel, "Out of talks!")
             return
-        self.meeting = Meeting.objects.create(start=datetime.datetime.now())
-        self.msg(channel, '=== Meeting #%s started. Next talk will be #%s ===', self.meeting.number, self.next.talk_id)
+        try:
+            self.meeting = Meeting.objects.get(number=meeting_num)
+            action = "restarted"
+        except Meeting.DoesNotExist:
+            self.meeting = Meeting.objects.create(start=datetime.datetime.now())
+            action = "started"
+        self.msg(channel, '=== Meeting #%s %s. Next talk will be #%s ===',
+                 self.meeting.number, action, self.next.talk_id)
 
     def handle_end(self, channel):
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
