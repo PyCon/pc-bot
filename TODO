@@ -6,9 +6,6 @@ In rough priority order
   here and who's not. then handle "who is" requests
   via PM.
 * ",start X "should re-start meeting X (in case the bot has to reboot)
-* In theory, I should be able to run the web interface and the IRC bot
-  inside the same Twisted reactor -- and this'd save me $35/mo. Figure out
-  how to actually do this.
 * Add a todo object and a ,todo command to record action items during each
   meeting (should this be ReviewMode-specific, or global?)
 * Add an "edit" mode for messing with talk data. Alternatively, spin up
