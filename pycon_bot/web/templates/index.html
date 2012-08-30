@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% macro pct(n) -%}
+  {{ "%.2g"|format(n*100) }}%
+{%- endmacro %}
+
+{% block content %}
+  <h1>Hello.</h1>
+  <p>
+    {{reviewed}}/{{total}} talks reviewed ({{ pct(percent_reviewed) }});
+    {{remaining}} talks remain.
+    {{accepted}} talks accepted ({{ pct(percent_accepted) }});
+    {{rejected}} talks rejected ({{ pct(percent_rejected) }}).
+  <p>
+    {{number_of_meetings}} meetings held so far, on average {{talks_per_meeting}} talks per meeting. In theory, {{meetings_left}} meetings remain.
+{% endblock %}

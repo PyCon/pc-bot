@@ -1,0 +1,7 @@
+.transcript {
+    font: 11px monospace;
+}
+.transcript p {
+    margin: 4px 0;
+    padding: 0;
+}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>#{{ talk.talk_id }} - {{ talk.title }}</h3>
+    <dl class="dl-horizontal">
+      <dt>Status:</dt>
+      <dd>{{ talk.status }}</dd>
+      <dt>K'dome votes:</dt>
+      <dd>{{ talk.kittendome_votes|default("-") }}</dd>
+    </dl>
+    {% if talk.kittendome_transcript %}
+      <h4>Transcript</h4>
+      <div class="transcript">
+        {% for line in talk.kittendome_transcript %}
+          <p class="speaker-{{ line.user }}">{{ line }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+{% endblock %}
