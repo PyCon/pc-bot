@@ -115,7 +115,7 @@ class ReviewMode(BaseBotMode):
         self.bot.state_handler = None
 
         # Save the votes for posterity
-        self.current.kittendome_votes = KittendomeVotes(yay=yay, nay=nay, abs=abstain)
+        self.current.kittendome_votes = KittendomeVotes(yay=yay, nay=nay, abstain=abstain)
         self.current.save()
 
     def handle_accept(self, channel):
