@@ -51,6 +51,3 @@ class BaseBotMode(object):
             else:
                 self.msg(channel, "Everyone voted.")
         self.bot.names(channel).addCallback(names_callback)
-
-    def talk_url(self, talk_id):
-        return "http://us.pycon.org/2012/review/%s/" % talk_id
