@@ -13,7 +13,7 @@ from pycon_bot.models import TalkProposal
 p = argparse.ArgumentParser()
 p.add_argument('--dsn')
 p.add_argument('-n', '--num', type=int, default=10)
-p.add_argument('-o', '--overflow', type=int, default=2)
+p.add_argument('-o', '--overflow', type=int, default=4)
 args = p.parse_args()
 if not pycon_bot.mongo.connect(args.dsn):
     sys.stderr.write("Need to pass --dsn or set env[MONGO_DSN].")
