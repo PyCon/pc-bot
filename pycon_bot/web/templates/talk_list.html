@@ -21,6 +21,9 @@
             <a href="{{ url_for('talk_detail', n=t.talk_id) }}">
               #{{ t.talk_id }} - {{ t.title }}
             </a>
+            <a href="{{ t.review_url }}" class="review-link" title="Proposal details" target="_blank">
+                <i class="icon-share">&nbsp;</i>
+            </a>
           </td>
           <td>{{ t.status }}</td>
           {% with v = t.kittendome_votes %}
@@ -32,4 +35,12 @@
       {% endfor %}
     </tbody>
   </table>
+{% endblock %}
+
+
+{% block bootstrap_js_bottom %}
+  {{ super() }}
+  <script type="text/javascript">
+    $(function() { $(".review-link").tooltip(); });
+  </script>
 {% endblock %}
