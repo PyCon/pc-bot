@@ -37,7 +37,7 @@ class TranscriptMessage(mongoengine.EmbeddedDocument):
     message = mongoengine.StringField()
 
     def __unicode__(self):
-        return u"[%s] <%s> %s" % (self.timestamp.strftime('%H:%I:%S'), self.user, self.message)
+        return u"[%s] <%s> %s" % (self.timestamp.strftime('%H:%M:%S'), self.user, self.message)
 
 class TalkProposal(mongoengine.Document):
     STATUSES = [
