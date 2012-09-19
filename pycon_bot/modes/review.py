@@ -1,9 +1,10 @@
-import datetime
+from __future__ import division
 from .base import BaseBotMode
 from ..models import TalkProposal, KittendomeVotes, Meeting
+import datetime
 
-CHAMPION_SECONDS = 2*60
-DEBATE_SECONDS = 3*60
+CHAMPION_MINUTES = 2
+DEBATE_MINUTES = 3
 
 class ReviewMode(BaseBotMode):
 
@@ -21,7 +22,7 @@ class ReviewMode(BaseBotMode):
             return
         try:
             self.meeting = Meeting.objects.get(number=meeting_num)
-            action = "restarted"
+            action = "resumed"
         except Meeting.DoesNotExist:
             self.meeting = Meeting.objects.create(start=datetime.datetime.now())
             action = "started"
@@ -54,7 +55,11 @@ class ReviewMode(BaseBotMode):
             msg += " Previous vote was %s." % self.next.kittendome_votes
         self.msg(channel, msg)
 
-    def handle_next(self, channel):
+    def handle_next(self, channel, champion_time=CHAMPION_MINUTES):
+        """Move to the next talk, and immediately shift into champion mode."""
+        
+        champion_time = int(float(champion_time) * 60)
+        
         # Clear out the state handler in case we're voting.
         self.bot.state_handler = None
 
@@ -70,7 +75,7 @@ class ReviewMode(BaseBotMode):
                 return
 
         # Announce the talk
-        self.bot.set_timer(channel, CHAMPION_SECONDS)
+        self.bot.set_timer(channel, champion_time)
         self.msg(channel, "=== Talk %d: %s - %s ===", t.talk_id, t.title, t.review_url)
 
         try:
@@ -78,14 +83,51 @@ class ReviewMode(BaseBotMode):
             self.msg(channel, "(%s will be next)", self.next.review_url)
         except IndexError:
             pass
+            
+        # make nice, human readable time text
+        # (even though, in reality, there's no good reason for this ever to not be 2 minutes)
+        champion_time_text = '%d minutes' % (champion_time // 60)
+        if champion_time % 60:
+            champion_time_text += ', %d seconds' % (champion_time % 60)
 
-        self.msg(channel, "If you are (a/the) champion for #%s, or "
-            "willing to champion the it, please say 'me'. Then, please type a succinct argument for "
-            "inclusion of this talk. (2 Minutes). Say 'done' when you are finished.", t.talk_id)
+        # begin the championing process
+        self.msg(channel, ' * * * ')
+        self.msg(channel, 'If you are (a/the) champion for #%s, or '
+            'willing to champion it, please say, "me". Then, please type a succinct argument for '
+            'inclusion of this talk (%s). Say "done" when you are finished.', t.talk_id, champion_time_text)
 
-    def handle_debate(self, channel):
-        self.bot.set_timer(channel, DEBATE_SECONDS)
-        self.msg(channel, "=== General Debate (3 minutes) for Talk: #%d ===", self.current.talk_id)
+    def handle_debate(self, channel, debate_time=DEBATE_MINUTES):
+        """Shift the channel into debate mode, and set the appropriate timer."""
+        
+        # parse out the debate time, and make nice, optimal
+        # human readable text
+        debate_time = int(float(debate_time) * 60)
+        debate_time_text = '%d minutes' % (debate_time // 60)
+        if debate_time % 60:
+            debate_time_text += ', %d seconds' % (debate_time % 60)
+        
+        # actually set the bot timer
+        self.bot.set_timer(channel, debate_time)
+        
+        # now report the shift to debate mode
+        self.msg(channel, "=== General Debate (%s) for Talk: #%d ===", debate_time_text, self.current.talk_id)
+        
+    def handle_extend(self, channel, extend_time=1):
+        """Extend the time on the clock. In reality, this does nothing
+        but set another clock, but it's a useful management tool within meetings."""
+        
+        # what's the human readable extension time?
+        extend_time = int(float(extend_time) * 60)
+        extend_time_text = '%d minutes' % (extend_time // 60)
+        if extend_time % 60:
+            extend_time_text += ', %d seconds' % (extend_time % 60)
+        
+        # clear the timer and set a new one
+        self.bot.clear_timer()
+        self.bot.set_timer(channel, extend_time)
+        
+        # now report the extension
+        self.msg(channel, '=== Extending time by %s. Please continue. ===' % extend_time_text)
 
     def handle_vote(self, channel):
         self.bot.clear_timer()
