@@ -17,6 +17,7 @@ if 'PYCONBOT_BASIC_AUTH' in os.environ:
     auth = barrel.cooper.basicauth(users=users, realm='PCbot')
     app.wsgi_app = auth(app.wsgi_app)
 
+
 @app.route('/')
 def index():
     total = len(TalkProposal.objects)
@@ -40,11 +41,13 @@ def index():
         meetings_left = int(math.ceil(float(remaining) / talks_per_meeting))
     )
 
+
 @app.route('/meetings')
 def meeting_list():
     return flask.render_template('meeting_list.html',
         meetings = Meeting.objects.order_by('number'),
         meeting = None)
+
 
 @app.route('/meetings/<int:n>')
 def meeting_detail(n):
@@ -52,15 +55,18 @@ def meeting_detail(n):
         meetings = Meeting.objects.order_by('number'),
         meeting = get_or_404(Meeting.objects, number=n))
 
+
 @app.route('/talks')
 def talk_list():
     return flask.render_template('talk_list.html',
         talks=TalkProposal.objects.order_by('talk_id'))
 
+
 @app.route('/talks/<int:n>')
 def talk_detail(n):
     return flask.render_template('talk_detail.html',
         talk=get_or_404(TalkProposal.objects, talk_id=n))
+
 
 def get_or_404(qs, *args, **kwargs):
     try:

@@ -14,6 +14,7 @@
       <dt>K'dome votes:</dt>
       <dd>{{ talk.kittendome_votes|default("-") }}</dd>
     </dl>
+    
     {% if talk.kittendome_transcript %}
       <h4>Transcript</h4>
       <div class="transcript">
@@ -22,4 +23,5 @@
         {% endfor %}
       </div>
     {% endif %}
+    
 {% endblock %}

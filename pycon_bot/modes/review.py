@@ -197,6 +197,7 @@ class ReviewMode(BaseBotMode):
 
     def handle_rules(self, channel):
         """Remind participants where they can find the rules."""
+        
         self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
         self.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
 
