@@ -16,10 +16,18 @@
     </dl>
     
     {% if talk.kittendome_transcript %}
-      <h4>Transcript</h4>
+      <h4>Transcripts</h4>
       <div class="transcript">
-        {% for line in talk.kittendome_transcript %}
-          <p class="speaker-{{ line.user }}">{{ line }}</p>
+        {% for meeting in transcripts %}
+          {% for line in meeting %}
+            {% if loop.first %}
+              <p class="meeting-date">{{ line.timestamp.strftime('%B %d, %Y') }}</p>
+            {% endif %}
+          
+            <p class="speaker-{{ line.user }}">{{ line }}</p>
+          {% endfor %}
+          
+          {% if not loop.last %}<hr />{% endif %}
         {% endfor %}
       </div>
     {% endif %}
