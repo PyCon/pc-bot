@@ -8,7 +8,7 @@
     <h3>#{{ talk.talk_id }} - {{ talk.title }}</h3>
     <dl class="dl-horizontal">
       <dt>Details:</dt>
-      <dd><a href="{{ talk.review_url }}"><i class="icon-share"></i> view proposal</a></dd>
+      <dd><a href="{{ talk.review_url }}" target="_blank"><i class="icon-share"></i> view proposal</a></dd>
       <dt>Status:</dt>
       <dd>{{ talk.get_status_display() }}</dd>
       <dt>K'dome votes:</dt>
