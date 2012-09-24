@@ -35,13 +35,28 @@ class ReviewMode(BaseBotMode):
         self.meeting.save()
         self.meeting = None
 
-    def handle_agenda(self, channel, ntalks=10):
+    def handle_agenda(self, channel, talk_count=12):
         try:
-            ntalks = int(ntalks)
+            talk_count = int(talk_count)
         except ValueError:
             return
-        next = TalkProposal.objects.order_by('talk_id')[:ntalks]
-        self.msg(channel, "Next talks: %s.", ", ".join(str(t.talk_id) for t in next))
+            
+        # get the list of talks
+        talks = TalkProposal.objects.filter(status='unreviewed').order_by('talk_id')[0:talk_count]
+        
+        # sanity check: do we have any talks up to bat at all?
+        if not talks:
+            self.msg(channel, 'There are no talks on the agenda. Clearly, we shouldn\'t be here.')
+            return
+            
+        # okay, show the talks coming next
+        next_up = talks[0]
+        subsequent_talks = talks[1:talk_count]
+        
+        # print out the list to the channel
+        self.msg(channel, 'The next talk on the table is:')
+        self.msg(channel, next_up.review_url)
+        self.msg(channel, 'Subsequent talks will be: %s.' % ", ".join([str(t.talk_id) for t in subsequent_talks]))
 
     def handle_goto(self, channel, talk_id):
         try:
@@ -92,7 +107,7 @@ class ReviewMode(BaseBotMode):
 
         # begin the championing process
         self.msg(channel, ' * * * ')
-        self.msg(channel, 'If you are (a/the) champion for #%s, or '
+        self.msg(channel, 'If you are a champion for #%s, or '
             'willing to champion it, please say, "me". Then, please type a succinct argument for '
             'inclusion of this talk (%s). Say "done" when you are finished.', t.talk_id, champion_time_text)
 
@@ -118,10 +133,15 @@ class ReviewMode(BaseBotMode):
         
         # what's the human readable extension time?
         extend_time = int(float(extend_time) * 60)
-        extend_time_text = '%d minutes' % (extend_time // 60)
+        extend_time_text = '%d minute%s' % (
+            extend_time // 60,
+            '' if extend_time == 60 else 's',
+        )
+        
+        # add seconds if appropriate
         if extend_time % 60:
             extend_time_text += ', %d seconds' % (extend_time % 60)
-        
+                
         # clear the timer and set a new one
         self.bot.clear_timer()
         self.bot.set_timer(channel, extend_time)
