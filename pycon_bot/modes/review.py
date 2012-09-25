@@ -34,6 +34,17 @@ class ReviewMode(BaseBotMode):
         self.meeting.end = datetime.now()
         self.meeting.save()
         self.meeting = None
+        
+    def handle_current(self, channel):
+        """Output to the channel the current talk we're on."""
+        
+        # sanity check: are we on a talk at all?
+        if not self.current:
+            self.msg(channel, 'There is no current talk in the system.')
+            return
+            
+        # okay, there is a current talk; show it
+        self.msg(channel, 'We are currently reviewing %s.' % self.current.review_url)
 
     def handle_agenda(self, channel, talk_count=12):
         try:
