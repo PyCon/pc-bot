@@ -13,6 +13,7 @@ class ReviewMode(BaseBotMode):
         self.next = None
         self.current = None
         self.meeting = None
+        self.segment = None
 
     def handle_start(self, channel, meeting_num=None):
         try:
@@ -39,12 +40,18 @@ class ReviewMode(BaseBotMode):
         """Output to the channel the current talk we're on."""
         
         # sanity check: are we on a talk at all?
-        if not self.current:
+        if not self.current or not self.segment:
             self.msg(channel, 'There is no current talk in the system.')
             return
             
         # okay, there is a current talk; show it
-        self.msg(channel, 'We are currently reviewing %s.' % self.current.review_url)
+        self.msg(channel, 'We are reviewing %s.' % self.current.review_url)
+        if self.segment == 'champion':
+           self.msg(channel, 'Currently, the talk is being championed. Please refrain from speaking until debate.')
+        elif self.segment == 'debate':
+            self.msg(channel, 'Currently, we are in debate. Feel free to participate.')
+        elif self.segment == 'voting':
+            self.msg(channel, 'Currently, we are voting.')
 
     def handle_agenda(self, channel, talk_count=12):
         try:
@@ -121,6 +128,9 @@ class ReviewMode(BaseBotMode):
         self.msg(channel, 'If you are a champion for #%s, or '
             'willing to champion it, please say, "me". Then, please type a succinct argument for '
             'inclusion of this talk (%s). Say "done" when you are finished.', t.talk_id, champion_time_text)
+            
+        # tell the bot that we are currently in champion mode
+        self.segment = 'champion'
 
     def handle_debate(self, channel, debate_time=DEBATE_MINUTES):
         """Shift the channel into debate mode, and set the appropriate timer."""
@@ -136,6 +146,7 @@ class ReviewMode(BaseBotMode):
         self.bot.set_timer(channel, debate_time)
         
         # now report the shift to debate mode
+        self.segment = 'debate'
         self.msg(channel, "=== General Debate (%s) for Talk: #%d ===", debate_time_text, self.current.talk_id)
         
     def handle_extend(self, channel, extend_time=1):
@@ -165,6 +176,7 @@ class ReviewMode(BaseBotMode):
         self.current_votes = {}
         self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===", self.current.talk_id)
         self.msg(channel, "Please do not speak after voting until we've gotten our report.")
+        self.segment = 'voting'
         self.bot.state_handler = self.handle_user_vote
 
     def handle_user_vote(self, channel, user, message):
@@ -203,6 +215,10 @@ class ReviewMode(BaseBotMode):
         # Save the votes for posterity
         self.current.kittendome_votes = KittendomeVotes(yay=yay, nay=nay, abstain=abstain)
         self.current.save()
+        
+        # tell the system that we're not in any segment
+        # (used only for reports from ,current right now)
+        self.segment = None
 
     def handle_accept(self, channel):
         self._make_decision(channel, 'thunderdome', 'talk #%s accepted, moves on to thunderdome.')
