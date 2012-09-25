@@ -152,7 +152,7 @@ class PyConBot(irc.IRCClient):
 
     def joined(self, channel):
         log.msg("Joined %s" % channel)
-        self.msg(channel, "Hello denizens of %s, I am your god." % channel)
+        self.msg(channel, "Hello, denizens of %s, I am your god." % channel)
         self.msg(channel, "To contribute to me: https://github.com/alex/THUNDERDOME-BOT")
         self.check_auth()
 
