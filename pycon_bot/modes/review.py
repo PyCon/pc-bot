@@ -1,7 +1,7 @@
 from __future__ import division
 from .base import BaseBotMode
 from ..models import TalkProposal, KittendomeVotes, Meeting
-import datetime
+from datetime import datetime
 
 CHAMPION_MINUTES = 2
 DEBATE_MINUTES = 3
@@ -24,14 +24,14 @@ class ReviewMode(BaseBotMode):
             self.meeting = Meeting.objects.get(number=meeting_num)
             action = "resumed"
         except Meeting.DoesNotExist:
-            self.meeting = Meeting.objects.create(start=datetime.datetime.now())
+            self.meeting = Meeting.objects.create(start=datetime.now())
             action = "started"
         self.msg(channel, '=== Meeting #%s %s. Next talk will be #%s ===',
                  self.meeting.number, action, self.next.talk_id)
 
     def handle_end(self, channel):
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
-        self.meeting.end = datetime.datetime.now()
+        self.meeting.end = datetime.now()
         self.meeting.save()
         self.meeting = None
 
@@ -158,11 +158,11 @@ class ReviewMode(BaseBotMode):
 
     def handle_user_vote(self, channel, user, message):
         message = message.strip().lower()
-        if message in ("y", "yes", "yay", "yea", "+1"):
-            self.current_votes[user] = "yay"
-        elif message in ("n", "no", "nay", "-1"):
-            self.current_votes[user] = "nay"
-        elif message in ("a", "abs", "abstain", "0"):
+        if message == 'y' or message.startswith(('yes', 'yay', 'yea', 'aye', '+1')):
+            self.current_votes[user] = 'yay'
+        elif message == 'n' or message.startswith(('no', 'nay', '-1')):
+            self.current_votes[user] = 'nay'
+        elif message == 'a' or message.startswith(('abs', 'abstain', '0')):
             self.current_votes[user] = "abstain"
         else:
             self.msg(channel, "%s: please vote yay, nay, or abstain.", user)
@@ -226,6 +226,6 @@ class ReviewMode(BaseBotMode):
         Save a transcript for debate along with each talk.
         """
         if self.meeting:
-            self.meeting.add_to_transcript(datetime.datetime.now(), user, message)
+            self.meeting.add_to_transcript(datetime.now(), user, message)
         if self.current:
-            self.current.add_to_transcript(datetime.datetime.now(), user, message)
+            self.current.add_to_transcript(datetime.now(), user, message)
