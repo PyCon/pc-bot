@@ -162,7 +162,7 @@ class ReviewMode(BaseBotMode):
                 
             # if this is the championing user, check to see if he's done
             if self.champions and user == self.champions[0]:
-                if message.endswith(('done', 'done.')):
+                if message.rstrip().endswith(('done', 'done.')):
                     # okay, this person is done. pop him off the champion list
                     self.msg(channel, '%s: Thank you.' % user)
                     
