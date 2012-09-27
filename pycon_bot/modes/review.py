@@ -3,6 +3,7 @@ from .base import BaseBotMode
 from ..models import TalkProposal, KittendomeVotes, Meeting
 from datetime import datetime
 
+CHAMPION_CALL_SECONDS = 30
 CHAMPION_MINUTES = 2
 DEBATE_MINUTES = 3
 
@@ -10,10 +11,17 @@ class ReviewMode(BaseBotMode):
 
     def __init__(self, bot):
         super(ReviewMode, self).__init__(bot)
+        
+        # the current talks
         self.next = None
         self.current = None
+        
+        # the current meeting
         self.meeting = None
+        
+        # where we are in the review process for the current talk on the plate
         self.segment = None
+        self.champions = []
 
     def handle_start(self, channel, meeting_num=None):
         try:
@@ -88,14 +96,9 @@ class ReviewMode(BaseBotMode):
             msg += " Previous vote was %s." % self.next.kittendome_votes
         self.msg(channel, msg)
 
-    def handle_next(self, channel, champion_time=CHAMPION_MINUTES):
+    def handle_next(self, channel):
         """Move to the next talk, and immediately shift into champion mode."""
         
-        champion_time = int(float(champion_time) * 60)
-        
-        # Clear out the state handler in case we're voting.
-        self.bot.state_handler = None
-
         # Figure out which talk is up now.
         if self.next:
             t = self.current = self.next
@@ -106,9 +109,12 @@ class ReviewMode(BaseBotMode):
             except IndexError:
                 self.msg(channel, "Out of talks!")
                 return
+                
+        # this is a new talk; no champions have declared themselves
+        self.champions = []
 
         # Announce the talk
-        self.bot.set_timer(channel, champion_time)
+        self.bot.set_timer(channel, CHAMPION_CALL_SECONDS, callback=self.handle_debate, callback_kwargs={ 'channel': channel })
         self.msg(channel, "=== Talk %d: %s - %s ===", t.talk_id, t.title, t.review_url)
 
         try:
@@ -117,23 +123,82 @@ class ReviewMode(BaseBotMode):
         except IndexError:
             pass
             
-        # make nice, human readable time text
-        # (even though, in reality, there's no good reason for this ever to not be 2 minutes)
-        champion_time_text = '%d minutes' % (champion_time // 60)
-        if champion_time % 60:
-            champion_time_text += ', %d seconds' % (champion_time % 60)
-
         # begin the championing process
-        self.msg(channel, ' * * * ')
-        self.msg(channel, 'If you are a champion for #%s, or '
-            'willing to champion it, please say, "me". Then, please type a succinct argument for '
-            'inclusion of this talk (%s). Say "done" when you are finished.', t.talk_id, champion_time_text)
-            
+        self.msg(channel, 'If you are a champion for #%d, or willing to champion it, please say, "me". If nobody steps up within %d seconds, we will move on to debate.' % (self.current.talk_id, CHAMPION_CALL_SECONDS))
+        
+        # start watching what users say
+        self.bot.state_handler = self.handle_user_champion
+        
         # tell the bot that we are currently in champion mode
         self.segment = 'champion'
+        
+    def handle_user_champion(self, channel, user, message):
+        """Handle the baton pass where a user declares that he will champion a talk,
+        and give him time to do it. Gripe at anyone who goes off script unless it's a superuser."""
+        
+        # if this message is "me", add the person to the champion list
+        # and address appropriately
+        message = message.lower().strip()
+        if message == 'me':
+            # add this user to the champion queue
+            if user not in self.champions:
+                self.champions.append(user)
+            
+                # should this user champion immediately, or is he
+                # in queue behind someone?
+                if len(self.champions) == 1:
+                    self.handle_next_champion(channel, _initial=True)
+                else:
+                    # tell this user to hold off for a bit...
+                    self.msg(channel, '%s: Excellent. Please champion #%d, but wait until %s is finished.' % (user, self.current.talk_id, self.champions[0]))
+        else:
+            # if this isn't the championing user, tell them to STFU
+            if not self.champions or user != self.champions[0]:
+                # is this user in queue later?
+                instructions = '%s: Please do not speak during the championing process. If you want to champion #%d, please say "me".'
+                if user in self.champions:
+                    instructions = '%s: You are in line to champion #%d, but please be quiet until it is your turn.'
+                self.msg(channel, instructions % (user, self.current.talk_id))
+                
+            # if this is the championing user, check to see if he's done
+            if self.champions and user == self.champions[0]:
+                if message.endswith(('done', 'done.')):
+                    # okay, this person is done. pop him off the champion list
+                    self.msg(channel, '%s: Thank you.' % user)
+                    
+                    # is there anyone else in line to champion? if so, move on
+                    # to that person, otherwise move to debate
+                    if len(self.champions) > 1:
+                        self.handle_next_champion(channel)
+                    else:
+                        self.handle_debate(channel)
+                        
+    def handle_next_champion(self, channel, _initial=False):
+        """Move to the next champion. Normally, this is called automatically by a champion's self-designation
+        or by a first champion's being finished, giving way to the next one. However, this allows the chair to
+        manually continue the process if needed."""
+        
+        # move to the next champion
+        if not _initial and len(self.champions):
+            self.champions.pop(0)
+            
+        # sanity check: are there any champions?
+        if not self.champions:
+            self.msg(channel, 'There are no more champions in queue.')
+            return
+            
+        # this user is up; tell him what to do
+        champion = self.champions[0]
+        self.msg(channel, '%s: You\'re up. Please type a succinct argument for the inclusion of #%d. When you are finished, please type "done".' % (champion, self.current.talk_id))
+        
+        # clear any existing timer
+        self.bot.clear_timer()
 
     def handle_debate(self, channel, debate_time=DEBATE_MINUTES):
         """Shift the channel into debate mode, and set the appropriate timer."""
+        
+        # clear out the state handler
+        self.bot.state_handler = None
         
         # parse out the debate time, and make nice, optimal
         # human readable text
