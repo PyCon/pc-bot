@@ -28,13 +28,16 @@ class PyConBot(irc.IRCClient):
     def nickname(self):
         return self.factory.nickname
 
-    def set_timer(self, channel, seconds, msg="Time has ended."):
-        """
-        Set a timer, saying `msg` after `seconds` seconds.
-        """
+    def set_timer(self, channel, seconds, message='Time has ended.', callback=None, callback_kwargs={}):
+        """Set a timer. By default, simply say `message` after `seconds` have elapsed.
+        Additionally, if a callback is provided, run it."""
+        
         def say_time(channel):
             self.timer = None
-            self.msg(channel, "=== %s ===" % msg)
+            if message:
+                self.msg(channel, "=== %s ===" % message)
+            if callback and callable(callback):
+                callback(**callback_kwargs)
         self.clear_timer()
         self.timer = reactor.callLater(seconds, say_time, channel)
 
