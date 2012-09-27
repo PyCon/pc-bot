@@ -37,6 +37,10 @@ class ReviewMode(BaseBotMode):
             action = "started"
         self.msg(channel, '=== Meeting #%s %s. Next talk will be #%s ===',
                  self.meeting.number, action, self.next.talk_id)
+                 
+        # now ask the folks in channel for names (unless this is a resumed meeting)
+        if not meeting_num:
+            self.handle_names(channel)
 
     def handle_end(self, channel):
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
