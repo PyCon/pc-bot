@@ -138,7 +138,7 @@ class ReviewMode(BaseBotMode):
         
         # if this message is "me", add the person to the champion list
         # and address appropriately
-        message = message.lower().strip()
+        message = message.lower().strip().rstrip('.')
         if message == 'me':
             # add this user to the champion queue
             if user not in self.champions:
@@ -184,7 +184,8 @@ class ReviewMode(BaseBotMode):
             
         # sanity check: are there any champions?
         if not self.champions:
-            self.msg(channel, 'There are no more champions in queue.')
+            self.msg(channel, 'There are no more champions in queue. Moving on to debate.')
+            self.handle_debate(channel)
             return
             
         # this user is up; tell him what to do
