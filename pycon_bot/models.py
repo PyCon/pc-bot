@@ -47,18 +47,18 @@ class Note(mongoengine.EmbeddedDocument):
 
     text = mongoengine.StringField()
     timestamp = mongoengine.DateTimeField(default=datetime.now)
-    
+
     def __unicode__(self):
         return unicode(self.text)
-    
-    
+
+
 class TalkProposal(mongoengine.Document):
     STATUSES = [
         ('unreviewed',      'Unreviewed'),
         ('hold',            'On hold'),
-        ('poster',          'Rejected, suggest poster session'),
+        ('poster',          'Rejected (suggest poster)'),
         ('rejected',        'Rejected'),
-        ('thunderdome',     'Accepted into Thunderdome'),
+        ('thunderdome',     'In Thunderdome'),
         ('accepted',        'Accepted'),
         ('damaged',         'Damaged'),
     ]

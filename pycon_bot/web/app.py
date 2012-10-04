@@ -64,7 +64,9 @@ def meeting_detail(n):
 def talk_list():
     return flask.render_template('talk_list.html',
         title = "All talks",
-        talks = TalkProposal.objects.order_by('talk_id'))
+        talks = TalkProposal.objects.order_by('talk_id'),
+        statuses = TalkProposal.STATUSES,
+    )
 
 @app.route('/talks/<int:n>')
 def talk_detail(n):
@@ -124,7 +126,10 @@ def talks_by_status(status):
         flask.abort(404)
     return flask.render_template('talk_list.html',
         title = statuses[status],
-        talks = TalkProposal.objects.filter(status=status).order_by('talk_id'))
+        talks = TalkProposal.objects.filter(status=status).order_by('talk_id'),
+        statuses = TalkProposal.STATUSES,
+        current_status = status
+    )
 
 def get_or_404(qs, *args, **kwargs):
     try:
