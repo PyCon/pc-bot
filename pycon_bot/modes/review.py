@@ -300,7 +300,8 @@ class ReviewMode(BaseBotMode):
         if self.meeting:
             # don't push the same talk onto a meeting twice
             # (when there's duplication, it's almost always bot operator error)
-            if self.current not in self.meeting.talks_decided:        
+            meeting_copy = Meeting.objects.get(id=self.meeting.id)
+            if self.current not in meeting_copy.talks_decided:
                 Meeting.objects(id=self.meeting.id).update_one(push__talks_decided=self.current)
 
     def handle_rules(self, channel):
