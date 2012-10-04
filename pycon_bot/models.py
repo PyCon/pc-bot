@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from datetime import datetime
 import mongoengine
 
 class SiteVotes(mongoengine.EmbeddedDocument):
@@ -39,6 +41,17 @@ class TranscriptMessage(mongoengine.EmbeddedDocument):
     def __unicode__(self):
         return u"[%s] <%s> %s" % (self.timestamp.strftime('%H:%M:%S'), self.user, self.message)
 
+
+class Note(mongoengine.Document):
+    """Notes left, usually manually, about a given talk. For record-keeping."""
+
+    text = mongoengine.StringField()
+    timestamp = mongoengine.DateTimeField(default=datetime.now)
+    
+    def __unicode__(self):
+        return unicode(self.text)
+    
+    
 class TalkProposal(mongoengine.Document):
     STATUSES = [
         ('unreviewed',      'Unreviewed'),
@@ -55,6 +68,7 @@ class TalkProposal(mongoengine.Document):
     title = mongoengine.StringField()
     category = mongoengine.StringField()
     status = mongoengine.StringField(choices=STATUSES)
+    notes = mongoengine.ListField(mongoengine.EmbeddedDocumentField(Note))
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)
     kittendome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
