@@ -9,7 +9,7 @@
       {% for m in meetings %}
         <li{% if m.id == meeting.id %} class="active"{% endif %}>
           <a href="{{ url_for('meeting_detail', n=m.number) }}">
-            {{ m.start.strftime('%B %d') }}
+            {{ m.start.strftime('%B %e') }}
           </a>
         </li>
       {% endfor %}

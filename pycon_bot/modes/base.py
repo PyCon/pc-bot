@@ -109,15 +109,23 @@ class BaseBotMode(object):
         """Convert a number of seconds, specified as an int or string,
         to a pretty string."""
         
+        # let's get started
         seconds = int(seconds)
+        time_text = ''
+
+        # sanity check: 0 seconds is a corner case; just return it back statically
         if seconds == 0:
             return '0 seconds'
+            
+        # deal with the minutes portion
         if seconds // 60 > 0:
-            time_text = '%d minute' % (seconds // 60)
+            time_text += '%d minute' % (seconds // 60)
             if seconds // 60 != 1:
                 time_text += 's'
             if seconds % 60:
                 time_text += ', '
+                
+        # deal with the seconds portion
         if seconds % 60:
             time_text += '%d second' % (seconds % 60)
             if seconds % 60 != 1:

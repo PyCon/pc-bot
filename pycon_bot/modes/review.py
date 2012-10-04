@@ -298,7 +298,10 @@ class ReviewMode(BaseBotMode):
         self.current.status = decision
         self.current.save()
         if self.meeting:
-            Meeting.objects(id=self.meeting.id).update_one(push__talks_decided=self.current)
+            # don't push the same talk onto a meeting twice
+            # (when there's duplication, it's almost always bot operator error)
+            if self.current not in self.meeting.talks_decided:        
+                Meeting.objects(id=self.meeting.id).update_one(push__talks_decided=self.current)
 
     def handle_rules(self, channel):
         """Remind participants where they can find the rules."""
