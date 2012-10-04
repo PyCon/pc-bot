@@ -32,6 +32,8 @@ class PyConBot(irc.IRCClient):
         """Set a timer. By default, simply say `message` after `seconds` have elapsed.
         Additionally, if a callback is provided, run it."""
         
+        seconds = int(seconds)
+        
         def say_time(channel):
             self.timer = None
             if message:

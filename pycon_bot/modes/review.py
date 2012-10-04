@@ -117,8 +117,7 @@ class ReviewMode(BaseBotMode):
         # this is a new talk; no champions have declared themselves
         self.champions = []
 
-        # Announce the talk
-        self.bot.set_timer(channel, CHAMPION_CALL_SECONDS, callback=self.handle_debate, callback_kwargs={ 'channel': channel })
+        # announce the talk
         self.msg(channel, "=== Talk %d: %s - %s ===", t.talk_id, t.title, t.review_url)
 
         try:
@@ -128,7 +127,14 @@ class ReviewMode(BaseBotMode):
             pass
             
         # begin the championing process
-        self.msg(channel, 'If you are a champion for #%d, or willing to champion it, please say, "me". If nobody steps up within %d seconds, we will move on to debate.' % (self.current.talk_id, CHAMPION_CALL_SECONDS))
+        # note: if this talk has *already* been debated and is, in fact, on hold,
+        #   we have a different process for it
+        if self.current.status == 'hold':
+            self.bot.set_timer(channel, CHAMPION_CALL_SECONDS * 2, callback=self.handle_reject, callback_kwargs={ 'channel': channel })
+            self.msg(channel, 'This talk, #%d, has already been debated and voted down. If you think it deserves to go to thunderdome and want to attempt to resurrect it, please say "me". If there is a champion, then after the champion period, we will debate as normal. If there is no champion within %s, this talk will be automatically rejected.', self.current.talk_id, self._seconds_to_text(CHAMPION_CALL_SECONDS * 2))
+        else:
+            self.bot.set_timer(channel, CHAMPION_CALL_SECONDS, callback=self.handle_debate, callback_kwargs={ 'channel': channel })
+            self.msg(channel, 'If you are a champion for #%d, or willing to champion it, please say, "me". If nobody steps up within %s, we will move on to debate.' % (self.current.talk_id, self._seconds_to_text(CHAMPION_CALL_SECONDS)))
         
         # start watching what users say
         self.bot.state_handler = self.handle_user_champion
@@ -166,7 +172,7 @@ class ReviewMode(BaseBotMode):
                 
             # if this is the championing user, check to see if he's done
             if self.champions and user == self.champions[0]:
-                if message.rstrip().endswith(('done', 'done.')):
+                if message.rstrip().endswith(('done', 'done.', 'done!')):
                     # okay, this person is done. pop him off the champion list
                     self.msg(channel, '%s: Thank you.' % user)
                     
@@ -175,7 +181,7 @@ class ReviewMode(BaseBotMode):
                     if len(self.champions) > 1:
                         self.handle_next_champion(channel)
                     else:
-                        self.handle_debate(channel)
+                        self.handle_debate(channel, debate_time=2 if self.current.status == 'hold' else 3)
                         
     def handle_next_champion(self, channel, _initial=False):
         """Move to the next champion. Normally, this is called automatically by a champion's self-designation
@@ -204,42 +210,24 @@ class ReviewMode(BaseBotMode):
         
         # clear out the state handler
         self.bot.state_handler = None
-        
-        # parse out the debate time, and make nice, optimal
-        # human readable text
-        debate_time = int(float(debate_time) * 60)
-        debate_time_text = '%d minutes' % (debate_time // 60)
-        if debate_time % 60:
-            debate_time_text += ', %d seconds' % (debate_time % 60)
-        
+                
         # actually set the bot timer
-        self.bot.set_timer(channel, debate_time)
+        self.bot.set_timer(channel, float(debate_time) * 60)
         
         # now report the shift to debate mode
         self.segment = 'debate'
-        self.msg(channel, "=== General Debate (%s) for Talk: #%d ===", debate_time_text, self.current.talk_id)
+        self.msg(channel, "=== General Debate (%s) for Talk: #%d ===", self._minutes_to_text(debate_time), self.current.talk_id)
         
     def handle_extend(self, channel, extend_time=1):
         """Extend the time on the clock. In reality, this does nothing
         but set another clock, but it's a useful management tool within meetings."""
-        
-        # what's the human readable extension time?
-        extend_time = int(float(extend_time) * 60)
-        extend_time_text = '%d minute%s' % (
-            extend_time // 60,
-            '' if extend_time == 60 else 's',
-        )
-        
-        # add seconds if appropriate
-        if extend_time % 60:
-            extend_time_text += ', %d seconds' % (extend_time % 60)
-                
+                        
         # clear the timer and set a new one
         self.bot.clear_timer()
-        self.bot.set_timer(channel, extend_time)
+        self.bot.set_timer(channel, float(extend_time) * 60)
         
         # now report the extension
-        self.msg(channel, '=== Extending time by %s. Please continue. ===' % extend_time_text)
+        self.msg(channel, '=== Extending time by %s. Please continue. ===' % self._minutes_to_text(extend_time))
 
     def handle_vote(self, channel):
         self.bot.clear_timer()

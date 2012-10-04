@@ -1,3 +1,6 @@
+from __future__ import division
+
+
 class BaseBotMode(object):
     """
     Base class for all modes, handling all the base commands.
@@ -101,3 +104,29 @@ class BaseBotMode(object):
         
         # actually do the pestering
         self.bot.names(channel).addCallback(_)
+        
+    def _seconds_to_text(self, seconds):
+        """Convert a number of seconds, specified as an int or string,
+        to a pretty string."""
+        
+        seconds = int(seconds)
+        if seconds == 0:
+            return '0 seconds'
+        if seconds // 60 > 0:
+            time_text = '%d minute' % (seconds // 60)
+            if seconds // 60 != 1:
+                time_text += 's'
+            if seconds % 60:
+                time_text += ', '
+        if seconds % 60:
+            time_text += '%d second' % (seconds % 60)
+            if seconds % 60 != 1:
+                time_text += 's'
+        return time_text
+            
+    def _minutes_to_text(self, minutes):
+        """Convert a number of minutes, specified as a float, int, or string,
+        to a pretty string."""
+        
+        seconds = int(float(minutes) * 60)
+        return self._seconds_to_text(seconds)

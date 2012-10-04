@@ -30,7 +30,7 @@
         {% for meeting in transcripts %}
           {% for line in meeting %}
             {% if loop.first %}
-              <p class="meeting-date">{{ line.timestamp.strftime('%B %d, %Y') }}</p>
+              <p class="meeting-date">{{ line.timestamp.strftime('%B %e, %Y') }}</p>
             {% endif %}
           
             <p class="speaker-{{ line.user }}">{{ line }}</p>
