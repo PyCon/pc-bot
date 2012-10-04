@@ -126,6 +126,10 @@ def talks_by_status(status):
         title = statuses[status],
         talks = TalkProposal.objects.filter(status=status).order_by('talk_id'))
 
+@app.route('/tdome/groups')
+def tdome_groups():
+    pass
+
 def get_or_404(qs, *args, **kwargs):
     try:
         return qs.get(*args, **kwargs)

@@ -47,11 +47,11 @@ class Note(mongoengine.EmbeddedDocument):
 
     text = mongoengine.StringField()
     timestamp = mongoengine.DateTimeField(default=datetime.now)
-    
+
     def __unicode__(self):
         return unicode(self.text)
-    
-    
+
+
 class TalkProposal(mongoengine.Document):
     STATUSES = [
         ('unreviewed',      'Unreviewed'),
@@ -108,3 +108,11 @@ class Meeting(mongoengine.Document):
     def add_to_transcript(self, timestamp, user, message):
         t = TranscriptMessage(timestamp=timestamp, user=user, message=message)
         Meeting.objects(id=self.id).update_one(push__transcript=t)
+
+class ThunderdomeGroup(mongoengine.Document):
+    """
+    A group of talks to be reviewed in one T-dome session.
+    """
+    number = mongoengine.SequenceField()
+    title = mongoengine.StringField()
+    talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
