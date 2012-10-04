@@ -4,15 +4,48 @@
   {{ "%.2g"|format(n*100) }}%
 {%- endmacro %}
 
+{% block style %}
+  {{ super() }}
+  <style type="text/css">
+    h3 {
+        margin-top: 1em;
+        margin-bottom: -1em;
+    }
+  </style>
+{% endblock %}
+
 {% block title %}PCbot{% endblock %}
 
 {% block content %}
-  <h1>Hello.</h1>
-  <p>
-    {{reviewed}}/{{total}} talks reviewed ({{ pct(percent_reviewed) }});
-    {{remaining}} talks remain.
-    {{accepted}} talks accepted ({{ pct(percent_accepted) }});
-    {{rejected}} talks rejected ({{ pct(percent_rejected) }}).
-  <p>
-    {{number_of_meetings}} meetings held so far, on average {{talks_per_meeting}} talks per meeting. In theory, {{meetings_left}} meetings remain.
+  <div class="hero-unit">
+    <h1>Hello.</h1>
+    <p>
+      {{reviewed}}/{{total}} talks reviewed ({{ pct(percent_reviewed) }});
+      {{accepted}} talks accepted ({{ pct(percent_accepted) }});
+      {{rejected}} talks rejected ({{ pct(percent_rejected) }}).
+    </p>
+    <p>
+      {{number_of_meetings}} meetings held so far, on average {{"%.2f"|format(talks_per_meeting)}} talks per meeting. In theory, {{meetings_left}} meetings remain.
+    </p>
+    <h3>Talks by status</h3>
+    <div id="c"></div>
+  </div>
+{% endblock %}
+
+
+{% block bootstrap_js_bottom %}
+  {{ super() }}
+  <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  <script type="text/javascript">
+    google.load("visualization", "1", {packages: ["corechart"]});
+    google.setOnLoadCallback(function() {
+        var chart = new google.visualization.BarChart(document.getElementById('c'));
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Status');
+        data.addColumn('number', 'Count');
+        data.addRows({{ talks_by_status_json|safe }});
+        var options = {legend: {position: 'none'}, backgroundColor: "transparent"};
+        chart.draw(data, options);
+    });
+  </script>
 {% endblock %}
