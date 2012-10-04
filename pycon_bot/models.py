@@ -42,7 +42,7 @@ class TranscriptMessage(mongoengine.EmbeddedDocument):
         return u"[%s] <%s> %s" % (self.timestamp.strftime('%H:%M:%S'), self.user, self.message)
 
 
-class Note(mongoengine.Document):
+class Note(mongoengine.EmbeddedDocument):
     """Notes left, usually manually, about a given talk. For record-keeping."""
 
     text = mongoengine.StringField()
