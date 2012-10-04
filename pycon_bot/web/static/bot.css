@@ -13,3 +13,10 @@
     margin: 4px 0;
     padding: 0;
 }
+
+.note .timestamp {
+    color: #a0a0a0;
+    font-size: 0.7em;
+    font-style: italic;
+    padding-left: 10px;
+}
