@@ -12,9 +12,11 @@
       <dt>Status:</dt>
       <dd>{{ talk.get_status_display() }}</dd>
       <dt>K'dome votes:</dt>
-      <dd>{{ talk.kittendome_votes|default("-") }}</dd>
+      <dd>{{ talk.kittendome_votes|default("-", true) }}</dd>
+      <dt>K'dome result:</dt>
+      <dd>{{ talk.kittendome_result|default("-", true) }}</dd>
     </dl>
-    
+
     {% if talk.notes %}
       <h4>Notes</h4>
       <ul class="notes">
@@ -23,7 +25,7 @@
         {% endfor %}
       </ul>
     {% endif %}
-    
+
     {% if talk.kittendome_transcript %}
       <h4>Transcripts</h4>
       <div class="transcript">
@@ -32,13 +34,13 @@
             {% if loop.first %}
               <p class="meeting-date">{{ line.timestamp.strftime('%B %e, %Y') }}</p>
             {% endif %}
-          
+
             <p class="speaker-{{ line.user }}">{{ line }}</p>
           {% endfor %}
-          
+
           {% if not loop.last %}<hr />{% endif %}
         {% endfor %}
       </div>
     {% endif %}
-    
+
 {% endblock %}

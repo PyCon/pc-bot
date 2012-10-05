@@ -62,6 +62,12 @@ class TalkProposal(mongoengine.Document):
         ('accepted',        'Accepted'),
         ('damaged',         'Damaged'),
     ]
+    KITTENDOME_RESULT_CHOICES = [
+        ('thunderdome', 'Accepted to thunderdome'),
+        ('hold',        'Held for re-review'),
+        ('rejected',    'Rejected'),
+        ('poster',      'Rejected (suggest poster)'),
+    ]
 
     talk_id = mongoengine.IntField(unique=True)
     speaker = mongoengine.StringField()
@@ -72,6 +78,7 @@ class TalkProposal(mongoengine.Document):
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)
     kittendome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
+    kittendome_result = mongoengine.StringField(choices=KITTENDOME_RESULT_CHOICES)
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
