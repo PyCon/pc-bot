@@ -1,3 +1,7 @@
+table {
+    font-size: 12px;
+}
+
 .transcript {
     font: 11px monospace;
 }
@@ -6,7 +10,7 @@
     font-family: sans-serif;
     font-size: 13px;
     font-weight: bold;
-    
+
 }
 
 .transcript p {

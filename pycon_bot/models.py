@@ -56,11 +56,17 @@ class TalkProposal(mongoengine.Document):
     STATUSES = [
         ('unreviewed',      'Unreviewed'),
         ('hold',            'On hold'),
-        ('poster',          'Rejected, suggest poster session'),
+        ('poster',          'Rejected (suggest poster)'),
         ('rejected',        'Rejected'),
-        ('thunderdome',     'Accepted into Thunderdome'),
+        ('thunderdome',     'In Thunderdome'),
         ('accepted',        'Accepted'),
         ('damaged',         'Damaged'),
+    ]
+    KITTENDOME_RESULT_CHOICES = [
+        ('thunderdome', 'Accepted to thunderdome'),
+        ('hold',        'Held for re-review'),
+        ('rejected',    'Rejected'),
+        ('poster',      'Rejected (suggest poster)'),
     ]
 
     talk_id = mongoengine.IntField(unique=True)
@@ -72,6 +78,7 @@ class TalkProposal(mongoengine.Document):
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)
     kittendome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
+    kittendome_result = mongoengine.StringField(choices=KITTENDOME_RESULT_CHOICES)
     grouped = mongoengine.BooleanField(default=False)
 
     def __unicode__(self):
