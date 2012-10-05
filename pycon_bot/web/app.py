@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from flask.ext.bootstrap import Bootstrap
 from pycon_bot import mongo
-from pycon_bot.models import Meeting, TalkProposal
+from pycon_bot.models import Meeting, TalkProposal, Group
 
 app = flask.Flask(__name__)
 app.debug = 'PYCONBOT_DEBUG' in os.environ
@@ -128,7 +128,23 @@ def talks_by_status(status):
 
 @app.route('/tdome/groups')
 def tdome_groups():
-    pass
+    return flask.render_template('tdome_groups.html',
+        groups = Group.objects.all().select_related(),
+        ungrouped = TalkProposal.objects.filter(status="thunderdome", grouped__ne=True).order_by('talk_id')
+    )
+
+@app.route('/tdome/groups/add')
+def tdome_add_group():
+    g, created = Group.objects.get_or_create(title=flask.request.form['title'])
+    return flask.jsonify({'group': g.id})
+
+@app.route('/tdome/groups/assign')
+def tdome_assign_talk():
+    g = Group.objects.get(id=flask.request.form['group'])
+    t = TalkProposal.objects.get(talk_id=flask.request.form['talk'])
+    g.talks.append(t)
+    g.save()
+    flask.abort(204)
 
 def get_or_404(qs, *args, **kwargs):
     try:

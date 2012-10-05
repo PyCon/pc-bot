@@ -72,6 +72,7 @@ class TalkProposal(mongoengine.Document):
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)
     kittendome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
+    grouped = mongoengine.BooleanField(default=False)
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
@@ -109,10 +110,9 @@ class Meeting(mongoengine.Document):
         t = TranscriptMessage(timestamp=timestamp, user=user, message=message)
         Meeting.objects(id=self.id).update_one(push__transcript=t)
 
-class ThunderdomeGroup(mongoengine.Document):
+class Group(mongoengine.Document):
     """
     A group of talks to be reviewed in one T-dome session.
     """
-    number = mongoengine.SequenceField()
-    title = mongoengine.StringField()
+    name = mongoengine.StringField()
     talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
