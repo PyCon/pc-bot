@@ -72,7 +72,7 @@ class ReviewMode(BaseBotMode):
             return
 
         # get the list of talks
-        talks = TalkProposal.objects.filter(status='unreviewed').order_by('talk_id')[0:talk_count]
+        talks = TalkProposal.objects.filter(status__in=('unreviewed', 'hold')).order_by('talk_id')[0:talk_count]
 
         # sanity check: do we have any talks up to bat at all?
         if not talks:
@@ -131,7 +131,10 @@ class ReviewMode(BaseBotMode):
         #   we have a different process for it
         if self.current.status == 'hold':
             self.bot.set_timer(channel, CHAMPION_CALL_SECONDS * 2, callback=self.handle_reject, callback_kwargs={ 'channel': channel })
-            self.msg(channel, 'This talk, #%d, has already been debated and voted down. If you think it deserves to go to thunderdome and want to attempt to resurrect it, please say "me". If there is a champion, then after the champion period, we will debate as normal. If there is no champion within %s, this talk will be automatically rejected.', self.current.talk_id, self._seconds_to_text(CHAMPION_CALL_SECONDS * 2))
+            self.msg(channel, 'This talk, #%(talk_id)d, has already been debated and voted down (transscript: http://pyconbot.herokuapp.com/talks/%(talk_id)d).\nIf you think it deserves to go to thunderdome and want to attempt to resurrect it, please say "me". If there is a champion, then after the champion period, we will debate as normal. If there is no champion within %(time_text)s, this talk will be automatically rejected.' % {
+                'talk_id': self.current.talk_id,
+                'time_text': self._seconds_to_text(CHAMPION_CALL_SECONDS * 2),
+            })
         else:
             self.bot.set_timer(channel, CHAMPION_CALL_SECONDS, callback=self.handle_debate, callback_kwargs={ 'channel': channel })
             self.msg(channel, 'If you are a champion for #%d, or willing to champion it, please say, "me". If nobody steps up within %s, we will move on to debate.' % (self.current.talk_id, self._seconds_to_text(CHAMPION_CALL_SECONDS)))
@@ -279,22 +282,22 @@ class ReviewMode(BaseBotMode):
         self.segment = None
 
     def handle_accept(self, channel):
-        self._make_decision(channel, 'thunderdome', 'talk #%s accepted, moves on to thunderdome.')
+        self._make_decision(channel, 'thunderdome', 'Talk #%s accepted; moves on to thunderdome.')
 
     def handle_reject(self, channel):
-        self._make_decision(channel, 'rejected', 'talk #%s rejected.')
+        self._make_decision(channel, 'rejected', 'Talk #%s rejected.')
 
     def handle_poster(self, channel):
-        self._make_decision(channel, 'poster', 'talk #%s rejected; suggest re-submission as poster.')
+        self._make_decision(channel, 'poster', 'Talk #%s rejected (suggest re-submission as poster).')
 
     def handle_hold(self, channel):
-        self._make_decision(channel, 'hold', 'talk #%s put on hold, will be reviewed at a future meeting.')
+        self._make_decision(channel, 'hold', 'Talk #%s put on hold; will be reviewed at a future meeting.')
 
     def _make_decision(self, channel, decision, message):
         self.bot.clear_timer()
         if not self.current:
             return
-        self.msg(channel, "=== Chair decision: %s ===" % message, self.current.talk_id)
+        self.msg(channel, "=== %s ===" % message, self.current.talk_id)
         self.current.status = decision
         self.current.kittendome_result = decision
         self.current.save()

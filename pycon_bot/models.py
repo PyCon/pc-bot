@@ -89,7 +89,7 @@ class TalkProposal(mongoengine.Document):
 
     @classmethod
     def next_unreviewed_talk(cls, after=None):
-        qs = cls.objects(status='unreviewed').order_by('talk_id')
+        qs = cls.objects(status__in=('unreviewed', 'hold')).order_by('talk_id')
         if after:
             qs = qs.filter(id__ne=after.id)
         return qs[0]
