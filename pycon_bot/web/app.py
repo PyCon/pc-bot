@@ -62,9 +62,11 @@ def meeting_detail(n):
 
 @app.route('/talks')
 def talk_list():
+    talks = TalkProposal.objects.exclude('notes', 'kittendome_transcript') \
+                                .order_by('talk_id')
     return flask.render_template('talk_list.html',
         title = "All talks",
-        talks = TalkProposal.objects.order_by('talk_id'),
+        talks = talks,
         statuses = TalkProposal.STATUSES,
     )
 
@@ -124,9 +126,12 @@ def talks_by_status(status):
     statuses = dict(TalkProposal.STATUSES)
     if status not in statuses:
         flask.abort(404)
+    talks = TalkProposal.objects.filter(status=status).order_by('talk_id') \
+                                .exclude('notes', 'kittendome_transcript') \
+                                .order_by('talk_id')
     return flask.render_template('talk_list.html',
         title = statuses[status],
-        talks = TalkProposal.objects.filter(status=status).order_by('talk_id'),
+        talks = talks,
         statuses = TalkProposal.STATUSES,
         current_status = status
     )
