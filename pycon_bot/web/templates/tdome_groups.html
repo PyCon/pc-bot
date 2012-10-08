@@ -6,41 +6,43 @@
     #select-talks td { cursor: default; }
     #tdome-groups h5 { margin:0; padding: 1px; font-size: 14px; }
     #tdome-groups>li { margin-bottom: 10px; }
-    #tdome-groups .thumbnail li { font-size: 12px; }
+    #tdome-groups .group-talk-list li { font-size: 12px; }
+    #tdome-groups .group-talk-list button { margin: 0; padding: 0 2px 2px 2px;}
+    #tdome-groups .group-talk-list button:hover { background-color: #f2dede; }
   </style>
 {% endblock %}
 
 {% block content %}
   <div class="row">
-    <div class="span6">
+    <div class="span7">
       <h3>Ungrouped talks <small>click to select</small></h3>
       <table class="table table-condensed table-striped" id="select-talks">
         <tbody>
           {% for t in ungrouped %}
             <tr>
-              <td>#{{ t.talk_id }}: {{ t.title|truncate(55) }}</td>
+              <td>#{{ t.talk_id }}: {{ t.title|truncate(80) }}</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
 
-    <div class="span6">
-      <h3>Groups <small>click <b>+</b> buttons to add selected talks to groups</small></h3>
-      <p><button class="btn"><i class="icon-plus"></i> Add selected talks to new group</button></p>
+    <div class="span5">
+      <h3>Groups <small>use <b>+</b> buttons to add selected talks to groups</small></h3>
+      <p><button class="btn btn-block"><i class="icon-plus"></i> Add selected talks to new group</button></p>
 
       <ul class="thumbnails" id="tdome-groups">
-        <li class="span6">
+        <li class="span5">
           <div class="thumbnail clearfix">
             <div class="pull-right">
-              <button class="btn btn-small" title="Add selected talks to this group"><i class="icon-plus"></i></button>
-              <button class="btn btn-small" title="Delete this group"><i class="icon-remove"></i></button>
+              <button class="btn btn-mini" title="Add selected talks to this group"><i class="icon-plus"></i></button>
+              <button class="btn btn-mini" title="Delete this group"><i class="icon-remove"></i></button>
             </div>
             <h5>Group One</h5>
-            <ul>
-              <li>talk 1</li>
-              <li>talk 2</li>
-              <li>talk 3</li>
+            <ul class="group-talk-list unstyled">
+              <li><button class="btn btn-mini btn-link btn-danger"><i class="remove-talk icon-arrow-left"></i></button> talk 1</li>
+              <li><button class="btn btn-mini btn-link btn-danger"><i class="remove-talk icon-arrow-left"></i></button> talk 2</li>
+              <li><button class="btn btn-mini btn-link btn-danger"><i class="remove-talk icon-arrow-left"></i></button> talk 3</li>
             </ul>
           </div>
         </li>
