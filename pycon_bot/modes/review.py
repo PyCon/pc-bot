@@ -131,7 +131,7 @@ class ReviewMode(BaseBotMode):
         #   we have a different process for it
         if self.current.status == 'hold':
             self.bot.set_timer(channel, CHAMPION_CALL_SECONDS * 2, callback=self.handle_reject, callback_kwargs={ 'channel': channel })
-            self.msg(channel, 'This talk, #%(talk_id)d, has already been debated and voted down (transscript: http://pyconbot.herokuapp.com/talks/%(talk_id)d).\nIf you think it deserves to go to thunderdome and want to attempt to resurrect it, please say "me". If there is a champion, then after the champion period, we will debate as normal. If there is no champion within %(time_text)s, this talk will be automatically rejected.' % {
+            self.msg(channel, 'This talk, #%(talk_id)d, has already been debated and voted down (transcript: http://pyconbot.herokuapp.com/talks/%(talk_id)d).\nIf you think it deserves to go to thunderdome and want to attempt to resurrect it, please say "me". If there is a champion, then after the champion period, we will debate as normal. If there is no champion within %(time_text)s, this talk will be automatically rejected.' % {
                 'talk_id': self.current.talk_id,
                 'time_text': self._seconds_to_text(CHAMPION_CALL_SECONDS * 2),
             })
