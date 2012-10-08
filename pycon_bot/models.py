@@ -121,5 +121,9 @@ class Group(mongoengine.Document):
     """
     A group of talks to be reviewed in one T-dome session.
     """
+    number = mongoengine.SequenceField()
     name = mongoengine.StringField()
     talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
+
+    def __unicode__(self):
+        return self.name if self.name else "Group #%s" % self.number

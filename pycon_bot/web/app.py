@@ -138,9 +138,12 @@ def talks_by_status(status):
 
 @app.route('/tdome/groups')
 def tdome_groups():
+    ungrouped = TalkProposal.objects.filter(status="thunderdome", grouped__ne=True) \
+                                    .only('talk_id', 'title') \
+                                    .order_by('talk_id')
     return flask.render_template('tdome_groups.html',
         groups = Group.objects.all().select_related(),
-        ungrouped = TalkProposal.objects.filter(status="thunderdome", grouped__ne=True).order_by('talk_id')
+        ungrouped = ungrouped
     )
 
 @app.route('/tdome/groups/add')
