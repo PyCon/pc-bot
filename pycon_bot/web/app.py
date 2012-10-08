@@ -165,5 +165,7 @@ def get_or_404(qs, *args, **kwargs):
     except mongoengine.queryset.DoesNotExist:
         flask.abort(404)
 
+# Force debug if run as main (i.e. python -m pycon_bot.web.app)
 if __name__ == '__main__':
+    app.debug = True
     app.run()
