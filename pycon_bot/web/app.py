@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from flask.ext.bootstrap import Bootstrap
 from pycon_bot import mongo
-from pycon_bot.models import Meeting, TalkProposal, Group
+from pycon_bot.models import Meeting, TalkProposal, Group, doc2dict
 
 app = flask.Flask(__name__)
 app.debug = 'PYCONBOT_DEBUG' in os.environ
@@ -138,26 +138,23 @@ def talks_by_status(status):
 
 @app.route('/tdome/groups')
 def tdome_groups():
-    ungrouped = TalkProposal.objects.filter(status="thunderdome", grouped__ne=True) \
-                                    .only('talk_id', 'title') \
-                                    .order_by('talk_id')
+    ungrouped = _get_ungrouped_talks()
     return flask.render_template('tdome_groups.html',
         groups = Group.objects.all().select_related(),
         ungrouped = ungrouped
     )
 
-@app.route('/tdome/groups/add')
-def tdome_add_group():
-    g, created = Group.objects.get_or_create(title=flask.request.form['title'])
-    return flask.jsonify({'group': g.id})
+@app.route('/api/talks/ungrouped')
+def api_talks_ungrouped():
+    return flask.jsonify(objects=[
+        doc2dict(t, fields=('talk_id', 'title'))
+        for t in _get_ungrouped_talks()
+    ])
 
-@app.route('/tdome/groups/assign')
-def tdome_assign_talk():
-    g = Group.objects.get(id=flask.request.form['group'])
-    t = TalkProposal.objects.get(talk_id=flask.request.form['talk'])
-    g.talks.append(t)
-    g.save()
-    flask.abort(204)
+def _get_ungrouped_talks():
+    return TalkProposal.objects.filter(status="thunderdome", grouped__ne=True) \
+                               .only('talk_id', 'title') \
+                               .order_by('talk_id')
 
 def get_or_404(qs, *args, **kwargs):
     try:

@@ -127,3 +127,43 @@ class Group(mongoengine.Document):
 
     def __unicode__(self):
         return self.name if self.name else "Group #%s" % self.number
+
+def doc2dict(doc, fields=None):
+    """
+    Convert a doc to a dictionary suitable for JSON-encoding.
+    """
+    # Which fields to encode?
+    if fields is None:
+        fields = doc._fields.keys()
+
+    d = {}
+    for name in fields:
+        field = doc._fields[name]
+        value = getattr(doc, name)
+
+        # Convert ObjectIDs to strings
+        if value and isinstance(field, mongoengine.ObjectIdField):
+            d[name] = str(value)
+
+        # Handle embededded documents by recursively dict-ifying
+        elif value and isinstance(field, mongoengine.EmbeddedDocumentField):
+            d[name] = doc2dict(value)
+
+        # List fields, two cases:
+        elif value and isinstance(field, mongoengine.ListField):
+
+            # If it's an embedded document or a ref, then the dict-ify
+            # each item in the list.
+            if isinstance(field.field, (mongoengine.EmbeddedDocumentField,
+                                        mongoengine.ReferenceField)):
+                d[name] = [doc2dict(v) for v in value]
+
+            # Otherwise, just make a copy of the list.
+            else:
+                d[name] = list(value)
+
+        # Everything else: hope json.dump can handle it :)
+        else:
+            d[name] = value
+
+    return d
