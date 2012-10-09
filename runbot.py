@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """Run the bot, as well as the web server."""
-
 import sys
 import argparse
 import os
