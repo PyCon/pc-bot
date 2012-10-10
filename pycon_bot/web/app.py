@@ -146,36 +146,29 @@ def tdome_groups():
 
 @app.route('/api/talks/ungrouped')
 def api_talks_ungrouped():
-    return flask.jsonify(objects=[
-        doc2dict(t, fields=('talk_id', 'title'))
-        for t in _get_ungrouped_talks()
-    ])
+    return _jsonify_talks(_get_ungrouped_talks())
 
 @app.route('/api/groups')
 def api_groups():
     return flask.jsonify(objects=[
-        {
-            'number': 1,
-            'name': 'Group One',
-            "talks": [
-                {"talk_id": 1, "title": "T1"},
-                {"talk_id": 2, "title": "T2"}
-            ]
-        },
-        {
-            'number': 2,
-            'name': 'Group Two',
-            "talks": [
-                {"talk_id": 3, "title": "T3"},
-                {"talk_id": 4, "title": "T4"}
-            ]
-        },
+        doc2dict(g, fields=('number', 'name'))
+        for g in Group.objects.all()
     ])
+
+@app.route('/api/groups/<int:group_number>/talks')
+def api_group_talks(group_number):
+    g = get_or_404(Group.objects, number=group_number)
+    return _jsonify_talks(g.talks)
 
 def _get_ungrouped_talks():
     return TalkProposal.objects.filter(status="thunderdome", grouped__ne=True) \
                                .only('talk_id', 'title') \
                                .order_by('talk_id')
+
+def _jsonify_talks(tl):
+    return flask.jsonify(objects=[
+        doc2dict(t, fields=('talk_id', 'title')) for t in tl
+    ])
 
 def get_or_404(qs, *args, **kwargs):
     try:

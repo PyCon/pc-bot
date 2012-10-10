@@ -3,14 +3,13 @@
 {% block style %}
   {{ super() }}
   <style type="text/css">
-    #talks>table { table-layout: fixed; }
-    #talks>table td { cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #talks>table tr.selected td { background-color: #D9EDF7; }
-    #groups>ul h5 { margin:0; padding: 1px; font-size: 14px; }
-    #groups>ul>li { margin-bottom: 10px; }
-    #groups>ul .group-talk-list li { font-size: 12px; }
-    #groups>ul .group-talk-list button { margin: 0; padding: 0 2px 2px 2px;}
-    #groups>ul .group-talk-list button:hover { background-color: #f2dede; }
+    .talk-table { table-layout: fixed; }
+    .talk-table td { cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .talk-table tr.selected td { background-color: #D9EDF7; }
+    #groups ul h5 { margin:0; padding: 1px; font-size: 14px; }
+    #groups ul li { margin-bottom: 10px; }
+    #groups table { margin: 2px 0 0 0; }
+    #groups table td { border: 0px none; }
   </style>
 {% endblock %}
 
@@ -18,7 +17,7 @@
   <div class="row">
     <div class="span7" id="talks">
       <h3>Ungrouped talks <small>click to select</small></h3>
-      <table class="table table-condensed table-striped">
+      <table class="talk-table table table-condensed table-striped">
       </table>
     </div>
 
@@ -48,7 +47,7 @@
           <button class="btn btn-mini remove-group"><i class="icon-remove"></i></button>
         </div>
         <h5><%= name ? name : "Group " + number %></h5>
-        <table class="table table-condensed"></table>
+        <table class="talk-table table table-condensed"></table>
       </div>
   </script>
 {% endblock %}

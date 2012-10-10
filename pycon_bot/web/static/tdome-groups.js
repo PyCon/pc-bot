@@ -12,7 +12,9 @@ var FlaskCollection = Backbone.Collection.extend({
 });
 
 // An individual Talk object.
-var Talk = Backbone.Model.extend({});
+var Talk = Backbone.Model.extend({
+    idAttribute: "talk_id"
+});
 
 // A list of talks.
 var TalkCollection = FlaskCollection.extend({
@@ -24,7 +26,13 @@ var TalkCollection = FlaskCollection.extend({
 });
 
 // A thunderdome group.
-var Group = Backbone.Model.extend({});
+var Group = Backbone.Model.extend({
+    idAttribute: "number",
+    initialize: function(attrs) {
+        this.talks = new TalkCollection(attrs.talks);
+        this.talks.url = this.url() + '/talks';
+    }
+});
 
 // The list of groups.
 var GroupCollection = FlaskCollection.extend({
@@ -59,7 +67,7 @@ var TalkView = Backbone.View.extend({
 });
 
 // The list of ungrouped talks down the side.
-var UngroupedTalkListView = Backbone.View.extend({
+var TalkListView = Backbone.View.extend({
     el: $("#talks"),
 
     initialize: function() {
@@ -91,6 +99,10 @@ var GroupView = Backbone.View.extend({
 
     render: function() {
         this.$el.html(this.template(this.model.toJSON()));
+        var tlv = new TalkListView({
+            collection: this.model.talks,
+            el: this.$el
+        });
         return this;
     },
 
@@ -136,7 +148,7 @@ var GroupListView = Backbone.View.extend({
 // main, as it were
 //
 var ungroupedTalks = new TalkCollection();
-var ungroupedTalksView = new UngroupedTalkListView({collection: ungroupedTalks});
+var ungroupedTalksView = new TalkListView({collection: ungroupedTalks});
 var groups = new GroupCollection();
 var groupView = new GroupListView({collection: groups});
 
