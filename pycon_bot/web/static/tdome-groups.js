@@ -60,7 +60,7 @@ var TalkView = Backbone.View.extend({
 
 // The list of ungrouped talks down the side.
 var UngroupedTalkListView = Backbone.View.extend({
-    el: $("#select-talks"),
+    el: $("#talks"),
 
     initialize: function() {
         this.collection.on('add', this.addOne, this);
@@ -71,7 +71,7 @@ var UngroupedTalkListView = Backbone.View.extend({
 
     addOne: function(talk) {
         var tv = new TalkView({model: talk});
-        this.$el.append(tv.render().el);
+        this.$('table').append(tv.render().el);
     },
     addAll: function() {
         this.collection.each(this.addOne, this);
@@ -84,15 +84,32 @@ var GroupView = Backbone.View.extend({
     attributes: {"class": "span5"},
     template: _.template($('#group-row-template').html()),
 
+    events: {
+        'click .add-talks': 'addTalksToGroup',
+        'click .remove-group': 'removeThisGroup'
+    },
+
     render: function() {
         this.$el.html(this.template(this.model.toJSON()));
         return this;
+    },
+
+    addTalksToGroup: function() {
+        alert('add talks to group ' + this.model.get('name'));
+    },
+
+    removeThisGroup: function() {
+        alert('remove group ' + this.model.get('name'));
     }
 });
 
 // The group list view
 var GroupListView = Backbone.View.extend({
-    el: $("#tdome-groups"),
+    el: $("#groups"),
+
+    events: {
+        'click #new-group': 'addNewGroup'
+    },
 
     initialize: function() {
         this.collection.bind('add', this.addOne, this);
@@ -103,11 +120,15 @@ var GroupListView = Backbone.View.extend({
 
     addOne: function(group) {
         var gv = new GroupView({model: group});
-        this.$el.append(gv.render().el);
+        this.$('ul').append(gv.render().el);
     },
 
     addAll: function() {
         this.collection.each(this.addOne, this);
+    },
+
+    addNewGroup: function() {
+        alert('new group');
     }
 });
 

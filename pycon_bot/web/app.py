@@ -154,8 +154,22 @@ def api_talks_ungrouped():
 @app.route('/api/groups')
 def api_groups():
     return flask.jsonify(objects=[
-        {'number': 1, 'name': 'Group 1'},
-        {'number': 2, 'name': 'Group 2'}
+        {
+            'number': 1,
+            'name': 'Group One',
+            "talks": [
+                {"talk_id": 1, "title": "T1"},
+                {"talk_id": 2, "title": "T2"}
+            ]
+        },
+        {
+            'number': 2,
+            'name': 'Group Two',
+            "talks": [
+                {"talk_id": 3, "title": "T3"},
+                {"talk_id": 4, "title": "T4"}
+            ]
+        },
     ])
 
 def _get_ungrouped_talks():
