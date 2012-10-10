@@ -1,1 +1,1 @@
-web: python runbot.py --http-port $PORT
+bot: python runbot.py --http-port $PORT
