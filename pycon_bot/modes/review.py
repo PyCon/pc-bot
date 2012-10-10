@@ -44,6 +44,11 @@ class ReviewMode(BaseBotMode):
 
     def handle_end(self, channel):
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
+        
+        # remove any state handler that may be present
+        self.bot.state_handler = None
+        
+        # end the meeting
         self.meeting.end = datetime.now()
         self.meeting.save()
         self.meeting = None
@@ -103,7 +108,15 @@ class ReviewMode(BaseBotMode):
     def handle_next(self, channel):
         """Move to the next talk, and immediately shift into champion mode."""
 
-        # Figure out which talk is up now.
+        # sanity check: are we in the post report phase?
+        #   it's *really* easy to remember to issue ,report and not issue ,accept or ,reject
+        #   and a call to ,next if this sequence has occured is almost certainly in error
+        #   therefore, error out and force the chair to actually issue a decision
+        if self.segment == 'post-report':
+            self.msg(channel, 'We just had a report on the current talk. I am stubbornly refusing to move to the next talk until the current one has been officially accepted or rejected.')
+            return
+
+        # figure out which talk is up now
         if self.next:
             t = self.current = self.next
             self.next = None
@@ -254,7 +267,11 @@ class ReviewMode(BaseBotMode):
     def handle_report(self, channel):
         if not self.current:
             return
+            
+        # turn off the state handler
+        self.bot.state_handler = None
 
+        # tally the vote
         yay, nay, abstain = 0, 0, 0
         for vote in self.current_votes.itervalues():
             if vote == 'yay':
@@ -263,23 +280,21 @@ class ReviewMode(BaseBotMode):
                 nay += 1
             elif vote == 'abstain':
                 abstain += 1
-        self.msg(channel, "=== Talk Votes on #%s: %s yays, %s nays, %s abstentions ===", self.current.talk_id, yay, nay, abstain)
-        if yay > nay:
-            msg = "The yays have it."
-        elif nay > yay:
-            msg = "The nays have it."
-        elif yay == nay:
-            msg = "It's a tie: http://i.imgur.com/Cw3lg.jpg"
-        self.msg(channel, msg)
-        self.bot.state_handler = None
-
+                
+        # cobble together the report on the talk votes
+        report = '=== Votes on #%d: %d in favor, %d opposed' % (self.current.talk_id, yay, nay)
+        if abstain > 0:
+            report += ', with %d abstention%s' % (abstain, 's' if abstain != 1 else '')
+        report += ' ==='
+        self.msg(channel, report)
+        
         # Save the votes for posterity
         self.current.kittendome_votes = KittendomeVotes(yay=yay, nay=nay, abstain=abstain)
         self.current.save()
 
-        # tell the system that we're not in any segment
-        # (used only for reports from ,current right now)
-        self.segment = None
+        # tell the system that we're between reporting and moving
+        # to the next talk
+        self.segment = 'post-report'
 
     def handle_accept(self, channel):
         self._make_decision(channel, 'thunderdome', 'Talk #%s accepted; moves on to thunderdome.')
@@ -294,13 +309,22 @@ class ReviewMode(BaseBotMode):
         self._make_decision(channel, 'hold', 'Talk #%s put on hold; will be reviewed at a future meeting.')
 
     def _make_decision(self, channel, decision, message):
+        """Make a given decision, and save it to the database."""
+        
+        # clear any timer and any user mode
         self.bot.clear_timer()
+        self.bot.state_handler = None
+        self.segment = None
+        
+        # actually make the decision
         if not self.current:
             return
         self.msg(channel, "=== %s ===" % message, self.current.talk_id)
         self.current.status = decision
         self.current.kittendome_result = decision
         self.current.save()
+        
+        # place the talk into the meeting's `talks_decided` list
         if self.meeting:
             # don't push the same talk onto a meeting twice
             # (when there's duplication, it's almost always bot operator error)
