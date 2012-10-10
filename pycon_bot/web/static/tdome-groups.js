@@ -15,7 +15,7 @@ var FlaskCollection = Backbone.Collection.extend({
 var Talk = Backbone.Model.extend({});
 
 // A list of talks.
-var TalkList = FlaskCollection.extend({
+var TalkCollection = FlaskCollection.extend({
     model: Talk,
     url: '/api/talks/ungrouped',
     comparator: function(talk) {
@@ -24,16 +24,10 @@ var TalkList = FlaskCollection.extend({
 });
 
 // A thunderdome group.
-var Group = Backbone.Model.extend({
-    initialize: function() {
-        this.talks = new TalkList();
-        this.talks.url = this.url() + '/talks';
-        // this.talks.on("reset", ...)
-    }
-});
+var Group = Backbone.Model.extend({});
 
 // The list of groups.
-var GroupList = FlaskCollection.extend({
+var GroupCollection = FlaskCollection.extend({
     model: Group,
     url: '/api/groups',
     comparator: function(group) {
@@ -69,36 +63,60 @@ var UngroupedTalkListView = Backbone.View.extend({
     el: $("#select-talks"),
 
     initialize: function() {
-        UngroupedTalks.bind('add', this.addOne, this);
-        UngroupedTalks.bind('reset', this.addAll, this);
-        UngroupedTalks.bind('all', this.render, this);
+        this.collection.on('add', this.addOne, this);
+        this.collection.on('reset', this.addAll, this);
+        this.collection.on('all', this.render, this);
+        this.collection.fetch();
     },
 
     addOne: function(talk) {
         var tv = new TalkView({model: talk});
-        UngroupedTalkList.$el.append(tv.render().el);
+        this.$el.append(tv.render().el);
     },
     addAll: function() {
-        UngroupedTalks.each(this.addOne);
+        this.collection.each(this.addOne, this);
     }
 });
 
 // A single group list item.
 var GroupView = Backbone.View.extend({
     tagName: "li",
-    template: _.template($('#talk-row-template').html()),
+    attributes: {"class": "span5"},
+    template: _.template($('#group-row-template').html()),
 
     render: function() {
         this.$el.html(this.template(this.model.toJSON()));
+        return this;
+    }
+});
 
+// The group list view
+var GroupListView = Backbone.View.extend({
+    el: $("#tdome-groups"),
+
+    initialize: function() {
+        this.collection.bind('add', this.addOne, this);
+        this.collection.bind('reset', this.addAll, this);
+        this.collection.bind('all', this.render, this);
+        this.collection.fetch();
+    },
+
+    addOne: function(group) {
+        var gv = new GroupView({model: group});
+        this.$el.append(gv.render().el);
+    },
+
+    addAll: function() {
+        this.collection.each(this.addOne, this);
     }
 });
 
 //
 // main, as it were
 //
-var UngroupedTalks = new TalkList();
-var UngroupedTalkList = new UngroupedTalkListView();
-UngroupedTalks.fetch();
+var ungroupedTalks = new TalkCollection();
+var ungroupedTalksView = new UngroupedTalkListView({collection: ungroupedTalks});
+var groups = new GroupCollection();
+var groupView = new GroupListView({collection: groups});
 
 });

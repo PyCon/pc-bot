@@ -151,6 +151,13 @@ def api_talks_ungrouped():
         for t in _get_ungrouped_talks()
     ])
 
+@app.route('/api/groups')
+def api_groups():
+    return flask.jsonify(objects=[
+        {'number': 1, 'name': 'Group 1'},
+        {'number': 2, 'name': 'Group 2'}
+    ])
+
 def _get_ungrouped_talks():
     return TalkProposal.objects.filter(status="thunderdome", grouped__ne=True) \
                                .only('talk_id', 'title') \

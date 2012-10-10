@@ -27,27 +27,6 @@
       <p><button id="new-group" class="btn btn-block"><i class="icon-plus"></i> Add selected talks to new group</button></p>
 
       <ul class="thumbnails" id="tdome-groups">
-        {% for g in groups %}
-          <li class="span5" data-group-id="{{ g.number }}">
-            <div class="thumbnail clearfix">
-              <div class="pull-right">
-                <button class="btn btn-mini"><i class="icon-plus"></i></button>
-                <button class="btn btn-mini"><i class="icon-remove"></i></button>
-              </div>
-              <h5>{{ g }}</h5>
-              <ul class="group-talk-list unstyled">
-                {% for t in g.talks %}
-                  <li data-talk_id="{{ t.talk_id }}">
-                    <button class="btn btn-mini btn-link btn-danger">
-                      <i class="remove-talk icon-arrow-left"></i>
-                      #{{ t.talk_id }}: {{ t.title|truncate(80) }}
-                    </button>
-                  </li>
-                {% endfor %}
-              </ul>
-            </div>
-          </li>
-        {% endfor %}
       </ul>
     </div>
   </div>
@@ -63,13 +42,13 @@
   <script type="text/template" id="talk-row-template">
     <td>#<%= talk_id %>: <%= title %></td>
   </script>
-  <script type="text/template" id="group-template">
+  <script type="text/template" id="group-row-template">
       <div class="thumbnail clearfix">
         <div class="pull-right">
           <button class="btn btn-mini"><i class="icon-plus"></i></button>
           <button class="btn btn-mini"><i class="icon-remove"></i></button>
         </div>
-        <h5><%= title %></h5>
+        <h5><%= name ? name : "Group " + number %></h5>
         <table class="table table-condensed"></table>
       </div>
   </script>
