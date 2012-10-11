@@ -16,10 +16,11 @@ var Talk = Backbone.Model.extend({
     idAttribute: "talk_id"
 });
 
-// A list of talks.
+// A list of talks. The URL isn't set since this is used both to map to
+// ungrouped talks (/api/talks/ungrouped) and also to talks within a group
+// (/api/groups/{id}/talks).
 var TalkCollection = FlaskCollection.extend({
     model: Talk,
-    url: '/api/talks/ungrouped',
     comparator: function(talk) {
         return talk.get('talk_id');
     }
@@ -47,6 +48,11 @@ var GroupCollection = FlaskCollection.extend({
 // Views
 //
 
+// The set of selected talks. This is shared anywhere a TalkView might be
+// rendered, so it needs to be a global. It's also not persisted anwyhere,
+// so it hasn't got a URL.
+selectedTalks = new TalkCollection();
+
 // A single talk row.
 var TalkView = Backbone.View.extend({
     tagName: "tr",
@@ -63,6 +69,11 @@ var TalkView = Backbone.View.extend({
 
     toggleSelect: function() {
         this.$el.toggleClass('selected');
+        if (this.$el.hasClass('selected')) {
+            selectedTalks.add(this.model);
+        } else {
+            selectedTalks.remove(this.model);
+        }
     }
 });
 
@@ -107,11 +118,12 @@ var GroupView = Backbone.View.extend({
     },
 
     addTalksToGroup: function() {
-        alert('add talks to group ' + this.model.get('name'));
+        alert('add ' + selectedTalks.pluck('talk_id') + ' to group ' + this.model.get('name'));
     },
 
     removeThisGroup: function() {
-        alert('remove group ' + this.model.get('name'));
+        this.collection.remove(this.model);
+        this.$el.remove();
     }
 });
 
@@ -131,7 +143,7 @@ var GroupListView = Backbone.View.extend({
     },
 
     addOne: function(group) {
-        var gv = new GroupView({model: group});
+        var gv = new GroupView({model: group, collection: this.collection});
         this.$('ul').append(gv.render().el);
     },
 
@@ -148,6 +160,7 @@ var GroupListView = Backbone.View.extend({
 // main, as it were
 //
 var ungroupedTalks = new TalkCollection();
+ungroupedTalks.url = '/api/talks/ungrouped';
 var ungroupedTalksView = new TalkListView({collection: ungroupedTalks});
 var groups = new GroupCollection();
 var groupView = new GroupListView({collection: groups});
