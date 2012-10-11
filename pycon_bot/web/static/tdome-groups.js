@@ -30,7 +30,7 @@ var TalkCollection = FlaskCollection.extend({
 var Group = Backbone.Model.extend({
     idAttribute: "number",
     initialize: function(attrs) {
-        this.talks = new TalkCollection(attrs.talks);
+        this.talks = new TalkCollection();
         this.talks.url = this.url() + '/talks';
     }
 });
@@ -122,8 +122,8 @@ var GroupView = Backbone.View.extend({
     },
 
     removeThisGroup: function() {
-        this.collection.remove(this.model);
         this.$el.remove();
+        this.model.destroy();
     }
 });
 
@@ -152,7 +152,9 @@ var GroupListView = Backbone.View.extend({
     },
 
     addNewGroup: function() {
-        alert('new group');
+        var g = {"name": "New Group", "talks": selectedTalks.toJSON()};
+        this.collection.create(g);
+        selectedTalks.reset([]);
     }
 });
 

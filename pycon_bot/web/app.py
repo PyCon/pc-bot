@@ -155,9 +155,32 @@ def api_groups():
         for g in Group.objects.all()
     ])
 
-@app.route('/api/groups/<int:group_number>/talks')
-def api_group_talks(group_number):
-    g = get_or_404(Group.objects, number=group_number)
+@app.route('/api/groups', methods=['POST'])
+def new_group():
+    g = Group.objects.create(name=flask.request.json['name'])
+    for td in flask.request.json['talks']:
+        try:
+            t = TalkProposal.objects.get(talk_id=td['talk_id'])
+            t.grouped = True
+            t.save()
+            g.talks.append(t)
+            g.save()
+        except TalkProposal.DoesNotExist:
+            pass
+    return flask.jsonify(doc2dict(g, fields=('number', 'name')))
+
+@app.route('/api/groups/<int:n>', methods=['DELETE'])
+def delete_group(n):
+    g = get_or_404(Group.objects, number=n)
+    for t in g.talks:
+        t.grouped = False
+        t.save()
+    g.delete()
+    return ("", 204)
+
+@app.route('/api/groups/<int:n>/talks')
+def api_group_talks(n):
+    g = get_or_404(Group.objects, number=n)
     return _jsonify_talks(g.talks)
 
 def _get_ungrouped_talks():
