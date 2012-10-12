@@ -7,7 +7,7 @@ import os
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
-from twisted.web import client
+from twisted.web.client import Agent
 from twisted.web.server import Site
 from twisted.web.wsgi import WSGIResource
 
@@ -27,7 +27,8 @@ def run_bot(irc_server, irc_port, irc_channel, bot_name, http_port, run_pinger, 
     if run_pinger:
         # Ping the website every 60 seconds to prevent heroku from turning off
         # the instance
-        lc = LoopingCall(client.getPage, "http://pyconbot.herokuapp.com")
+        agent = Agent(reactor)
+        lc = LoopingCall(agent.request, "GET", "http://pyconbot.herokuapp.com")
         lc.start(60)
     reactor.run()
 
