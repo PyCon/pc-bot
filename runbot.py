@@ -1,17 +1,22 @@
 #!/usr/bin/env python
 """Run the bot, as well as the web server."""
-import sys
 import argparse
+import sys
 import os
+
+from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
+from twisted.python import log
+from twisted.web import client
+from twisted.web.server import Site
+from twisted.web.wsgi import WSGIResource
+
 import pycon_bot.driver
 import pycon_bot.mongo
 from pycon_bot.web.app import app as webapp
-from twisted.web.server import Site
-from twisted.web.wsgi import WSGIResource
-from twisted.python import log
-from twisted.internet import reactor
 
-def run_bot(irc_server, irc_port, irc_channel, bot_name, http_port, logfile):
+
+def run_bot(irc_server, irc_port, irc_channel, bot_name, http_port, run_pinger, logfile):
     log.startLogging(logfile)
     if irc_server is not None:
         bot = pycon_bot.driver.PyConBotFactory([irc_channel], bot_name)
@@ -19,7 +24,13 @@ def run_bot(irc_server, irc_port, irc_channel, bot_name, http_port, logfile):
     if http_port is not None:
         web = WSGIResource(reactor, reactor.getThreadPool(), webapp)
         reactor.listenTCP(http_port, Site(web))
+    if run_pinger:
+        # Ping the website every 60 seconds to prevent heroku from turning off
+        # the instance
+        lc = LoopingCall(client.getPage, "http://pyconbot.herokuapp.com")
+        lc.start(60)
     reactor.run()
+
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
@@ -30,6 +41,7 @@ if __name__ == '__main__':
     p.add_argument('--http-port', type=int, default=8000)
     p.add_argument('--no-irc', dest='run_irc', action='store_false', default=True)
     p.add_argument('--no-web', dest='run_web', action='store_false', default=True)
+    p.add_argument('--no-pinger', dest='run_pinger', action='store_false', default=True),
     p.add_argument('--dsn', default=None)
     args = p.parse_args()
 
@@ -46,5 +58,6 @@ if __name__ == '__main__':
         irc_channel=args.irc_channel,
         bot_name=args.irc_nickname,
         http_port=args.http_port if args.run_web else None,
+        run_pinger=args.run_pinger,
         logfile=sys.stderr,
     )
