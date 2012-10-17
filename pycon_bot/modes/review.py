@@ -67,24 +67,6 @@ class Mode(BaseMode):
         # pull out of this mode; ,end implies a reversion to skeleton mode
         self.chair_mode(user, channel, 'none', _silent=True)
 
-    def chair_current(self, user, channel):
-        """Output to the channel the current talk we're on, and
-        where we are in the process of reviewing it."""
-
-        # sanity check: are we on a talk at all?
-        if not self.current or not self.segment:
-            self.msg(channel, 'There is no current talk in the system.')
-            return
-
-        # okay, there is a current talk; show it
-        self.msg(channel, 'We are reviewing %s.' % self.current.review_url)
-        if self.segment == 'champion':
-           self.msg(channel, 'Currently, the talk is being championed. Please refrain from speaking until debate.')
-        elif self.segment == 'debate':
-            self.msg(channel, 'Currently, we are in debate. Feel free to participate.')
-        elif self.segment == 'voting':
-            self.msg(channel, 'Currently, we are voting.')
-
     def chair_agenda(self, user, channel, talk_count=12):
         """Print out the agenda. Blindly assume that the agenda includes
         the next 12 talks, regardless of when or where it is called."""
@@ -274,11 +256,44 @@ class Mode(BaseMode):
     def chair_hold(self, user, channel):
         self._make_decision(user, channel, 'hold', 'Talk #%s put on hold; will be reviewed at a future meeting.')
 
-    def chair_rules(self, user, channel):
-        """Remind participants where they can find the rules."""
+    def private_rules(self, user):
+        """Report where the user may find the rules and process notes."""
 
-        self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
-        self.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
+        self.msg(user, "Meeting rules: http://bit.ly/pycon-pc-rules")
+        self.msg(user, "Notes about process: http://bit.ly/pycon-pc-format")
+        
+    def private_current(self, user):
+        """Report on the current talk, and provide the link to view the talk
+        on the PyCon PC website. Also, report where we are in the proceedings."""
+        
+        # sanity check: are we on a talk at all?
+        if not self.current or not self.segment:
+            self.msg(user, 'There is no current talk in the system.')
+            return
+    
+        # okay, there is a current talk; show it
+        self.msg(user, 'We are currently reviewing:')
+        self.msg(user, '    #%d: %s (%s)' % (self.current.talk_id, self.current.title, self.current.speaker))
+        self.msg(user, '    %s' % self.current.review_url)
+        if self.segment == 'champion':
+           self.msg(user, 'Currently, the talk is being championed. Please refrain from speaking until debate.')
+        elif self.segment == 'debate':
+            self.msg(user, 'Currently, we are in debate. Feel free to participate.')
+        elif self.segment == 'voting':
+            self.msg(user, 'Currently, we are voting.')
+        
+    def private_next(self, user):
+        """Report the next talk, and provide the link to view the talk
+        on the PyCon PC website."""
+        
+        # sanity check: is there a next talk in the system?
+        if not self.next:
+            self.msg(user, 'There is no upcoming talk. We will be done after this talk.')
+        
+        # report on the talk coming next
+        self.msg(user, 'The next talk to be discussed will be:')
+        self.msg(user, '    #%d: %s (%s)' % (self.next.talk_id, self.next.title, self.next.speaker))
+        self.msg(user, '    %s' % self.next.review_url)
         
     def handler_user_vote(self, user, channel, message):
         message = message.strip().lower()
