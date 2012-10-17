@@ -1,5 +1,5 @@
 from __future__ import division
-from .base import BaseBotMode
+from .base import BaseMode
 from ..models import TalkProposal, KittendomeVotes, Meeting
 from datetime import datetime
 
@@ -7,10 +7,11 @@ CHAMPION_CALL_SECONDS = 30
 CHAMPION_MINUTES = 2
 DEBATE_MINUTES = 3
 
-class ReviewMode(BaseBotMode):
+class Mode(BaseMode):
+    """Review mode. Handles kittendome."""
 
     def __init__(self, bot):
-        super(ReviewMode, self).__init__(bot)
+        super(Mode, self).__init__(bot)
 
         # the current talks
         self.next = None
@@ -23,12 +24,19 @@ class ReviewMode(BaseBotMode):
         self.segment = None
         self.champions = []
 
-    def handle_start(self, channel, meeting_num=None):
+    def chair_start(self, user, channel, meeting_num=None):
+        """Start a meeting. If a meeting number is given, resume the
+        meeting instead."""
+        
+        # get the next talk in queue
         try:
             self.next = TalkProposal.next_unreviewed_talk()
+            self._in_meeting = True
         except IndexError:
             self.msg(channel, "Out of talks!")
             return
+            
+        # now pull up the meeting itself
         try:
             self.meeting = Meeting.objects.get(number=meeting_num)
             action = "resumed"
@@ -40,21 +48,28 @@ class ReviewMode(BaseBotMode):
 
         # now ask the folks in channel for names (unless this is a resumed meeting)
         if not meeting_num:
-            self.handle_names(channel)
+            self.names(channel)
 
-    def handle_end(self, channel):
+    def chair_end(self, user, channel):
+        """Conclude the meeting."""
+        
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
         
         # remove any state handler that may be present
         self.bot.state_handler = None
         
         # end the meeting
-        self.meeting.end = datetime.now()
-        self.meeting.save()
-        self.meeting = None
+        if self.meeting:
+            self.meeting.end = datetime.now()
+            self.meeting.save()
+            self.meeting = None
+            
+        # pull out of this mode; ,end implies a reversion to skeleton mode
+        self.chair_mode(user, channel, 'none', _silent=True)
 
-    def handle_current(self, channel):
-        """Output to the channel the current talk we're on."""
+    def chair_current(self, user, channel):
+        """Output to the channel the current talk we're on, and
+        where we are in the process of reviewing it."""
 
         # sanity check: are we on a talk at all?
         if not self.current or not self.segment:
@@ -70,7 +85,10 @@ class ReviewMode(BaseBotMode):
         elif self.segment == 'voting':
             self.msg(channel, 'Currently, we are voting.')
 
-    def handle_agenda(self, channel, talk_count=12):
+    def chair_agenda(self, user, channel, talk_count=12):
+        """Print out the agenda. Blindly assume that the agenda includes
+        the next 12 talks, regardless of when or where it is called."""
+        
         try:
             talk_count = int(talk_count)
         except ValueError:
@@ -93,7 +111,7 @@ class ReviewMode(BaseBotMode):
         self.msg(channel, next_up.review_url)
         self.msg(channel, 'Subsequent talks will be: %s.' % ", ".join([str(t.talk_id) for t in subsequent_talks]))
 
-    def handle_goto(self, channel, talk_id):
+    def chair_goto(self, user, channel, talk_id):
         try:
             self.next = TalkProposal.objects.get(talk_id=talk_id)
         except TalkProposal.DoesNotExist:
@@ -105,7 +123,7 @@ class ReviewMode(BaseBotMode):
             msg += " Previous vote was %s." % self.next.kittendome_votes
         self.msg(channel, msg)
 
-    def handle_next(self, channel):
+    def chair_next(self, user, channel):
         """Move to the next talk, and immediately shift into champion mode."""
 
         # sanity check: are we in the post report phase?
@@ -143,63 +161,22 @@ class ReviewMode(BaseBotMode):
         # note: if this talk has *already* been debated and is, in fact, on hold,
         #   we have a different process for it
         if self.current.status == 'hold':
-            self.bot.set_timer(channel, CHAMPION_CALL_SECONDS * 2, callback=self.handle_reject, callback_kwargs={ 'channel': channel })
+            self.bot.set_timer(channel, CHAMPION_CALL_SECONDS * 2, callback=self.chair_reject, callback_kwargs={ 'channel': channel, 'user': user })
             self.msg(channel, 'This talk, #%(talk_id)d, has already been debated and voted down (transcript: http://pyconbot.herokuapp.com/talks/%(talk_id)d).\nIf you think it deserves to go to thunderdome and want to attempt to resurrect it, please say "me". If there is a champion, then after the champion period, we will debate as normal. If there is no champion within %(time_text)s, this talk will be automatically rejected.' % {
                 'talk_id': self.current.talk_id,
                 'time_text': self._seconds_to_text(CHAMPION_CALL_SECONDS * 2),
             })
         else:
-            self.bot.set_timer(channel, CHAMPION_CALL_SECONDS, callback=self.handle_debate, callback_kwargs={ 'channel': channel })
+            self.bot.set_timer(channel, CHAMPION_CALL_SECONDS, callback=self.chair_debate, callback_kwargs={ 'channel': channel, 'user': user })
             self.msg(channel, 'If you are a champion for #%d, or willing to champion it, please say, "me". If nobody steps up within %s, we will move on to debate.' % (self.current.talk_id, self._seconds_to_text(CHAMPION_CALL_SECONDS)))
 
         # start watching what users say
-        self.bot.state_handler = self.handle_user_champion
+        self.bot.state_handler = self.handler_user_champion
 
         # tell the bot that we are currently in champion mode
         self.segment = 'champion'
 
-    def handle_user_champion(self, channel, user, message):
-        """Handle the baton pass where a user declares that he will champion a talk,
-        and give him time to do it. Gripe at anyone who goes off script unless it's a superuser."""
-
-        # if this message is "me", add the person to the champion list
-        # and address appropriately
-        message = message.lower().strip().rstrip('.')
-        if message == 'me':
-            # add this user to the champion queue
-            if user not in self.champions:
-                self.champions.append(user)
-
-                # should this user champion immediately, or is he
-                # in queue behind someone?
-                if len(self.champions) == 1:
-                    self.handle_next_champion(channel, _initial=True)
-                else:
-                    # tell this user to hold off for a bit...
-                    self.msg(channel, '%s: Excellent. Please champion #%d, but wait until %s is finished.' % (user, self.current.talk_id, self.champions[0]))
-        else:
-            # if this isn't the championing user, tell them to STFU
-            if not self.champions or user != self.champions[0]:
-                # is this user in queue later?
-                instructions = '%s: Please do not speak during the championing process. If you want to champion #%d, please say "me".'
-                if user in self.champions:
-                    instructions = '%s: You are in line to champion #%d, but please be quiet until it is your turn.'
-                self.msg(channel, instructions % (user, self.current.talk_id))
-
-            # if this is the championing user, check to see if he's done
-            if self.champions and user == self.champions[0]:
-                if message.rstrip().endswith(('done', 'done.', 'done!')):
-                    # okay, this person is done. pop him off the champion list
-                    self.msg(channel, '%s: Thank you.' % user)
-
-                    # is there anyone else in line to champion? if so, move on
-                    # to that person, otherwise move to debate
-                    if len(self.champions) > 1:
-                        self.handle_next_champion(channel)
-                    else:
-                        self.handle_debate(channel, debate_time=2 if self.current.status == 'hold' else 3)
-
-    def handle_next_champion(self, channel, _initial=False):
+    def chair_next_champion(self, user, channel, _initial=False):
         """Move to the next champion. Normally, this is called automatically by a champion's self-designation
         or by a first champion's being finished, giving way to the next one. However, this allows the chair to
         manually continue the process if needed."""
@@ -211,7 +188,7 @@ class ReviewMode(BaseBotMode):
         # sanity check: are there any champions?
         if not self.champions:
             self.msg(channel, 'There are no more champions in queue. Moving on to debate.')
-            self.handle_debate(channel)
+            self.debate(channel)
             return
 
         # this user is up; tell him what to do
@@ -221,7 +198,7 @@ class ReviewMode(BaseBotMode):
         # clear any existing timer
         self.bot.clear_timer()
 
-    def handle_debate(self, channel, debate_time=DEBATE_MINUTES):
+    def chair_debate(self, user, channel, debate_time=DEBATE_MINUTES):
         """Shift the channel into debate mode, and set the appropriate timer."""
 
         # clear out the state handler
@@ -234,7 +211,7 @@ class ReviewMode(BaseBotMode):
         self.segment = 'debate'
         self.msg(channel, "=== General Debate (%s) for Talk: #%d ===", self._minutes_to_text(debate_time), self.current.talk_id)
 
-    def handle_extend(self, channel, extend_time=1):
+    def chair_extend(self, user, channel, extend_time=1):
         """Extend the time on the clock. In reality, this does nothing
         but set another clock, but it's a useful management tool within meetings."""
 
@@ -245,26 +222,15 @@ class ReviewMode(BaseBotMode):
         # now report the extension
         self.msg(channel, '=== Extending time by %s. Please continue. ===' % self._minutes_to_text(extend_time))
 
-    def handle_vote(self, channel):
+    def chair_vote(self, user, channel):
         self.bot.clear_timer()
         self.current_votes = {}
         self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===", self.current.talk_id)
         self.msg(channel, "Please do not speak after voting until we've gotten our report.")
         self.segment = 'voting'
-        self.bot.state_handler = self.handle_user_vote
+        self.bot.state_handler = self.handler_user_vote
 
-    def handle_user_vote(self, channel, user, message):
-        message = message.strip().lower()
-        if message == 'y' or message.startswith(('yes', 'yay', 'yea', 'aye', '+1')):
-            self.current_votes[user] = 'yay'
-        elif message == 'n' or message.startswith(('no', 'nay', '-1')):
-            self.current_votes[user] = 'nay'
-        elif message == 'a' or message.startswith(('abs', 'abstain', '0')):
-            self.current_votes[user] = "abstain"
-        else:
-            self.msg(channel, "%s: please vote yay, nay, or abstain.", user)
-
-    def handle_report(self, channel):
+    def chair_report(self, user, channel):
         if not self.current:
             return
             
@@ -296,19 +262,118 @@ class ReviewMode(BaseBotMode):
         # to the next talk
         self.segment = 'post-report'
 
-    def handle_accept(self, channel):
-        self._make_decision(channel, 'thunderdome', 'Talk #%s accepted; moves on to thunderdome.')
+    def chair_accept(self, user, channel):
+        self._make_decision(user, channel, 'thunderdome', 'Talk #%s accepted; moves on to thunderdome.')
 
-    def handle_reject(self, channel):
-        self._make_decision(channel, 'rejected', 'Talk #%s rejected.')
+    def chair_reject(self, user, channel):
+        self._make_decision(user, channel, 'rejected', 'Talk #%s rejected.')
 
-    def handle_poster(self, channel):
-        self._make_decision(channel, 'poster', 'Talk #%s rejected (suggest re-submission as poster).')
+    def chair_poster(self, user, channel):
+        self._make_decision(user, channel, 'poster', 'Talk #%s rejected (suggest re-submission as poster).')
 
-    def handle_hold(self, channel):
-        self._make_decision(channel, 'hold', 'Talk #%s put on hold; will be reviewed at a future meeting.')
+    def chair_hold(self, user, channel):
+        self._make_decision(user, channel, 'hold', 'Talk #%s put on hold; will be reviewed at a future meeting.')
 
-    def _make_decision(self, channel, decision, message):
+    def chair_rules(self, user, channel):
+        """Remind participants where they can find the rules."""
+
+        self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
+        self.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
+        
+    def handler_user_vote(self, user, channel, message):
+        message = message.strip().lower()
+        if message == 'y' or message.startswith(('yes', 'yay', 'yea', 'aye', '+1')):
+            self.current_votes[user] = 'yay'
+        elif message == 'n' or message.startswith(('no', 'nay', '-1')):
+            self.current_votes[user] = 'nay'
+        elif message == 'a' or message.startswith(('abs', 'abstain', '0')):
+            self.current_votes[user] = "abstain"
+        else:
+            self.msg(channel, "%s: please vote yay, nay, or abstain.", user)
+    
+    def handler_user_champion(self, user, channel, message):
+        """Handle the baton pass where a user declares that he will champion a talk,
+        and give him time to do it. Gripe at anyone who goes off script unless it's a superuser."""
+    
+        # if this message is "me", add the person to the champion list
+        # and address appropriately
+        message = message.lower().strip().rstrip('.')
+        if message == 'me':
+            # add this user to the champion queue
+            if user not in self.champions:
+                self.champions.append(user)
+    
+                # should this user champion immediately, or is he
+                # in queue behind someone?
+                if len(self.champions) == 1:
+                    self.chair_next_champion(user, channel, _initial=True)
+                else:
+                    # tell this user to hold off for a bit...
+                    self.msg(channel, '%s: Excellent. Please champion #%d, but wait until %s is finished.' % (user, self.current.talk_id, self.champions[0]))
+        else:
+            # if this isn't the championing user, tell them to STFU
+            if not self.champions or user != self.champions[0]:
+                # is this user in queue later?
+                instructions = '%s: Please do not speak during the championing process. If you want to champion #%d, please say "me".'
+                if user in self.champions:
+                    instructions = '%s: You are in line to champion #%d, but please be quiet until it is your turn.'
+                self.msg(channel, instructions % (user, self.current.talk_id))
+    
+            # if this is the championing user, check to see if he's done
+            if self.champions and user == self.champions[0]:
+                if message.rstrip().endswith(('done', 'done.', 'done!')):
+                    # okay, this person is done. pop him off the champion list
+                    self.msg(channel, '%s: Thank you.' % user)
+    
+                    # is there anyone else in line to champion? if so, move on
+                    # to that person, otherwise move to debate
+                    if len(self.champions) > 1:
+                        self.chair_next_champion(user, channel)
+                    else:
+                        self.chair_debate(user, channel, debate_time=2 if self.current.status == 'hold' else 3)
+                        
+    def event_user_joined(self, user, channel):
+        """React to a user's joining the channel when a meeting is
+        already in progress."""
+        
+        # sanity check: if we're not in a meeting, then no need
+        # to do anything at all
+        if not self._in_meeting:
+            return
+            
+        # sanity check: if the user is already in the non-voter list,
+        # then this is a red herring; ignore it
+        if user in self.nonvoters:
+            return
+            
+        # spit out a welcome, and a request for a name, to the meeting channel,
+        # but tailor the request to where we are
+        if self.segment in ('champion', 'voting'):
+            self.msg(channel, 'Howdy %s. Right now we are in the %s segment on talk #%d. Please print your name for the record, but wait until this segment concludes.' % (user, self.segment, self.current.talk_id))
+        else:
+            self.msg(channel, 'Howdy %s; name for the record, please?' % user)
+        
+        # also, send the user a welcome with information about
+        # where we are and what's going on
+        self.msg(user, 'Thanks for coming, %s! This meeting has already begun.' % user)
+        if self.current:
+            self.msg(user, 'Currently, we are on talk #%d (%s). We are in the %s segment.' % (self.current.talk_id, self.current.review_url, self.segment))
+        else:
+            self.msg(user, 'There is no current talk under consideration at this moment.')
+            
+        # now give a quick overview of bot abilities
+        self.msg(user, 'You may issue me commands via. private message if you like. Issue `help` at any time for a list.')
+
+    def log_message(self, user, channel, message):
+        """
+        Save a transcript for debate along with each talk.
+        """
+        if self.meeting:
+            self.meeting.add_to_transcript(datetime.now(), user, message)
+        if self.current:
+            self.current.add_to_transcript(datetime.now(), user, message)
+
+    def _make_decision(self, user, channel, decision, message):
         """Make a given decision, and save it to the database."""
         
         # clear any timer and any user mode
@@ -331,18 +396,3 @@ class ReviewMode(BaseBotMode):
             meeting_copy = Meeting.objects.get(id=self.meeting.id)
             if self.current not in meeting_copy.talks_decided:
                 Meeting.objects(id=self.meeting.id).update_one(push__talks_decided=self.current)
-
-    def handle_rules(self, channel):
-        """Remind participants where they can find the rules."""
-
-        self.msg(channel, "Meeting rules: http://bit.ly/pycon-pc-rules")
-        self.msg(channel, "Notes about process: http://bit.ly/pycon-pc-format")
-
-    def log_message(self, user, channel, message):
-        """
-        Save a transcript for debate along with each talk.
-        """
-        if self.meeting:
-            self.meeting.add_to_transcript(datetime.now(), user, message)
-        if self.current:
-            self.current.add_to_transcript(datetime.now(), user, message)
