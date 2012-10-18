@@ -54,19 +54,22 @@ class Note(mongoengine.EmbeddedDocument):
 
 class TalkProposal(mongoengine.Document):
     STATUSES = [
-        ('unreviewed',      'Unreviewed'),
-        ('hold',            'On hold'),
-        ('poster',          'Rejected (suggest poster)'),
-        ('rejected',        'Rejected'),
-        ('thunderdome',     'In Thunderdome'),
-        ('accepted',        'Accepted'),
-        ('damaged',         'Damaged'),
+        ('accepted',    'Accepted'),
+        ('damaged',     'Damaged'),
+        ('hold',        'On hold'),
+        ('rejected',    'Rejected'),
+        ('unreviewed',  'Unreviewed'),
+        ('thunderdome', 'In Thunderdome'),
     ]
     KITTENDOME_RESULT_CHOICES = [
-        ('thunderdome', 'Accepted to thunderdome'),
         ('hold',        'Held for re-review'),
         ('rejected',    'Rejected'),
-        ('poster',      'Rejected (suggest poster)'),
+        ('thunderdome', 'Accepted to thunderdome'),
+    ]
+    TALK_ALTERNATIVES = [
+        ('lightning',  'Lightning Talk'),
+        ('open_space', 'Open Space'),
+        ('poster',     'Poster'),
     ]
 
     talk_id = mongoengine.IntField(unique=True)
@@ -74,6 +77,7 @@ class TalkProposal(mongoengine.Document):
     title = mongoengine.StringField()
     category = mongoengine.StringField()
     status = mongoengine.StringField(choices=STATUSES)
+    alternative_suggestion = mongoengine.StringField(choices=TALK_ALTERNATIVES)
     notes = mongoengine.ListField(mongoengine.EmbeddedDocumentField(Note))
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)

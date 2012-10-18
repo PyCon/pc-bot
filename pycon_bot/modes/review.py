@@ -67,49 +67,8 @@ class Mode(BaseMode):
         # pull out of this mode; ,end implies a reversion to skeleton mode
         self.chair_mode(user, channel, 'none', _silent=True)
 
-    def chair_agenda(self, user, channel):
-        """Print out the agenda. Attempt to assess how many talks are left
-        and print out the expected agenda appropriately."""
-                    
-        # determine how many talks we expect to be left
-        # first, we start with the expected number of talks; we'll be
-        #   pessimistic and go with 12
-        talk_count = 12
-        
-        # now, if we're more than 15 minutes into the meeting, then
-        #   we can use the number of talks decided to guess how many we think
-        #   will actually be left
-        if hasattr(self, '_talks_remaining'):
-            talk_count = self._talks_remaining + 1
-        elif self.meeting:
-            meeting_end = self.meeting.start + timedelta(minutes=70)
-            time_left = meeting_end - datetime.now()
-            talk_count = int(round(time_left.seconds / 300))
-
-        # get the list of talks
-        talks = TalkProposal.objects.filter(status__in=('unreviewed', 'hold')).order_by('talk_id')[0:talk_count]
-
-        # sanity check: do we have any talks up to bat at all?
-        if not talks:
-            self.msg(channel, 'There are no talks on the agenda. Clearly, we shouldn\'t be here.')
-            return
-
-        # okay, show the talks coming next
-        next_up = talks[0]
-        subsequent_talks = talks[1:talk_count]
-
-        # print out the current/next talk to the channel
-        self.msg(channel, 'The %s talk on the table is:' % 'current' if self.current.talk_id == next_up.talk_id else 'next')
-        self.msg(channel, next_up.review_url)
-        
-        # what about later talks? print them too
-        upcoming_talks = ", ".join([str(t.talk_id) for t in subsequent_talks])
-        if upcoming_talks:
-            self.msg(channel, 'Subsequent talks will be: %s.' % upcoming_talks)
-        else:
-            self.msg(channel, 'The are no subsequent talks for today.')
-
     def chair_goto(self, user, channel, talk_id):
+        """Cause the next talk to be the talk with the given `talk_id`."""
         try:
             self.next = TalkProposal.objects.get(talk_id=talk_id)
         except TalkProposal.DoesNotExist:
@@ -271,16 +230,32 @@ class Mode(BaseMode):
         self.segment = 'post-report'
 
     def chair_accept(self, user, channel):
-        self._make_decision(user, channel, 'thunderdome', 'Talk #%s accepted; moves on to thunderdome.')
+        """Accept the current talk."""
+        self._make_decision(user, channel, 'thunderdome', 'Talk #%d accepted; moves on to thunderdome.')
 
-    def chair_reject(self, user, channel):
-        self._make_decision(user, channel, 'rejected', 'Talk #%s rejected.')
-
-    def chair_poster(self, user, channel):
-        self._make_decision(user, channel, 'poster', 'Talk #%s rejected (suggest re-submission as poster).')
+    def chair_reject(self, user, channel, reject_type=None):
+        """Reject the current talk."""
+        
+        # if we got an argument, and there was a rejection type that we
+        # recognize, then reject the talk, but in a special way
+        if reject_type == 'poster':
+            return self._make_decision(user, channel, 'poster', 'Talk #%d rejected (suggest submission of poster).')
+        if reject_type == 'lightning':
+            return self._make_decision(user, channel, 'lightning', 'Talk #%d rejected (suggest submission of lightning talk).')
+        if reject_type == 'open_space':
+            return self._make_decision(user, channel, 'open_space', 'Talk #%d rejected (suggest submission of open space).')
+            
+        # if we got a rejection type, but we don't understand it, then
+        # error out -- probably the chair meant something else
+        if reject_type:
+            return self.msg(channel, '%s, I do not understand what kind of rejection you want.' % user)
+            
+        # okay, perform a standard rejection
+        self._make_decision(user, channel, 'rejected', 'Talk #%d rejected.')
 
     def chair_hold(self, user, channel):
-        self._make_decision(user, channel, 'hold', 'Talk #%s put on hold; will be reviewed at a future meeting.')
+        """Place the current talk on hold."""
+        self._make_decision(user, channel, 'hold', 'Talk #%d put on hold; will be reviewed at a future meeting.')
 
     def private_rules(self, user):
         """Report where the user may find the rules and process notes."""
@@ -324,6 +299,48 @@ class Mode(BaseMode):
         self.msg(user, 'The next talk to be discussed will be:')
         self.msg(user, '    #%d: %s (%s)' % (self.next.talk_id, self.next.title, self.next.speaker))
         self.msg(user, '    %s' % self.next.review_url)
+    
+    def private_agenda(self, user):
+        """Print out the agenda. Attempt to assess how many talks are left
+        and print out the expected agenda appropriately."""
+                    
+        # determine how many talks we expect to be left
+        # first, we start with the expected number of talks; we'll be
+        #   pessimistic and go with 12
+        talk_count = 12
+        
+        # now, if we're more than 15 minutes into the meeting, then
+        #   we can use the number of talks decided to guess how many we think
+        #   will actually be left
+        if hasattr(self, '_talks_remaining'):
+            talk_count = self._talks_remaining + 1
+        elif self.meeting:
+            meeting_end = self.meeting.start + timedelta(minutes=70)
+            time_left = meeting_end - datetime.now()
+            talk_count = int(round(time_left.seconds / 300))
+    
+        # get the list of talks
+        talks = TalkProposal.objects.filter(status__in=('unreviewed', 'hold')).order_by('talk_id')[0:talk_count]
+    
+        # sanity check: do we have any talks up to bat at all?
+        if not talks:
+            self.msg(user, 'There are no talks on the agenda. Clearly, we shouldn\'t be here.')
+            return
+    
+        # okay, show the talks coming next
+        next_up = talks[0]
+        subsequent_talks = talks[1:talk_count]
+    
+        # print out the current/next talk to the channel
+        self.msg(user, 'The %s talk on the table is:' % ('current' if (self.current and self.current.talk_id == next_up.talk_id) else 'next'))
+        self.msg(user, next_up.review_url)
+        
+        # what about later talks? print them too
+        upcoming_talks = ", ".join([str(t.talk_id) for t in subsequent_talks])
+        if upcoming_talks:
+            self.msg(user, 'Subsequent talks will be: %s.' % upcoming_talks)
+        else:
+            self.msg(user, 'The are no subsequent talks for today.')
         
     def handler_user_vote(self, user, channel, message):
         message = message.strip().lower()
