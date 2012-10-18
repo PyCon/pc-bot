@@ -30,6 +30,12 @@ class SkeletonMode(object):
     def exec_command(self, command, command_type, user, channel, *args):
         """Execute an arbitrary command, provided it is found on the mode."""
         
+        # if this is a command beginning with a comma,
+        # then inform the user that the comma is superfluous
+        if command.startswith(','):
+            self.msg(user, 'A leading comma is only necessary for chair commands.')
+            return
+        
         # find the correct command and execute it
         method = '%s_%s' % (command_type, command)
         if hasattr(self, method):

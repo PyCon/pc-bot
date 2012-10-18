@@ -1,7 +1,7 @@
 from __future__ import division
 from .base import BaseMode
 from ..models import TalkProposal, KittendomeVotes, Meeting
-from datetime import datetime
+from datetime import datetime, timedelta
 
 CHAMPION_CALL_SECONDS = 30
 CHAMPION_MINUTES = 2
@@ -67,14 +67,24 @@ class Mode(BaseMode):
         # pull out of this mode; ,end implies a reversion to skeleton mode
         self.chair_mode(user, channel, 'none', _silent=True)
 
-    def chair_agenda(self, user, channel, talk_count=12):
-        """Print out the agenda. Blindly assume that the agenda includes
-        the next 12 talks, regardless of when or where it is called."""
+    def chair_agenda(self, user, channel):
+        """Print out the agenda. Attempt to assess how many talks are left
+        and print out the expected agenda appropriately."""
+                    
+        # determine how many talks we expect to be left
+        # first, we start with the expected number of talks; we'll be
+        #   pessimistic and go with 12
+        talk_count = 12
         
-        try:
-            talk_count = int(talk_count)
-        except ValueError:
-            return
+        # now, if we're more than 15 minutes into the meeting, then
+        #   we can use the number of talks decided to guess how many we think
+        #   will actually be left
+        if hasattr(self, '_talks_remaining'):
+            talk_count = self._talks_remaining + 1
+        elif self.meeting:
+            meeting_end = self.meeting.start + timedelta(minutes=70)
+            time_left = meeting_end - datetime.now()
+            talk_count = int(round(time_left.seconds / 300))
 
         # get the list of talks
         talks = TalkProposal.objects.filter(status__in=('unreviewed', 'hold')).order_by('talk_id')[0:talk_count]
@@ -88,10 +98,16 @@ class Mode(BaseMode):
         next_up = talks[0]
         subsequent_talks = talks[1:talk_count]
 
-        # print out the list to the channel
-        self.msg(channel, 'The next talk on the table is:')
+        # print out the current/next talk to the channel
+        self.msg(channel, 'The %s talk on the table is:' % 'current' if self.current.talk_id == next_up.talk_id else 'next')
         self.msg(channel, next_up.review_url)
-        self.msg(channel, 'Subsequent talks will be: %s.' % ", ".join([str(t.talk_id) for t in subsequent_talks]))
+        
+        # what about later talks? print them too
+        upcoming_talks = ", ".join([str(t.talk_id) for t in subsequent_talks])
+        if upcoming_talks:
+            self.msg(channel, 'Subsequent talks will be: %s.' % upcoming_talks)
+        else:
+            self.msg(channel, 'The are no subsequent talks for today.')
 
     def chair_goto(self, user, channel, talk_id):
         try:
@@ -105,7 +121,7 @@ class Mode(BaseMode):
             msg += " Previous vote was %s." % self.next.kittendome_votes
         self.msg(channel, msg)
 
-    def chair_next(self, user, channel):
+    def chair_next(self, user, channel, talks_remaining=None):
         """Move to the next talk, and immediately shift into champion mode."""
 
         # sanity check: are we in the post report phase?
@@ -115,6 +131,13 @@ class Mode(BaseMode):
         if self.segment == 'post-report':
             self.msg(channel, 'We just had a report on the current talk. I am stubbornly refusing to move to the next talk until the current one has been officially accepted or rejected.')
             return
+            
+        # if we were told, now or previously, how many talks remain
+        # in this meeting, then track that accordingly
+        if talks_remaining is not None:
+            self._talks_remaining = max(int(talks_remaining), 1)
+        if hasattr(self, '_talks_remaining'):
+            self._talks_remaining -= 1
 
         # figure out which talk is up now
         if self.next:
@@ -133,11 +156,14 @@ class Mode(BaseMode):
         # announce the talk
         self.msg(channel, "=== Talk %d: %s - %s ===", t.talk_id, t.title, t.review_url)
 
-        try:
-            self.next = TalkProposal.next_unreviewed_talk(after=t)
-            self.msg(channel, "(%s will be next)", self.next.review_url)
-        except IndexError:
-            pass
+        if getattr(self, '_talks_remaining', 3.14159):  # arbitrary non-zero number; I want "not set" to eval to True
+            try:
+                self.next = TalkProposal.next_unreviewed_talk(after=t)
+                self.msg(channel, "(%s will be next)", self.next.review_url)
+            except IndexError:
+                self.msg(channel, 'This will be the last talk of kittendome!')
+        else:
+            self.msg(channel, 'This will be the last talk for today.')
 
         # begin the championing process
         # note: if this talk has *already* been debated and is, in fact, on hold,
@@ -288,7 +314,11 @@ class Mode(BaseMode):
         
         # sanity check: is there a next talk in the system?
         if not self.next:
-            self.msg(user, 'There is no upcoming talk. We will be done after this talk.')
+            message = 'There is no upcoming talk.'
+            if self.current:
+                message += ' We will be done after this talk.'
+            self.msg(user, message)
+            return
         
         # report on the talk coming next
         self.msg(user, 'The next talk to be discussed will be:')
@@ -411,3 +441,7 @@ class Mode(BaseMode):
             meeting_copy = Meeting.objects.get(id=self.meeting.id)
             if self.current not in meeting_copy.talks_decided:
                 Meeting.objects(id=self.meeting.id).update_one(push__talks_decided=self.current)
+                
+            # if this is the last talk, end
+            if hasattr(self, '_talks_remaining') and self._talks_remaining == 0:
+                self.chair_end(user, channel)
