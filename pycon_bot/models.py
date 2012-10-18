@@ -77,7 +77,7 @@ class TalkProposal(mongoengine.Document):
     title = mongoengine.StringField()
     category = mongoengine.StringField()
     status = mongoengine.StringField(choices=STATUSES)
-    alternative_suggestion = mongoengine.StringField(choices=TALK_ALTERNATIVES)
+    alternative = mongoengine.StringField(choices=TALK_ALTERNATIVES)
     notes = mongoengine.ListField(mongoengine.EmbeddedDocumentField(Note))
     site_votes = mongoengine.EmbeddedDocumentField(SiteVotes)
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)

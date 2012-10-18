@@ -233,21 +233,21 @@ class Mode(BaseMode):
         """Accept the current talk."""
         self._make_decision(user, channel, 'thunderdome', 'Talk #%d accepted; moves on to thunderdome.')
 
-    def chair_reject(self, user, channel, reject_type=None):
+    def chair_reject(self, user, channel, alternative=None):
         """Reject the current talk."""
         
         # if we got an argument, and there was a rejection type that we
         # recognize, then reject the talk, but in a special way
-        if reject_type == 'poster':
-            return self._make_decision(user, channel, 'poster', 'Talk #%d rejected (suggest submission of poster).')
-        if reject_type == 'lightning':
-            return self._make_decision(user, channel, 'lightning', 'Talk #%d rejected (suggest submission of lightning talk).')
-        if reject_type == 'open_space':
-            return self._make_decision(user, channel, 'open_space', 'Talk #%d rejected (suggest submission of open space).')
+        if alternative == 'poster':
+            return self._make_decision(user, channel, 'rejected', 'Talk #%d rejected (suggest submission of poster).', alternative='poster')
+        if alternative == 'lightning':
+            return self._make_decision(user, channel, 'rejected', 'Talk #%d rejected (suggest submission of lightning talk).', alternative='lightning')
+        if alternative == 'open_space':
+            return self._make_decision(user, channel, 'rejected', 'Talk #%d rejected (suggest submission of open space).', alternative='open_space')
             
         # if we got a rejection type, but we don't understand it, then
         # error out -- probably the chair meant something else
-        if reject_type:
+        if alternative:
             return self.msg(channel, '%s, I do not understand what kind of rejection you want.' % user)
             
         # okay, perform a standard rejection
@@ -435,7 +435,7 @@ class Mode(BaseMode):
         if self.current:
             self.current.add_to_transcript(datetime.now(), user, message)
 
-    def _make_decision(self, user, channel, decision, message):
+    def _make_decision(self, user, channel, decision, message, alternative=None):
         """Make a given decision, and save it to the database."""
         
         # clear any timer and any user mode
@@ -449,6 +449,8 @@ class Mode(BaseMode):
         self.msg(channel, "=== %s ===" % message, self.current.talk_id)
         self.current.status = decision
         self.current.kittendome_result = decision
+        if decision == 'rejected' and alternative:
+            self.current.alternative = alternative
         self.current.save()
         
         # place the talk into the meeting's `talks_decided` list
