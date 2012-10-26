@@ -170,11 +170,13 @@ class BaseMode(SkeletonMode):
         who has not reported in to be a non-voter."""
         
         # this is a special command if we're in the "reporting in" phase;
-        # set as a non-voter everyone who hasn't reported in yet
+        #   set as a non-voter everyone who hasn't reported in yet
+        # note: also adds as a non-voter the person who ran the command
         if self.bot.state_handler == self.handler_user_names and not users:
             def _(names):
                 laggards = set(names) - self.reported_in - self.nonvoters
                 laggards.remove(self.bot.nickname)
+                laggards.add(user)
                 if laggards:
                     self.nonvoters.update(laggards)
                     self.msg(channel, 'Will no longer pester %s.' % ', '.join(laggards))
