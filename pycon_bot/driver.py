@@ -46,17 +46,19 @@ class PyConBot(irc.IRCClient):
                 self.msg(channel, "=== %s ===" % message)
             if callback and callable(callback):
                 callback(**callback_kwargs)
+        
         self.clear_timer()
         self.timer = reactor.callLater(seconds, say_time, channel)
-
+        
     def clear_timer(self):
-        """
-        Clear an already-set timer.
-        """
+        """Clear an already-set timer, and return it."""
+        
+        # get the timer so I can get data out of it, in case
+        # I need to re-instutite the timer       
         if self.timer:
             self.timer.cancel()
-            self.timer = None
-
+            self.timer = None        
+                    
     def names(self, channel):
         """List names in the channel.
 

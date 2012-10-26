@@ -2,6 +2,7 @@ from __future__ import division
 from .base import BaseMode
 from ..models import TalkProposal, KittendomeVotes, Meeting
 from datetime import datetime, timedelta
+from twisted.internet import reactor
 
 CHAMPION_CALL_SECONDS = 30
 CHAMPION_MINUTES = 2
@@ -23,6 +24,9 @@ class Mode(BaseMode):
         # where we are in the review process for the current talk on the plate
         self.segment = None
         self.champions = []
+        
+        # some private things
+        self._delayed_vote_timer = None
 
     def chair_start(self, user, channel, meeting_num=None):
         """Start a meeting. If a meeting number is given, resume the
@@ -189,13 +193,62 @@ class Mode(BaseMode):
         # now report the extension
         self.msg(channel, '=== Extending time by %s. Please continue. ===' % self._minutes_to_text(extend_time))
 
-    def chair_vote(self, user, channel):
-        self.bot.clear_timer()
-        self.current_votes = {}
-        self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===", self.current.talk_id)
-        self.msg(channel, "Please do not speak after voting until we've gotten our report.")
-        self.segment = 'voting'
-        self.bot.state_handler = self.handler_user_vote
+    def chair_vote(self, user, channel, defer=None):
+        """Call for a vote.
+        
+        If an argument (`defer`) is specified, wait `defer` seconds before calling
+        the vote, and if anyone in the channel says "wait", then cancel the countdown."""
+        
+        # the basic idea here is that if any defer is called that is >= some number,
+        #   there should be a second announcement saying that time is almost up
+        # so, if voting will commence in 15 seconds, give the initial warning and then a second
+        #   warning just beforehand
+        # the constants are just here so that these boundaries can be modified in one place,
+        #   but I'm pretty sure 10 and 5 are where I want them
+        _DOUBLE_MESSAGE_BOUNDARY = 10
+        _DOUBLE_MESSAGE_SECOND_CALL = 5
+        
+        if defer:
+            defer = int(defer)
+            
+            # first, delay the timer currently on the bot by the amount of the deferral;
+            # do this in lieu of clearing the timer because if we are asked to wait; we still need it
+            if self.bot.timer and self.bot.timer.active:
+                if defer >= _DOUBLE_MESSAGE_BOUNDARY:
+                    self.bot.timer.delay(defer)
+                else:
+                    self.bot.timer.delay(defer - _DOUBLE_MESSAGE_SECOND_CALL)
+            else:
+                # there is no timer; this is an odd case, but I don't know how to automate it;
+                # the chair will have to handle this as he sees fit.
+                self.msg(user, 'Note: You called a deferred vote called with no active timer on the channel. I am doing as I am told, but am not sure what you are intending. FYI.')
+                
+            # now set up our own timer for the vote delay; note that we need to *not* use
+            #   `self.bot.set_timer` because it will wipe out the "main" timer that we need back;
+            #   therefore; set this one off to the side
+            if defer >= _DOUBLE_MESSAGE_BOUNDARY:
+                self._delayed_vote_timer = reactor.callLater(defer - _DOUBLE_MESSAGE_SECOND_CALL, self.chair_vote, user, channel, defer=_DOUBLE_MESSAGE_SECOND_CALL)
+            else:
+                self._delayed_vote_timer = reactor.callLater(defer, self.chair_vote, user, channel)
+            self.msg(channel, 'Voting in %d seconds unless someone objects (type "wait").' % defer)
+            
+            # set the state handler so the bot actually listens to wait calls
+            self.bot.state_handler = self.handler_voting_soon
+            
+        else:
+            # clear any timer that may exist now
+            self.bot.clear_timer()
+            
+            # clear out the votes
+            self.current_votes = {}
+            
+            # tell the channel that we're switching segments
+            self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===", self.current.talk_id)
+            self.msg(channel, "Please do not speak after voting until we've gotten our report.")
+            self.segment = 'voting'
+        
+            # set the state handler
+            self.bot.state_handler = self.handler_user_vote
 
     def chair_report(self, user, channel):
         if not self.current:
@@ -352,6 +405,19 @@ class Mode(BaseMode):
             self.current_votes[user] = "abstain"
         else:
             self.msg(channel, "%s: please vote yay, nay, or abstain.", user)
+            
+    def handler_voting_soon(self, user, channel, message):
+        """Handle the case where we're counting down to a premature vote. If anyone
+        says "wait", call off the countdown."""
+        
+        # if the message is (or even just begins with) "wait", that's our signal to hold off
+        message = message.strip().lower()
+        if message.startswith('wait'):
+            self._delayed_vote_timer.cancel()
+            self._delayed_vote_timer = None
+            
+            # print that we're holding off
+            self.msg(channel, 'Request to wait acknowledged. Holding off.')
     
     def handler_user_champion(self, user, channel, message):
         """Handle the baton pass where a user declares that he will champion a talk,

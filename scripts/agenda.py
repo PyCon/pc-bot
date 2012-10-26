@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Generate an agenda for the next meeting.
 
