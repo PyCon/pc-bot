@@ -186,9 +186,13 @@ class Mode(BaseMode):
         """Extend the time on the clock. In reality, this does nothing
         but set another clock, but it's a useful management tool within meetings."""
 
-        # clear the timer and set a new one
-        self.bot.clear_timer()
-        self.bot.set_timer(channel, float(extend_time) * 60)
+        # if there's an active timer, just delay it
+        if self.bot.timer and self.bot.timer.active():
+            self.bot.timer.delay(float(extend_time) * 60)
+        else:
+            # clear the timer and set a new one
+            self.bot.clear_timer()
+            self.bot.set_timer(channel, float(extend_time) * 60)
 
         # now report the extension
         self.msg(channel, '=== Extending time by %s. Please continue. ===' % self._minutes_to_text(extend_time))
@@ -213,7 +217,7 @@ class Mode(BaseMode):
             
             # first, delay the timer currently on the bot by the amount of the deferral;
             # do this in lieu of clearing the timer because if we are asked to wait; we still need it
-            if self.bot.timer and self.bot.timer.active:
+            if self.bot.timer and self.bot.timer.active():
                 if defer >= _DOUBLE_MESSAGE_BOUNDARY:
                     self.bot.timer.delay(defer)
                 else:
