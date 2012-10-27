@@ -224,7 +224,7 @@ class Mode(BaseMode):
                     self.bot.timer.delay(defer - _DOUBLE_MESSAGE_SECOND_CALL)
             else:
                 # there is no timer; this is an odd case, but I don't know how to automate it;
-                # the chair will have to handle this as he sees fit.
+                # the chair will have to handle this as he/she sees fit.
                 self.msg(user, 'Note: You called a deferred vote called with no active timer on the channel. I am doing as I am told, but am not sure what you are intending. FYI.')
                 
             # now set up our own timer for the vote delay; note that we need to *not* use
@@ -424,7 +424,7 @@ class Mode(BaseMode):
             self.msg(channel, 'Request to wait acknowledged. Holding off.')
     
     def handler_user_champion(self, user, channel, message):
-        """Handle the baton pass where a user declares that he will champion a talk,
+        """Handle the baton pass where a user declares that he/she will champion a talk,
         and give him time to do it. Gripe at anyone who goes off script unless it's a superuser."""
     
         # if this message is "me", add the person to the champion list
@@ -435,7 +435,7 @@ class Mode(BaseMode):
             if user not in self.champions:
                 self.champions.append(user)
     
-                # should this user champion immediately, or is he
+                # should this user champion immediately, or is he/she
                 # in queue behind someone?
                 if len(self.champions) == 1:
                     self.chair_next_champion(user, channel, _initial=True)
@@ -451,7 +451,7 @@ class Mode(BaseMode):
                     instructions = '%s: You are in line to champion #%d, but please be quiet until it is your turn.'
                 self.msg(channel, instructions % (user, self.current.talk_id))
     
-            # if this is the championing user, check to see if he's done
+            # if this is the championing user, check to see if he/she's done
             if self.champions and user == self.champions[0]:
                 if message.rstrip().endswith(('done', 'done.', 'done!')):
                     # okay, this person is done. pop him off the champion list
