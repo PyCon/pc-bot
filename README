@@ -11,7 +11,7 @@ First, the usual:
 
     pip install -r requirements.txt
 
-Then, rhe best way to configure this thing is through some environ variables
+Then, the best way to configure this thing is through some environ variables
 (there are flags, but env is easier)::
 
     export MONGO_DSN=mongodb://...
