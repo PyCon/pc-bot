@@ -143,6 +143,12 @@ class PyConBot(irc.IRCClient):
         """When a new user joins the channel, take appropriate action,
         and also ask the node what, if anything, it wants to do."""
         
+        # is this a potential superuser? if so, we
+        # need to refresh the superuser list
+        if user in self.potential_superusers:
+            self.check_auth()
+        
+        # now ship us off to the mode
         if hasattr(self.mode, 'event_user_joined'):
             self.mode.event_user_joined(user, channel)
 
