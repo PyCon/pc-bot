@@ -87,6 +87,12 @@ class TalkProposal(mongoengine.Document):
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
+        
+    def __lt__(self, other):
+        return self.talk_id < other.talk_id
+        
+    def __gt__(self, other):
+        return self.talk_id > other.talk_id
 
     @property
     def review_url(self):
@@ -122,9 +128,8 @@ class Meeting(mongoengine.Document):
         Meeting.objects(id=self.id).update_one(push__transcript=t)
 
 class Group(mongoengine.Document):
-    """
-    A group of talks to be reviewed in one T-dome session.
-    """
+    """A group of talks to be reviewed in one Thunderdome session."""
+    
     number = mongoengine.SequenceField()
     name = mongoengine.StringField()
     talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))

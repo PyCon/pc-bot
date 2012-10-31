@@ -1,73 +1,42 @@
-import re
-import json
-import os
-
-from pycon_bot.base import main, BasePyConBot
+from .base import BaseMode
+from ..models import Meeting, Group, TalkProposal
+from datetime import datetime
 
 
-REVIEW_MINUTES = 2          # Length of "quiet review" before debate.
-DEBATE_MINUTES = 5          # Length of debate.
 WINNING_THRESHOLD = 0.75    # Min % votes for a winning talk.
 DAMAGED_THRESHOLD = 0.50    # Min % votes for a damaged talk.
 
-"""
-Talk group JSON format, for reference:
 
-[
-    {
-        "name": "Name of this talk group III",
-        "talks": {
-            123: "Talk name",
-            456: "Talk name",
-            789: "Talk name",
-        },
-        "decision": {
-            "accepted": [123],
-            "damaged": [456],
-            "rejeted": [789],
-        }
-        "votes": {
-            "jacobkm": [123, 456, 789],
-            ...
-        }
-    },
-    ...
-]
-"""
-
-class PyConThunderdomeBot(BasePyConBot):
-    commands = frozenset(["next", "debate", "vote", "report", "pester", "start",
-                          "in", "out", "dam", 'voter', 'nonvoter'])
-
-    jsonfile = os.path.join(os.path.dirname(__file__), 'talk_groups.json')
-
+class Mode(BaseMode):
+    """A mdoer for handling Thunderdome sessions."""
+    
     def __init__(self):
-        self.load_talk_groups()
-        BasePyConBot.__init__(self)
-        self.idx = -1
+        self.meeting = None
 
-    def load_talk_groups(self):
-        with open(self.jsonfile) as f:
-            self.talk_groups = json.load(f)
-
-    @property
-    def nonvoter_list(self):
-        return ', '.join(self.nonvoters) if self.nonvoters else 'none'
-
-    def save_state(self):
-        with open(self.jsonfile, 'w') as fp:
-            json.dump(self.talk_groups, fp, indent=4)
-
-    def handle_start(self, channel):
-        for i, group in enumerate(self.talk_groups):
-            if "decision" not in group:
-                break
-        if i > 0:
-            self.idx = i - 1
-            next_name = self.talk_groups[i]['name']
-            self.msg(channel, '=== Skipped {0} groups; next will be "{1}" ==='.format(i, next_name))
+    def chair_start(self, user, channel, meeting_num=None):
+        """Begin a meeting. If a meeting number is given, then
+        resume that meeting."""
+        
+        # pull up the meeting itself, or if no meeting number was specified,
+        # then create a new meeting record
+        if meeting_num:
+            try:
+                self.meeting = Meeting.objects.get(number=int(meeting_num))
+                action = 'resumed'
+            except Meeting.DoesNotExist:
+                self.msg(channel, 'There is no meeting in the system with that number.')
+                return
         else:
-            self.msg(channel, "=== Ready (no groups to skip). ===")
+            self.meeting = Meeting.objects.create(start=datetime.now())
+            action = 'started'
+            
+        # announce that the meeting has begun
+        self.msg(channel, 'THIS. IS. THUNDERDOME!')
+        self.msg(channel, "And meeting #{number} has {action}. Let's do this thing.".format(number=self.meeting.number, action=action))
+        
+        # ask folks for their names iff this is a new meeting
+        if action == 'started':
+            self.names()
 
     def handle_next(self, channel, minutes=REVIEW_MINUTES):
         self.idx += 1
