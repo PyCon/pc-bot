@@ -136,3 +136,8 @@ class Group(mongoengine.Document):
 
     def __unicode__(self):
         return self.name if self.name else "Group #%s" % self.number
+
+    @property
+    def talk_ids(self):
+        """Return a set with the talk IDs in this particular group."""
+        return set([i.talk_id for i in self.talks])

@@ -183,8 +183,10 @@ class PyConBot(irc.IRCClient):
         # we only care about ,-prefixed commands.
         if not message.startswith(","):
             if self.state_handler:
-                self.state_handler(user, channel, message)
-            # TODO: callback for logging every message.
+                user_message = message.lower().strip()
+                if not user_message:
+                    return
+                self.state_handler(user, channel, user_message)
             return
 
         # only accept commands from superusers
