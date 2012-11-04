@@ -20,15 +20,31 @@ class SiteVotes(mongoengine.EmbeddedDocument):
         return self.plus_1 + self.plus_0 + self.minus_0 + self.minus_1
 
 class KittendomeVotes(mongoengine.EmbeddedDocument):
-    """
-    Records the votes on a talk in a Kittendome session.
-    """
+    """Records the votes on a talk in a Kittendome session."""
     yay = mongoengine.IntField(min_value=0, default=0)
     nay = mongoengine.IntField(min_value=0, default=0)
     abstain = mongoengine.IntField(min_value=0, default=0)
 
     def __unicode__(self):
         return u"%s/%s/%s" % (self.yay, self.nay, self.abstain)
+        
+
+class ThunderdomeVotes(mongoengine.EmbeddedDocument):
+    """Records the votes on a talk in a Thunderdome session."""
+    
+    supporters = mongoengine.IntField(min_value=0, default=0)
+    attendees = mongoengine.IntField(min_value=0, default=0)
+    
+    def __unicode__(self):
+        return u'{0:.1d}%'.format(self.percent)
+    
+    @property
+    def percent(self):
+        try:
+            return self.votes / self.attendees
+        except ZeroDivisionError:
+            return None
+
 
 class TranscriptMessage(mongoengine.EmbeddedDocument):
     """
@@ -66,6 +82,12 @@ class TalkProposal(mongoengine.Document):
         ('rejected',    'Rejected'),
         ('thunderdome', 'Accepted to thunderdome'),
     ]
+    THUNDERDOME_RESULT_CHOICES = [
+        ('accepted', 'Accepted'),
+        ('damaged', 'Damaged'),
+        ('rejected', 'Rejected'),
+        ('hold', 'On hold'),
+    ]
     TALK_ALTERNATIVES = [
         ('lightning',  'Lightning Talk'),
         ('open_space', 'Open Space'),
@@ -83,6 +105,9 @@ class TalkProposal(mongoengine.Document):
     kittendome_votes = mongoengine.EmbeddedDocumentField(KittendomeVotes)
     kittendome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
     kittendome_result = mongoengine.StringField(choices=KITTENDOME_RESULT_CHOICES)
+    thunderdome_votes = mongoengine.EmbeddedDocumentField(ThunderdomeVotes)
+    thunderdome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
+    thunderdome_result = mongoengine.StringField(choices=THUNDERDOME_RESULT_CHOICES)
     grouped = mongoengine.BooleanField(default=False)
 
     def __unicode__(self):

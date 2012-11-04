@@ -1,5 +1,5 @@
 from .base import BaseMode
-from ..models import Meeting, Group, TalkProposal
+from ..models import Meeting, Group, TalkProposal, ThunderdomeVotes
 from copy import copy
 from datetime import datetime
 from random import randInt
@@ -68,7 +68,7 @@ class Mode(BaseMode):
         #                   "debate. Please refrain from speaking until debate begins.")
         # self.set_timer(channel, minutes * 60)
 
-    def handle_debate(self, user, channel):
+    def chair_debate(self, user, channel):
         """Shift the channel into debate mode. The time allotted for debate
         should scale with the number of talks in the group."""
         
@@ -86,7 +86,7 @@ class Mode(BaseMode):
         self.bot.set_timer(debate_minutes * 60)
         self.segment = 'debate'
 
-    def handle_vote(self, user, channel):
+    def chair_vote(self, user, channel):
         """Shift the channel into voting mode. Accept votes in
         any reasonable / parsable format, and collect data for the
         final report."""
@@ -105,7 +105,7 @@ class Mode(BaseMode):
         self.current_votes = {}
         self.state_handler = self.handler_user_votes
 
-    def handle_user_vote(self, channel, user, message):
+    def handler_user_votes(self, channel, user, message):
         """Record a user's vote."""
         
         # parse out the vote into individual tokens, separated by commas,
@@ -154,8 +154,8 @@ class Mode(BaseMode):
             return
         if len(invalid_talk_ids):
             self.msg(channel, '{user}: You voted for {talks}, which {to_be_verb} not part of this group. Your vote has not been recorded.'.format(
-                talks=self._english_list(['#{0}'.format(i) for i in invalid_talk_ids])
-                to_be_verb='is' if len(bad_talk_ids) == 1 else 'are',
+                talks=self._english_list(['#{0}'.format(i) for i in invalid_talk_ids]),
+                to_be_verb='is' if len(invalid_talk_ids) == 1 else 'are',
                 user=user,
             ))
         
@@ -219,8 +219,28 @@ class Mode(BaseMode):
         # okay, we processed a valid vote without error; set it
         self.current_votes[user] = answer
 
-    def handle_report(self, user, channel):
+    def chair_report(self, user, channel):
         """Report the results of the vote that was just taken to the channel."""
+        
+        # iterate over each talk in the group, and save its thunderdome
+        # results to the database
+        for talk in self.group.talks:
+            supporters = sum(lambda vote: 1 if talk.talk_id in vote else 0, [i for i in self.current_votes.values()])
+            total_voters = len(self.current_votes)
+            
+            # record the thunderdome votes for this talk
+            talk.thunderdome_votes = ThunderdomeVotes(
+                supporters=supporters,
+                total_voters=total_voters,
+            )
+            talk.save()
+            
+        # now get me a sorted list of talks, sorted by the total
+        # number of votes received (descending)
+        
+        
+        
+        
         
         group = self.talk_groups[self.idx]
         talk_votes = dict.fromkeys(map(int, group["talks"].keys()), 0)
@@ -246,17 +266,6 @@ class Mode(BaseMode):
         group['votes'] = self.current_votes
         self.save_state()
         self.state_handler = None
-
-    def handle_pester(self, channel):
-        def names_callback(names):
-            laggards = (set(names) - set(self.current_votes.keys()) -
-                        self.nonvoters)
-            laggards.remove(self.nickname)
-            if laggards:
-                self.msg(channel, "Didn't vote: %s." % (", ".join(laggards)))
-            else:
-                self.msg(channel, "Everyone voted.")
-        self.names(channel).addCallback(names_callback)
 
     def handle_in(self, channel, *talks):
         self._make_decision(channel, 'accepted', talks)
@@ -299,6 +308,3 @@ class Mode(BaseMode):
             group['decision'].setdefault(decision, []).append(t)
 
         self.save_state()
-
-if __name__ == "__main__":
-    main(PyConThunderdomeBot)
