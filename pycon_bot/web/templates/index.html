@@ -44,7 +44,7 @@
         data.addColumn('string', 'Status');
         data.addColumn('number', 'Count');
         data.addRows({{ talks_by_status_json|safe }});
-        var options = {legend: {position: 'none'}, backgroundColor: "transparent"};
+        var options = {legend: {position: 'none'}, backgroundColor: "transparent", hAxis: {baseline: 0}};
         chart.draw(data, options);
     });
   </script>

@@ -91,6 +91,20 @@ class TalkProposal(mongoengine.Document):
     def review_url(self):
         return 'http://us.pycon.org/2013/reviews/review/%s/' % self.talk_id
 
+    @property
+    def decision(self):
+        if self.status == 'rejected' and self.alternative:
+            return "rejected (%s)" % self.alternative
+        else:
+            return self.status
+
+    @property
+    def kittendome_decision(self):
+        if self.kittendome_result == 'rejected' and self.alternative:
+            return "rejected (%s)" % self.alternative
+        else:
+            return self.kittendome_result
+
     @classmethod
     def next_unreviewed_talk(cls, after=None):
         qs = cls.objects(status__in=('unreviewed', 'hold')).order_by('talk_id')
