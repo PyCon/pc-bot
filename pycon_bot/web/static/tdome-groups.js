@@ -152,8 +152,10 @@ var GroupListView = Backbone.View.extend({
     },
 
     addNewGroup: function() {
-        var g = {"name": "New Group", "talks": selectedTalks.toJSON()};
-        this.collection.create(g);
+        var g = this.collection.create({
+            name: "New Group",
+            talks: selectedTalks.toJSON()
+        });
         selectedTalks.reset([]);
     }
 });
@@ -166,5 +168,4 @@ ungroupedTalks.url = '/api/talks/ungrouped';
 var ungroupedTalksView = new TalkListView({collection: ungroupedTalks});
 var groups = new GroupCollection();
 var groupView = new GroupListView({collection: groups});
-
 });
