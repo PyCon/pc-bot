@@ -88,8 +88,7 @@ var TalkListView = Backbone.View.extend({
     },
 
     addOne: function(talk) {
-        console.log('tlv.addOne', talk.get('talk_id'));
-        var tv = new TalkView({model: talk});
+        var tv = new TalkView({model: talk, id: 'talk-' + talk});
         this.$('table').append(tv.render().el);
     },
     addAll: function() {
@@ -139,13 +138,15 @@ var GroupListView = Backbone.View.extend({
     initialize: function() {
         this.collection.bind('add', this.addOne, this);
         this.collection.bind('reset', this.addAll, this);
-        this.collection.bind('all', this.render, this);
         this.collection.fetch();
     },
 
     addOne: function(group) {
-        console.log('g.addOne', group.get('number'));
-        var gv = new GroupView({model: group, collection: this.collection});
+        var gv = new GroupView({
+            model: group,
+            collection: this.collection,
+            id: 'group-view-' + group.get('number')
+        });
         this.$('ul').append(gv.render().el);
     },
 
@@ -157,7 +158,7 @@ var GroupListView = Backbone.View.extend({
         var g = this.collection.create({
             name: "New Group",
             talks: selectedTalks.toJSON()
-        });
+        }, {wait: true});
 
         selectedTalks.reset([]);
 
@@ -181,5 +182,11 @@ ungroupedTalks.url = '/api/talks/ungrouped';
 var ungroupedTalksView = new TalkListView({collection: ungroupedTalks});
 var groups = new GroupCollection();
 var groupView = new GroupListView({collection: groups});
+
+// When adding or removing a group, make sure the ungrouped talks list re-
+// renders. This feels very inelegent, but I'm not aware of a better way.
+groups.on('add destroy', function(group, collection) {
+    ungroupedTalks.fetch();
+});
 
 });
