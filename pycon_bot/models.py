@@ -87,10 +87,10 @@ class TalkProposal(mongoengine.Document):
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
-        
+
     def __lt__(self, other):
         return self.talk_id < other.talk_id
-        
+
     def __gt__(self, other):
         return self.talk_id > other.talk_id
 
@@ -143,13 +143,30 @@ class Meeting(mongoengine.Document):
 
 class Group(mongoengine.Document):
     """A group of talks to be reviewed in one Thunderdome session."""
-    
+
     number = mongoengine.SequenceField()
     name = mongoengine.StringField()
     talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
 
     def __unicode__(self):
         return self.name if self.name else "Group #%s" % self.number
+
+    def add_talk_id(self, talk_id):
+        """
+        Add the talk given by talk_id to this group, making sure it's not in
+        another group and that it's marked "grouped" correctly. Do this as
+        atomically as possible.
+        """
+        t = TalkProposal.objects.get(talk_id=talk_id)
+
+        # Remove the talk from any existing groups
+        Group.objects.filter(talks=t).update(pull__talks=t)
+
+        # Add the talk to this group (but only if it's not already there)
+        self.update(add_to_set__talks=t)
+
+        # Set the "grouped" flag on the talk.
+        t.update(set__grouped=True)
 
 def doc2dict(doc, fields=None):
     """
