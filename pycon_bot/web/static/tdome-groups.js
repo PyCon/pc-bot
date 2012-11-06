@@ -111,7 +111,8 @@ var GroupView = Backbone.View.extend({
 
     events: {
         'click .add-talks': 'addTalksToGroup',
-        'click .remove-group': 'removeThisGroup'
+        'click .remove-group': 'removeThisGroup',
+        'blur h5 input': 'editTalkName'
     },
 
     render: function() {
@@ -133,6 +134,10 @@ var GroupView = Backbone.View.extend({
     removeThisGroup: function() {
         this.$el.remove();
         this.model.destroy();
+    },
+
+    editTalkName: function() {
+        this.model.save({name: this.$('h5 input').val()});
     }
 });
 

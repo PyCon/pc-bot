@@ -7,6 +7,8 @@
     .talk-table td { cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .table.talk-table tr.selected td { background-color: #D9EDF7; }
     #groups ul h5 { margin:0; padding: 1px; font-size: 14px; }
+    #groups ul h5 input { border: 0px none; margin:0; padding:2px; width: 80%; box-shadow: none; }
+    #groups ul h5 input:focus { background-color: #D9EDF7; }
     #groups ul li { margin-bottom: 10px; }
     #groups table { margin: 2px 0 0 0; }
     #groups table td { border: 0px none; }
@@ -46,7 +48,7 @@
           <button class="btn btn-mini add-talks"><i class="icon-plus"></i></button>
           <button class="btn btn-mini remove-group"><i class="icon-remove"></i></button>
         </div>
-        <h5><%= name ? name : "Group " + number %></h5>
+        <h5><input type="text" value="<%= name %>"></h5>
         <table class="talk-table table table-condensed"></table>
       </div>
   </script>
