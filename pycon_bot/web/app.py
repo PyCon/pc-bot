@@ -147,10 +147,23 @@ def talks_by_status(status):
         current_status = status
     )
 
-@app.route('/tdome/groups')
-def tdome_groups():
+@app.route('/thunderdome/groups')
+def thunderdome_group_list():
+    return flask.render_template('thunderdome_group_list.html',
+        groups = Group.objects.order_by('number').select_related(),
+        title = "all groups",
+    )
+
+@app.route('/thunderdome/groups/<int:g>')
+def thunderdome_group_detail(g):
+    return flask.render_template('thunderdome_group_detail.html',
+        group = get_or_404(Group.objects, number=g)
+    )
+
+@app.route('/thunderdome/manage')
+def manage_thunderdome():
     ungrouped = _get_ungrouped_talks()
-    return flask.render_template('tdome_groups.html',
+    return flask.render_template('manage_thunderdome.html',
         groups = Group.objects.all().select_related(),
         ungrouped = ungrouped
     )
