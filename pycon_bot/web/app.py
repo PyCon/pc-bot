@@ -29,7 +29,13 @@ def index():
     rejected = len(TalkProposal.objects(status__in=('rejected', 'posted')))
     number_of_meetings = len(Meeting.objects)
     talks_per_meeting = float(reviewed) / number_of_meetings
-    talks_by_status = TalkProposal.objects.item_frequencies('status').items()
+
+    talks_by_status = TalkProposal.objects.item_frequencies('status')
+    talks_by_status.update(TalkProposal.objects.item_frequencies('alternative'))
+    talks_by_status.pop(None)
+    talks_by_status['rejected'] -= sum(talks_by_status.get(k, 0) for k,v in TalkProposal.TALK_ALTERNATIVES)
+    talks_by_status = sorted(talks_by_status.items())
+
     return flask.render_template('index.html',
         total = total,
         reviewed = reviewed,
@@ -67,7 +73,7 @@ def talk_list():
     return flask.render_template('talk_list.html',
         title = "All talks",
         talks = talks,
-        statuses = TalkProposal.STATUSES,
+        statuses = sorted(TalkProposal.STATUSES + TalkProposal.TALK_ALTERNATIVES),
     )
 
 @app.route('/talks/<int:n>')
@@ -123,16 +129,21 @@ def talk_detail(n):
 
 @app.route('/talks/<string:status>')
 def talks_by_status(status):
-    statuses = dict(TalkProposal.STATUSES)
-    if status not in statuses:
+
+    if status in [k for k,v in TalkProposal.STATUSES]:
+        talks = TalkProposal.objects.filter(status=status)
+    elif status in [k for k,v in TalkProposal.TALK_ALTERNATIVES]:
+        talks = TalkProposal.objects.filter(alternative=status)
+    else:
         flask.abort(404)
-    talks = TalkProposal.objects.filter(status=status).order_by('talk_id') \
-                                .exclude('notes', 'kittendome_transcript') \
-                                .order_by('talk_id')
+
+    talks = talks.order_by('talk_id').exclude('notes', 'kittendome_transcript').order_by('talk_id')
+    statuses = dict(TalkProposal.STATUSES + TalkProposal.TALK_ALTERNATIVES)
+
     return flask.render_template('talk_list.html',
         title = statuses[status],
         talks = talks,
-        statuses = TalkProposal.STATUSES,
+        statuses = TalkProposal.STATUSES + TalkProposal.TALK_ALTERNATIVES,
         current_status = status
     )
 

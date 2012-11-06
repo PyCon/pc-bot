@@ -13,13 +13,19 @@ from twisted.words.protocols import irc
 
 class PyConBot(irc.IRCClient):
     def __init__(self):
+        # mode and state handler
+        from pycon_bot.modes.base import SkeletonMode
+        self.mode = SkeletonMode(self)
         self.state_handler = None
-        self._namescallback = {}
-        self.timer = None
-        self.mode = None
+        
+        # variables storing superuser information
         self.potential_superusers = os.environ.get('PYCONBOT_SUPERUSERS', '').split(',')
         self.superusers = set()
-
+        self._namescallback = {}
+        
+        # the timer running, if any
+        self.timer = None
+        
     #
     # "Public" API - stuff to be called by drivers.
     #
@@ -40,20 +46,21 @@ class PyConBot(irc.IRCClient):
                 self.msg(channel, "=== %s ===" % message)
             if callback and callable(callback):
                 callback(**callback_kwargs)
+        
         self.clear_timer()
         self.timer = reactor.callLater(seconds, say_time, channel)
-
+        
     def clear_timer(self):
-        """
-        Clear an already-set timer.
-        """
+        """Clear an already-set timer, and return it."""
+        
+        # get the timer so I can get data out of it, in case
+        # I need to re-instutite the timer       
         if self.timer:
             self.timer.cancel()
-            self.timer = None
-
+            self.timer = None        
+                    
     def names(self, channel):
-        """
-        List names in the channel.
+        """List names in the channel.
 
         Returns a deferred. Because THIS IS TWISTED!
         """
@@ -63,35 +70,6 @@ class PyConBot(irc.IRCClient):
         self.sendLine("NAMES %s" % channel)
         return d
 
-    #
-    # Bot commands supported by the driver itself
-    #
-
-    def handle_mode(self, channel, *args):
-        """
-        Handle switching modes.
-        """
-        self.check_auth()
-
-        if not args:
-            mname = (self.mode.__class__.__name__ if self.mode else "(none)")
-            self.msg(channel, "Current mode: %s" % mname)
-            return
-
-        newmode = args[0]
-        try:
-            mod = importlib.import_module('pycon_bot.modes.%s' % newmode)
-            self.mode = getattr(mod, '%sMode' % newmode.title())(self)
-            self.msg(channel, "OK, now in %s mode." % newmode)
-        except (ImportError, AttributeError) as e:
-            self.msg(channel, "Can't load mode %s: %s" % (newmode, e))
-
-    def handle_sleep(self, channel, *args):
-        """
-        Go to sleep (i.e. set no mode).
-        """
-        self.msg(channel, "Sleep tight, don't let the bedbugs bite.")
-        self.mode = None
 
     #
     # Internals
@@ -160,21 +138,41 @@ class PyConBot(irc.IRCClient):
         self.msg(channel, "Hello, denizens of %s, I am your god." % channel)
         self.msg(channel, "To contribute to me: https://github.com/alex/THUNDERDOME-BOT")
         self.check_auth()
+        
+    def userJoined(self, user, channel):
+        """When a new user joins the channel, take appropriate action,
+        and also ask the node what, if anything, it wants to do."""
+        
+        # is this a potential superuser? if so, we
+        # need to refresh the superuser list
+        if user in self.potential_superusers:
+            self.check_auth()
+        
+        # now ship us off to the mode
+        if hasattr(self.mode, 'event_user_joined'):
+            self.mode.event_user_joined(user, channel)
 
     def privmsg(self, user, channel, message):
-        """
-        Called whenever a message is recived.
+        """Called whenever a message is recived.
+        
+        If this is a private message, dispatch it to the private messaging
+        command bank.
 
-        if the message starts with ",<cmd>", then dispatch to a `handle_<cmd>`
+        If the message starts with ",<cmd>", then dispatch to a `handle_<cmd>`
         function, either on self or on the bot mode object, but only if the
         user is a superuser.
         """
-        # Ignore private messages.
-        if not channel.startswith('#'):
-            return
 
         user = user.split("!")[0]
 
+        # if this is a private message, then it uses the
+        # private messaging commands rather than the chair commands
+        if not channel.startswith('#'):
+            command_parts = message.split()
+            command, args = command_parts[0], command_parts[1:]
+            self.mode.exec_command(command, 'private', user, channel, *args)
+            return
+        
         # Modes can define a log_message function which'll be called for each
         # message, command or not. This lets modes do logging.
         if hasattr(self.mode, 'log_message'):
@@ -185,33 +183,26 @@ class PyConBot(irc.IRCClient):
         # we only care about ,-prefixed commands.
         if not message.startswith(","):
             if self.state_handler:
-                self.state_handler(channel, user, message)
+                self.state_handler(user, channel, message)
             # TODO: callback for logging every message.
             return
 
+        # only accept commands from superusers
         if user not in self.superusers:
             return
 
-        # Find the callback. First look on self, then look at the mode.
+        # find the appropriate callback on the mode
+        # (or one of its superclasses)
         message = message[1:]
         command_parts = message.split()
         command, command_args = command_parts[0], command_parts[1:]
-        callback_name = 'handle_%s' % command
-        if hasattr(self, callback_name):
-            action = getattr(self, callback_name)
-        elif hasattr(self.mode, callback_name):
-            action = getattr(self.mode, callback_name)
-        else:
-            self.msg(channel, "%s: I don't recognize that command" % user)
-            return
-
-        action(channel, *command_args)
+        self.mode.exec_command(command, 'chair', user, channel, *command_args)
 
     def msg(self, channel, message):
         # Make sure things I say go into the transcript, too.
         if channel.startswith('#') and hasattr(self.mode, 'log_message'):
             self.mode.log_message(self.nickname, channel, message)
-        irc.IRCClient.msg(self, channel, message)  # Scumbag old-style class.
+        irc.IRCClient.msg(self, channel, message)  # scumbag old-style class
 
 class PyConBotFactory(protocol.ClientFactory):
     protocol = PyConBot

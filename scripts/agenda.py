@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Generate an agenda for the next meeting.
 
@@ -19,8 +20,8 @@ if not pycon_bot.mongo.connect(args.dsn):
     sys.stderr.write("Need to pass --dsn or set env[MONGO_DSN].")
     sys.exit(1)
 
-talks = TalkProposal.objects(status='unreviewed').order_by('talk_id')[:args.num]
-overflow = TalkProposal.objects(status='unreviewed').order_by('talk_id')[args.num:args.num+args.overflow]
+talks = TalkProposal.objects(status__in=('unreviewed', 'hold')).order_by('talk_id')[:args.num]
+overflow = TalkProposal.objects(status__in=('unreviewed', 'hold')).order_by('talk_id')[args.num:args.num+args.overflow]
 
 def pt(t):
     return "#%s - %s - %s\n%s\n" % (t.talk_id, t.title, t.speaker, t.review_url)
