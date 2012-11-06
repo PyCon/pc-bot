@@ -30,8 +30,14 @@ var TalkCollection = FlaskCollection.extend({
 var Group = Backbone.Model.extend({
     idAttribute: "number",
     initialize: function(attrs) {
-        this.talks = new TalkCollection();
+        this.talks = new TalkCollection(attrs.talks);
         this.talks.url = this.url() + '/talks';
+    },
+
+    toJSON: function() {
+        var json = Backbone.Model.prototype.toJSON.call(this);
+        json['talks'] = this.talks.pluck('talk_id');
+        return json;
     }
 });
 
@@ -88,7 +94,7 @@ var TalkListView = Backbone.View.extend({
     },
 
     addOne: function(talk) {
-        var tv = new TalkView({model: talk, id: 'talk-' + talk});
+        var tv = new TalkView({model: talk});
         this.$('table').append(tv.render().el);
     },
     addAll: function() {
@@ -118,7 +124,10 @@ var GroupView = Backbone.View.extend({
     },
 
     addTalksToGroup: function() {
-        alert('add ' + selectedTalks.pluck('talk_id') + ' to group ' + this.model.get('name'));
+        selectedTalks.each(function(t) { this.model.talks.add(t); }, this);
+        selectedTalks.reset([]);
+        this.model.save();
+        this.model.trigger('change:talks');
     },
 
     removeThisGroup: function() {
@@ -185,7 +194,7 @@ var groupView = new GroupListView({collection: groups});
 
 // When adding or removing a group, make sure the ungrouped talks list re-
 // renders. This feels very inelegent, but I'm not aware of a better way.
-groups.on('add destroy', function(group, collection) {
+groups.on('add destroy change:talks', function(group, collection) {
     ungroupedTalks.fetch();
 });
 

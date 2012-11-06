@@ -169,15 +169,29 @@ def api_groups():
 @app.route('/api/groups', methods=['POST'])
 def new_group():
     g = Group.objects.create(name=flask.request.json['name'])
-    for td in flask.request.json['talks']:
-        try:
-            t = TalkProposal.objects.get(talk_id=td['talk_id'])
-            t.grouped = True
-            t.save()
-            g.talks.append(t)
-            g.save()
-        except TalkProposal.DoesNotExist:
-            pass
+    for talk_id in flask.request.json['talks']:
+        t = TalkProposal.objects.get(talk_id=talk_id)
+        t.update(set__grouped=True)
+        g.update(add_to_set__talks=t)
+    return flask.jsonify(doc2dict(g, fields=('number', 'name')))
+
+@app.route('/api/groups/<int:n>', methods=['PUT'])
+def update_group(n):
+    g = get_or_404(Group.objects, number=n)
+
+    # Update name if given. Note that we don't update the number because
+    # that's weird and I don't want to think through the ramifications.
+    if 'name' in flask.request.json:
+        g.update(set__name=flask.request.json['name'])
+
+    # For each talk we have to remove it from an exsting group, if neccisary,
+    # add it to this group, and make sure to mark it grouped.
+    if 'talks' in flask.request.json:
+        for talk in TalkProposal.objects.filter(talk_id__in=flask.request.json['talks']):
+            Group.objects.filter(talks=talk).update(pull__talks=talk)
+            talk.update(set__grouped=False)
+            g.update(add_to_set__talks=talk)
+
     return flask.jsonify(doc2dict(g, fields=('number', 'name')))
 
 @app.route('/api/groups/<int:n>', methods=['DELETE'])
