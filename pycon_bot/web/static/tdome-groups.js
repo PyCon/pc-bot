@@ -84,15 +84,16 @@ var TalkListView = Backbone.View.extend({
     initialize: function() {
         this.collection.on('add', this.addOne, this);
         this.collection.on('reset', this.addAll, this);
-        this.collection.on('all', this.render, this);
         this.collection.fetch();
     },
 
     addOne: function(talk) {
+        console.log('tlv.addOne', talk.get('talk_id'));
         var tv = new TalkView({model: talk});
         this.$('table').append(tv.render().el);
     },
     addAll: function() {
+        this.$('table').empty();
         this.collection.each(this.addOne, this);
     }
 });
@@ -143,6 +144,7 @@ var GroupListView = Backbone.View.extend({
     },
 
     addOne: function(group) {
+        console.log('g.addOne', group.get('number'));
         var gv = new GroupView({model: group, collection: this.collection});
         this.$('ul').append(gv.render().el);
     },
@@ -156,7 +158,18 @@ var GroupListView = Backbone.View.extend({
             name: "New Group",
             talks: selectedTalks.toJSON()
         });
+
         selectedTalks.reset([]);
+
+        // For reasons I don't really understand, create() doesn't properly
+        // set the group's number from returned POST until *after* calling
+        // Group.initialize(). So we'll wait for sync to complete, then set
+        // the talk URL correctly, then re-fetch the talks so the view renders
+        // OK. There has got to be a better way, but I don't know it.
+        g.on('sync', function() {
+            g.talks.url = g.url() + '/talks';
+            g.talks.fetch();
+        });
     }
 });
 
@@ -168,4 +181,5 @@ ungroupedTalks.url = '/api/talks/ungrouped';
 var ungroupedTalksView = new TalkListView({collection: ungroupedTalks});
 var groups = new GroupCollection();
 var groupView = new GroupListView({collection: groups});
+
 });
