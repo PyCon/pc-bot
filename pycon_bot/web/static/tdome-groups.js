@@ -1,5 +1,8 @@
 $(function() {
 
+// A dispatcher to manage custom events.
+var dispatcher = _.clone(Backbone.Events);
+
 //
 // Models
 //
@@ -94,7 +97,8 @@ var TalkListView = Backbone.View.extend({
     },
 
     addOne: function(talk) {
-        var tv = new TalkView({model: talk});
+        var id = 'talk-' + talk.get('talk_id');
+        var tv = new TalkView({model: talk, id: id});
         this.$('table').append(tv.render().el);
     },
     addAll: function() {
@@ -125,7 +129,10 @@ var GroupView = Backbone.View.extend({
     },
 
     addTalksToGroup: function() {
-        selectedTalks.each(function(t) { this.model.talks.add(t); }, this);
+        selectedTalks.each(function(t) {
+            dispatcher.trigger('reassign-talk', t);
+            this.model.talks.add(t);
+        }, this);
         selectedTalks.reset([]);
         this.model.save();
         this.model.trigger('change:talks');
@@ -169,6 +176,8 @@ var GroupListView = Backbone.View.extend({
     },
 
     addNewGroup: function() {
+        selectedTalks.each(function(t) { dispatcher.trigger('reassign-talk', t); });
+
         var g = this.collection.create({
             name: "New Group",
             talks: selectedTalks.toJSON()
@@ -197,9 +206,12 @@ var ungroupedTalksView = new TalkListView({collection: ungroupedTalks});
 var groups = new GroupCollection();
 var groupView = new GroupListView({collection: groups});
 
-// When adding or removing a group, make sure the ungrouped talks list re-
-// renders. This feels very inelegent, but I'm not aware of a better way.
-groups.on('add destroy change:talks', function(group, collection) {
+dispatcher.on('reassign-talk', function(talk) {
+    var id = talk.get('talk_id');
+    $('#talk-' + talk.get('talk_id')).remove();
+});
+
+groups.on('remove', function() {
     ungroupedTalks.fetch();
 });
 
