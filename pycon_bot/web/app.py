@@ -29,20 +29,28 @@ if 'PYCONBOT_BASIC_AUTH' in os.environ:
     auth = barrel.cooper.basicauth(users=users, realm='PCbot')
     app.wsgi_app = auth(app.wsgi_app)
 
-SUPERUSERS = os.environ.get('PYCONBOT_SUPERUSERS', '').split(',')
+    SUPERUSERS = os.environ.get('PYCONBOT_SUPERUSERS', '').split(',')
 
-def requires_superuser(func):
-    @functools.wraps(func)
-    def inner(*args, **kwargs):
-        if flask.request.authorization['username'] not in SUPERUSERS:
-            flask.abort(403)
-        return func(*args, **kwargs)
+    def requires_superuser(func):
+        @functools.wraps(func)
+        def inner(*args, **kwargs):
+            if flask.request.authorization['username'] not in SUPERUSERS:
+                flask.abort(403)
+            return func(*args, **kwargs)
 
-    return inner
+        return inner
 
-@app.context_processor
-def inject_superuser():
-    return {'user_is_superuser': flask.request.authorization['username'] in SUPERUSERS}
+    @app.context_processor
+    def inject_superuser():
+        return {'user_is_superuser': flask.request.authorization['username'] in SUPERUSERS}
+
+else:
+    def requires_superuser(func):
+        return func
+
+    @app.context_processor
+    def inject_superuser():
+        return {'user_is_superuser': True}
 
 @app.route('/')
 def index():
