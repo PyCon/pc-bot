@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block body_content %}
-  <div class="navbar navbar-inverse navbar-fixed-top">
+  <div class="navbar navbar-fixed-top">
     <div class="navbar-inner">
       <div class="container-fluid">
         <a class="brand" href="{{ url_for('index') }}">PCBot</a>
@@ -16,6 +16,9 @@
             <li><a href="{{ url_for('meeting_list') }}">Kittendome meetings</a></li>
             <li><a href="{{ url_for('thunderdome_group_list') }}">Thunderdome groups</a></li>
             <li><a href="#">Thunderdome meetings</a></li>
+            {% if user_is_superuser %}
+                <li><a href="{{ url_for('manage_thunderdome') }}">Manage Thunderdome</a></li>
+            {% endif %}
           </ul>
         </div>
       </div>

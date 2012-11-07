@@ -1,5 +1,6 @@
 import barrel.cooper
 import flask
+import functools
 import json
 import math
 import mongoengine
@@ -14,11 +15,34 @@ app = flask.Flask(__name__)
 app.debug = 'PYCONBOT_DEBUG' in os.environ
 Bootstrap(app)
 mongo.connect()
+
+#
+# Auth.
+#
+# If PYCONBOT_BASIC_AUTH is set, then it's a list of user/pass
+# pairs (of the form "user:pass;user2:pass2") to protect the app with basic
+# auth. If any of those users match users in PYCONBOT_SUPERUSERS, they're
+# admins and can do awesome admin stuff.
+#
 if 'PYCONBOT_BASIC_AUTH' in os.environ:
-    users = [os.environ['PYCONBOT_BASIC_AUTH'].split(':', 2)]
+    users = [userpass.split(':', 1) for userpass in os.environ['PYCONBOT_BASIC_AUTH'].split(';')]
     auth = barrel.cooper.basicauth(users=users, realm='PCbot')
     app.wsgi_app = auth(app.wsgi_app)
 
+SUPERUSERS = os.environ.get('PYCONBOT_SUPERUSERS', '').split(',')
+
+def requires_superuser(func):
+    @functools.wraps(func)
+    def inner(*args, **kwargs):
+        if flask.request.authorization['username'] not in SUPERUSERS:
+            flask.abort(403)
+        return func(*args, **kwargs)
+
+    return inner
+
+@app.context_processor
+def inject_superuser():
+    return {'user_is_superuser': flask.request.authorization['username'] in SUPERUSERS}
 
 @app.route('/')
 def index():
@@ -161,6 +185,7 @@ def thunderdome_group_detail(g):
     )
 
 @app.route('/thunderdome/manage')
+@requires_superuser
 def manage_thunderdome():
     ungrouped = _get_ungrouped_talks()
     return flask.render_template('manage_thunderdome.html',
@@ -180,6 +205,7 @@ def api_groups():
     ])
 
 @app.route('/api/groups', methods=['POST'])
+@requires_superuser
 def new_group():
     g = Group.objects.create(name=flask.request.json['name'])
     for talk_id in flask.request.json['talks']:
@@ -187,6 +213,7 @@ def new_group():
     return flask.jsonify(doc2dict(g, fields=('number', 'name')))
 
 @app.route('/api/groups/<int:n>', methods=['PUT'])
+@requires_superuser
 def update_group(n):
     g = get_or_404(Group.objects, number=n)
 
@@ -203,6 +230,7 @@ def update_group(n):
     return flask.jsonify(doc2dict(g, fields=('number', 'name')))
 
 @app.route('/api/groups/<int:n>', methods=['DELETE'])
+@requires_superuser
 def delete_group(n):
     g = get_or_404(Group.objects, number=n)
     for t in g.talks:
