@@ -35,14 +35,7 @@
     <tbody>
       {% for t in talks %}
         <tr>
-          <td>
-            <a href="{{ url_for('talk_detail', n=t.talk_id) }}">
-              #{{ t.talk_id }} - {{ t.title }}
-            </a>
-            <a href="{{ t.review_url }}" class="review-link" title="Proposal details" target="_blank">
-                <i class="icon-share">&nbsp;</i>
-            </a>
-          </td>
+          <td>{{ talklink(t) }}</td>
           <td>{{ t.decision }}</td>
           {% with v = t.kittendome_votes %}
             <td>{{ v.yay|default("-") }}</td>

@@ -3,8 +3,8 @@
 {% block style %}
   {{ super() }}
   <style type="text/css">
-    .talk-table { table-layout: fixed; }
-    .talk-table td { cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .talk-table { table-layout: fixed; font-size: 11px; }
+    .talk-table td { cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 3px; }
     .table.talk-table tr.selected td { background-color: #D9EDF7; }
     #groups ul h5 { margin:0; padding: 1px; font-size: 14px; }
     #groups ul h5 input { border: 0px none; margin:0; padding:2px; width: 80%; box-shadow: none; }
@@ -40,7 +40,12 @@
   <script type="text/javascript" src="{{ url_for('static', filename='backbone-min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename='tdome-groups.js') }}"></script>
   <script type="text/template" id="talk-row-template">
-    <td>#<%= talk_id %>: <%= title %></td>
+    <td>
+      <a href="/talks/<%= talk_id %>">#<%= talk_id %></a>: <%= title %>
+      <a href="http://us.pycon.org/2013/reviews/review/<%= talk_id %>/" class="review-link" title="Proposal details" target="_blank">
+        <i class="icon-share">&nbsp;</i>
+      </a>
+</td>
   </script>
   <script type="text/template" id="group-row-template">
       <div class="thumbnail clearfix">
