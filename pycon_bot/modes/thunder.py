@@ -7,10 +7,6 @@ from random import randInt
 import re
 
 
-WINNING_THRESHOLD = 0.75    # Min % votes for a winning talk.
-DAMAGED_THRESHOLD = 0.50    # Min % votes for a damaged talk.
-
-
 class Mode(BaseMode):
     """A mdoer for handling Thunderdome sessions."""
     
