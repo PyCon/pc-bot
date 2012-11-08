@@ -1,3 +1,4 @@
+from __future__ import division
 from .base import BaseMode
 from ..models import Meeting, Group, TalkProposal, ThunderdomeVotes
 from copy import copy
@@ -19,6 +20,7 @@ class Mode(BaseMode):
         self.current_group = None
         self.next_group = None
         self.segment = None
+        self.unaddressed = 0
 
     def chair_start(self, user, channel, meeting_num=None):
         """Begin a meeting. If a meeting number is given, then
@@ -222,6 +224,9 @@ class Mode(BaseMode):
     def chair_report(self, user, channel):
         """Report the results of the vote that was just taken to the channel."""
         
+        # turn off any state handlers
+        self.state_handler = None
+        
         # iterate over each talk in the group, and save its thunderdome
         # results to the database
         for talk in self.group.talks:
@@ -231,80 +236,111 @@ class Mode(BaseMode):
             # record the thunderdome votes for this talk
             talk.thunderdome_votes = ThunderdomeVotes(
                 supporters=supporters,
-                total_voters=total_voters,
+                attendees=attendees,
             )
             talk.save()
             
         # now get me a sorted list of talks, sorted by the total
         # number of votes received (descending)
+        sorted_talks = sorted(self.group.talks, key=lambda t: t.thunderdome_votes, reverse=True)
         
+        # print out the talks to the channel, in order from
+        # those voted well to those voted poorly
+        for talk in sorted_talks:
+            self.msg(channel, '{status}: #{talk_id}: {talk_title} ({supporters}/{attendees}, {percent:.2f}%)'.format(
+                attendees=talk.thunderdome_votes.attendees,
+                percent=talk.thunderdome_votes.percent,
+                status=talk.thunderdome_votes.vote_result.upper(),
+                supporters=talk.thunderdome_votes.supporters,
+                talk_id=talk.talk_id,
+                talk_title=talk.title,
+            ))
+            
+        # declare that we are in the post-report segment
+        self.segment = 'post-report'
+        self.unaddressed = len(self.group)
         
+    def chair_certify(self, user, channel):
+        """Certify the results as just reported."""
         
+        # sanity check: are we in the post-report segment?
+        # if not, then this command doesn't make sense
+        if self.segment != 'post-report':
+            self.msg(channel, 'There are no results to certify.')
         
-        
-        group = self.talk_groups[self.idx]
-        talk_votes = dict.fromkeys(map(int, group["talks"].keys()), 0)
-        num_voters = len(self.current_votes)
-        for vote_list in self.current_votes.itervalues():
-            for vote in vote_list:
-                talk_votes[vote] += 1
+        # iterate over the talks and record the results of the voting
+        accepted = []
+        damaged = []
+        rejected = []
+        for talk in self.group.talks:
+            result = talk.thunderdome_votes.vote_result
+            if result == 'accepted':
+                accepted.append(talk.talk_id)
+            elif result == 'damaged':
+                damaged.append(talk.talk_id)
+            elif result == 'rejected':
+                rejected.append(talk.talk_id)
+                
+        # actually perform the accepting, damaging, and rejecting
+        # of the talks based on the votes
+        chair_accept(user, channel, *accepted)
+        chair_damage(user, channel, *damaged)
+        chair_reject(user, channel, *rejected)        
 
-        # sorted_votes ends up being a list of (talk_id, score), sorted by score.
-        sorted_votes = list(sorted(talk_votes.items(), key=lambda t: t[1], reverse=True))
-        winning_score = sorted_votes[0][1]
-        for (talk_id, score) in sorted_votes:
-            score_pct = float(score) / (num_voters if num_voters else 0)
-            if score == winning_score and score_pct >= WINNING_THRESHOLD:
-                status = "WINNER"
-            elif score_pct >= DAMAGED_THRESHOLD:
-                status = "DAMAGED"
-            else:
-                status = "OUT"
-            self.msg(channel, "%s - #%s: %d votes (%d%%)" % (status, talk_id, score, score_pct*100))
+    def chair_accept(self, user, channel, *talk_ids):
+        """Accept the talks provided as arguments."""
+        self._make_decision(user, channel, 'accepted', *talk_ids)
 
-        # Save for posterity
-        group['votes'] = self.current_votes
-        self.save_state()
-        self.state_handler = None
+    def chair_reject(self, user, channel, *talk_ids):
+        """Reject the talks provided as arguments."""
+        self._make_decision(user, channel, 'rejected', *talk_ids)
 
-    def handle_in(self, channel, *talks):
-        self._make_decision(channel, 'accepted', talks)
+    def chair_damage(self, user, channel, *talk_ids):
+        """Damage the talks provided as arguments."""
+        self._make_decision(user, channel, 'damaged', *talk_ids)
 
-    def handle_out(self, channel, *talks):
-        self._make_decision(channel, 'rejected', talks)
-
-    def handle_dam(self, channel, *talks):
-        self._make_decision(channel, 'damaged', talks)
-
-    def _make_decision(self, channel, decision, talks):
-        group = self.talk_groups[self.idx]
-        talk_ids = map(int, group['talks'])
-
-        if 'decision' not in group:
-            group['decision'] = {}
-
-        # Validate decision
-        for t in talks:
+    def _make_decision(self, user, channel, decision, *talk_ids):
+        # sanity check: if there is an empty list of talk ids
+        #   (which could happen, since `chair_certify` doesn't check
+        #   for a non-zero list), then simply do nothing
+        if not talk_ids:
+            return
+            
+        # iterate over each provided talk id, get the talk from
+        # the group's list of talks, and make the decision on the talk
+        talks = []
+        errors = []
+        for talk_id in talk_ids:
             try:
-                t = int(t)
+                talk_id = int(talk_id)
+                talk = self.group.talk_by_id(talk_id)
+                talks.append(talk)
             except ValueError:
-                self.msg(channel, "Oops, %s isn't an int; action ignored." % t)
-                return
-            if t not in talk_ids:
-                self.msg(channel, "Oops, %s isn't under discussion; action ignored" % t)
-                return
-
-        self.msg(channel, '=== Chair decision: %s %s ===' % (decision, ', '.join(talks)))
-
-        # Remove each talk in question from any existing decisions, if needed,
-        # then add the talk to the apropriate decision group.
-        talks = map(int, talks)
-        for t in talks:
-            for d in group['decision'].values():
-                try:
-                    d.remove(t)
-                except ValueError:
-                    pass
-            group['decision'].setdefault(decision, []).append(t)
-
-        self.save_state()
+                errors.append(talk_id)
+                
+        # if there were errors on any of the talk ids given,
+        # then error out now
+        if errors:
+            self.msg(channel, 'The following talk{plural} are not part of the active group and could not be {decision}: {badness}'.format(
+                badness=', '.join([str(i) for i in errors]),
+                decision=decision,
+                plural='s' if len(errors) != 1 else '',
+            ))
+            self.msg(channel, 'As some of the input is in error, and because I am a very picky robot, I am cowardly refusing to do anything.')
+            return
+            
+        # actually make the decision on the given talks
+        for talk in talks:
+            talk.thunderdome_result = decision
+            talk.save()
+            
+        # report success to the channel
+        self.msg(channel, '=== Talk{plural} {decision}: {talk_ids} ==='.format(
+            decision=decision.capitalize(),
+            plural='s' if len(talks) else '',
+            talk_ids=', '.join([str(i.talk_id) for i in talks]),
+        ))
+        
+        # if we don't have any more unaddressed talks, nix the segment
+        if not self.group.undecided_talks:
+            self.segment = None

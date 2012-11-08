@@ -41,9 +41,22 @@ class ThunderdomeVotes(mongoengine.EmbeddedDocument):
     @property
     def percent(self):
         try:
-            return self.votes / self.attendees
+            return 100 * self.votes / self.attendees
         except ZeroDivisionError:
             return None
+            
+    @property
+    def vote_result(self):
+        """Return the expected the result based on the votes."""
+        
+        # return the appropriate result text
+        # this is based solely on the votes; it may not
+        #   and need not match the chair decision
+        if self.percent >= 75.0:
+            return 'accepted'
+        if self.percent >= 50.0:
+            return 'damaged'
+        return 'rejected'
 
 
 class TranscriptMessage(mongoengine.EmbeddedDocument):
@@ -152,10 +165,9 @@ class TalkProposal(mongoengine.Document):
         TalkProposal.objects(id=self.id).update_one(push__kittendome_transcript=t)
 
 class Meeting(mongoengine.Document):
-    """
-    Records details about a meeting - when it starts/stops, which talks were
-    debated, and the complete meeting transcript.
-    """
+    """Records details about a meeting - when it starts/stops, which talks were
+    debated, and the complete meeting transcript."""
+    
     number = mongoengine.SequenceField()
     start = mongoengine.DateTimeField()
     end = mongoengine.DateTimeField()
@@ -165,6 +177,7 @@ class Meeting(mongoengine.Document):
     def add_to_transcript(self, timestamp, user, message):
         t = TranscriptMessage(timestamp=timestamp, user=user, message=message)
         Meeting.objects(id=self.id).update_one(push__transcript=t)
+
 
 class Group(mongoengine.Document):
     """A group of talks to be reviewed in one Thunderdome session."""
@@ -180,13 +193,28 @@ class Group(mongoengine.Document):
     def talk_ids(self):
         """Return a set with the talk IDs in this particular group."""
         return set([i.talk_id for i in self.talks])
+        
+    @property
+    def undecided_talks(self):
+        """Return a list of talks that do not have a `thunderdome_result` set."""
+        return [i for i in self.talks if not i.thunderdome_result]
+        
+    def talk_by_id(self, talk_id):
+        """Return the talk represented by `talk_id`. If the talk is not
+        in this group, raise ValueError."""
+        talk_id = int(talk_id)
+        for talk in self.talks:
+            if talk.id == talk_id:
+                return talk
+        raise ValueError, 'Talk #{0} not found in this group'.format(talk_id)
 
     def add_talk_id(self, talk_id):
-        """
-        Add the talk given by talk_id to this group, making sure it's not in
+        """Add the talk given by talk_id to this group, making sure it's not in
         another group and that it's marked "grouped" correctly. Do this as
-        atomically as possible.
-        """
+        atomically as possible."""
+        
+        # from the talk id, retrieve the talk
+        talk_id = int(talk_id)
         t = TalkProposal.objects.get(talk_id=talk_id)
 
         # Remove the talk from any existing groups
@@ -197,6 +225,7 @@ class Group(mongoengine.Document):
 
         # Set the "grouped" flag on the talk.
         t.update(set__grouped=True)
+
 
 def doc2dict(doc, fields=None):
     """
