@@ -112,16 +112,30 @@ class TalkProposal(mongoengine.Document):
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
-        
+
     def __lt__(self, other):
         return self.talk_id < other.talk_id
-        
+
     def __gt__(self, other):
         return self.talk_id > other.talk_id
 
     @property
     def review_url(self):
         return 'http://us.pycon.org/2013/reviews/review/%s/' % self.talk_id
+
+    @property
+    def decision(self):
+        if self.status == 'rejected' and self.alternative:
+            return "rejected (%s)" % self.alternative
+        else:
+            return self.status
+
+    @property
+    def kittendome_decision(self):
+        if self.kittendome_result == 'rejected' and self.alternative:
+            return "rejected (%s)" % self.alternative
+        else:
+            return self.kittendome_result
 
     @classmethod
     def next_unreviewed_talk(cls, after=None):
@@ -154,7 +168,7 @@ class Meeting(mongoengine.Document):
 
 class Group(mongoengine.Document):
     """A group of talks to be reviewed in one Thunderdome session."""
-    
+
     number = mongoengine.SequenceField()
     name = mongoengine.StringField()
     talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
@@ -166,3 +180,60 @@ class Group(mongoengine.Document):
     def talk_ids(self):
         """Return a set with the talk IDs in this particular group."""
         return set([i.talk_id for i in self.talks])
+
+    def add_talk_id(self, talk_id):
+        """
+        Add the talk given by talk_id to this group, making sure it's not in
+        another group and that it's marked "grouped" correctly. Do this as
+        atomically as possible.
+        """
+        t = TalkProposal.objects.get(talk_id=talk_id)
+
+        # Remove the talk from any existing groups
+        Group.objects.filter(talks=t).update(pull__talks=t)
+
+        # Add the talk to this group (but only if it's not already there)
+        self.update(add_to_set__talks=t)
+
+        # Set the "grouped" flag on the talk.
+        t.update(set__grouped=True)
+
+def doc2dict(doc, fields=None):
+    """
+    Convert a doc to a dictionary suitable for JSON-encoding.
+    """
+    # Which fields to encode?
+    if fields is None:
+        fields = doc._fields.keys()
+
+    d = {}
+    for name in fields:
+        field = doc._fields[name]
+        value = getattr(doc, name)
+
+        # Convert ObjectIDs to strings
+        if value and isinstance(field, mongoengine.ObjectIdField):
+            d[name] = str(value)
+
+        # Handle embededded documents by recursively dict-ifying
+        elif value and isinstance(field, mongoengine.EmbeddedDocumentField):
+            d[name] = doc2dict(value)
+
+        # List fields, two cases:
+        elif value and isinstance(field, mongoengine.ListField):
+
+            # If it's an embedded document or a ref, then the dict-ify
+            # each item in the list.
+            if isinstance(field.field, (mongoengine.EmbeddedDocumentField,
+                                        mongoengine.ReferenceField)):
+                d[name] = [doc2dict(v) for v in value]
+
+            # Otherwise, just make a copy of the list.
+            else:
+                d[name] = list(value)
+
+        # Everything else: hope json.dump can handle it :)
+        else:
+            d[name] = value
+
+    return d

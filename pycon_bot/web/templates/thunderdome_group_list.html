@@ -1,0 +1,73 @@
+{% extends "base_sidebar.html" %}
+
+{% block style %}
+  {{ super() }}
+  <style type="text/css">
+    table td ul { margin-left: 0px; }
+    table td ul li { list-style-type: none; }
+  </style>
+{% endblock %}
+
+{% block title %}PCbot: Thunderdome: {{ title }}{% endblock %}
+
+{% block sidebar %}
+  <div class="well sidebar-nav">
+    <ul class="nav nav-list">
+      <li class="nav-header">By status</li>
+      <li{% if not current_status %} class="active"{% endif %}>
+        <a href="{{ url_for('talk_list') }}">All</a>
+      </li>
+    </ul>
+  </div><!--/.well -->
+{% endblock %}
+
+{% block content %}
+  <h3>Thunderdome: {{ title }}</h3>
+  <table class="table table-striped table-condensed table-hover">
+    <thead>
+      <tr>
+        <th>Group</th>
+        <th>Talks</th>
+        <th>Accepted</th>
+        <th>Damaged</th>
+        <th>Rejected</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in groups %}
+        <tr>
+          <td>
+            <a href="{{ url_for('thunderdome_group_detail', g=g.number) }}">
+              #{{ g.number }} - {{ g.name }}
+            </a>
+          </td>
+          <td>
+            <ul>
+              {% for t in g.talks %}
+                <li>
+                  <a href="{{ url_for('talk_detail', n=t.talk_id) }}">
+                    #{{ t.talk_id }} - {{ t.title }}
+                  </a>
+                  <a href="{{ t.review_url }}" class="review-link" title="Proposal details" target="_blank">
+                      <i class="icon-share">&nbsp;</i>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+
+
+{% block bootstrap_js_bottom %}
+  {{ super() }}
+  <script type="text/javascript">
+    $(function() { $(".review-link").tooltip(); });
+  </script>
+{% endblock %}
