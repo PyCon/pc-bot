@@ -181,10 +181,12 @@ class PyConBot(irc.IRCClient):
         # Some times - voting - we want to record every command. In those cases,
         # the botmode will set state_handler and we'll call that. Othwewise,
         # we only care about ,-prefixed commands.
-        if not message.startswith(","):
+        if not message.startswith(','):
             if self.state_handler:
-                self.state_handler(user, channel, message)
-            # TODO: callback for logging every message.
+                user_message = message.lower().strip()
+                if not user_message:
+                    return
+                self.state_handler(user, channel, user_message)
             return
 
         # only accept commands from superusers

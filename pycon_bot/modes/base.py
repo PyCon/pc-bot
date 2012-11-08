@@ -280,3 +280,25 @@ class BaseMode(SkeletonMode):
         
         seconds = int(float(minutes) * 60)
         return self._seconds_to_text(seconds)
+        
+    def _english_list(self, l, conjunction='and'):
+        """Return a string with a comma-separated list, with an "and" between
+        the penultimate and ultimate list items."""
+        
+        # sanity check: if there is only one list item, do nothing
+        # except convert to a string
+        if len(l) == 1:
+            return '{0}'.format(*l)
+            
+        # sanity check: if there are two items, then join them with "and" but
+        # don't use commas
+        if len(l) == 2:
+            return '{0} {conjunction} {1}'.format(*l, conjunction=conjunction)
+            
+        # okay, there are three or more items: I want the format to be
+        # "a, b, c, and d"
+        return '{initial}, {conjunction} {last}'.format(
+            conjunction=conjunction,
+            initial=', '.join(l[:-1]),
+            last=l[-1],
+        )
