@@ -186,6 +186,20 @@ def thunderdome_group_list():
         title = "all groups",
     )
 
+@app.route('/thunderdome/groups/undecided')
+def thunderdome_undecided_groups():
+    return flask.render_template('thunderdome_group_list.html',
+        groups = Group.objects.filter(decided__ne=True).order_by('number').select_related(),
+        title = "undecided groups",
+    )
+
+@app.route('/thunderdome/groups/decided')
+def thunderdome_decided_groups():
+    return flask.render_template('thunderdome_group_list.html',
+        groups = Group.objects.filter(decided=True).order_by('number').select_related(),
+        title = "decided groups",
+    )
+
 @app.route('/thunderdome/groups/<int:g>')
 def thunderdome_group_detail(g):
     return flask.render_template('thunderdome_group_detail.html',

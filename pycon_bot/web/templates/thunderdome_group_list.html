@@ -14,8 +14,14 @@
   <div class="well sidebar-nav">
     <ul class="nav nav-list">
       <li class="nav-header">By status</li>
-      <li{% if not current_status %} class="active"{% endif %}>
-        <a href="{{ url_for('talk_list') }}">All</a>
+      <li{% if title == "all groups" %} class="active"{% endif %}>
+        <a href="{{ url_for('thunderdome_group_list') }}">All</a>
+      </li>
+      <li{% if title == "undecided groups" %} class="active"{% endif %}>
+        <a href="{{ url_for('thunderdome_undecided_groups') }}">Undecided</a>
+      </li>
+      <li{% if title == "decided groups" %} class="active"{% endif %}>
+        <a href="{{ url_for('thunderdome_decided_groups') }}">Decided</a>
       </li>
     </ul>
   </div><!--/.well -->
@@ -28,9 +34,9 @@
       <tr>
         <th>Group</th>
         <th>Talks</th>
-        <th>Accepted</th>
-        <th>Damaged</th>
-        <th>Rejected</th>
+        <th><i class="icon-ok"></i></th>
+        <th><i class="icon-minus"></i></th>
+        <th><i class="icon-remove"></i></th>
       </tr>
     </thead>
     <tbody>
@@ -44,20 +50,15 @@
           <td>
             <ul>
               {% for t in g.talks %}
-                <li>
-                  <a href="{{ url_for('talk_detail', n=t.talk_id) }}">
-                    #{{ t.talk_id }} - {{ t.title }}
-                  </a>
-                  <a href="{{ t.review_url }}" class="review-link" title="Proposal details" target="_blank">
-                      <i class="icon-share">&nbsp;</i>
-                  </a>
-                </li>
+                <li>{{ talklink(t) }}</li>
               {% endfor %}
             </ul>
           </td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
+          {% with decisions = g.talks_by_decision()  %}
+            <td>{% for t in decisions.accepted %}#{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+            <td>{% for t in decisions.damaged %}#{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+            <td>{% for t in decisions.rejected %}#{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+          {% endwith %}
         </tr>
       {% endfor %}
     </tbody>
