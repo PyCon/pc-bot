@@ -48,6 +48,9 @@ class Mode(BaseMode):
         self.msg(channel, 'THIS. IS. THUNDERDOME!')
         self.msg(channel, "And meeting #{number} has {action}. Let's do this thing!".format(number=self.meeting.number, action=action))
 
+        # tell the mode that the meting has begin
+        self._in_meeting = True
+
         # ask folks for their names iff this is a new meeting
         if action == 'started':
             self.names(channel)
@@ -284,6 +287,7 @@ class Mode(BaseMode):
             self.meeting.end = datetime.now()
             self.meeting.save()
             self.meeting = None
+            self._in_meeting = False
 
         # pull out of this mode; ,end implies a reversion to skeleton mode
         self.chair_mode(user, channel, 'none', _silent=True)
@@ -446,6 +450,39 @@ class Mode(BaseMode):
                 
         # okay, we processed a valid vote without error; set it
         self.current_votes[user] = answer
+
+    def event_user_joined(self, user, channel):
+        """React to a user's joining the channel when a meeting is
+        already in progress."""
+        
+        # sanity check: if we're not in a meeting, then no need
+        # to do anything at all
+        if not self._in_meeting:
+            return
+            
+        # sanity check: if the user is already in the non-voter list,
+        # then this is a red herring; ignore it
+        if user in self.nonvoters:
+            return
+            
+        # spit out a welcome, and a request for a name, to the meeting channel,
+        # but tailor the request to where we are
+        if self.segment == 'selent_review':
+            self.msg(channel, 'Howdy %s. Right now we are in the %s segment on talk #%d. Please print your name for the record, but wait until this segment concludes.' % (user, self.segment.replace('_', ' '), self.current.talk_id))
+        else:
+            self.msg(channel, 'Howdy %s; name for the record, please?' % user)
+        
+        # also, send the user a welcome with information about
+        # where we are and what's going on
+        self.msg(user, 'Thanks for coming, %s! This meeting has already begun.' % user)
+        if self.current_group:
+            self.private_current(user)
+        else:
+            self.msg(user, 'There is no current talk under consideration at this moment.')
+            
+        # now give a quick overview of bot abilities
+        self.msg(user, 'You may issue me commands via. private message if you like. Issue `help` at any time for a list.')
+
 
     def log_message(self, user, channel, message):
         """Save the existing message to all appropriate transcripts."""
