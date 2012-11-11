@@ -75,7 +75,7 @@ class Mode(BaseMode):
 
         # print out the group we're now on, and the necessary information about it
         self.msg(channel, '=== Thunderdome for "{0}" begins now! ==='.format(self.current_group.name))
-        self._report_on_group(channel, group)
+        self._report_on_group(channel, self.current_group)
         self.msg(channel, ' * - * - * - * ')
 
         # now calculate the period of silent time to give to review talks

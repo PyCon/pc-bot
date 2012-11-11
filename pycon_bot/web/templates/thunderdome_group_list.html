@@ -55,9 +55,9 @@
             </ul>
           </td>
           {% with decisions = g.talks_by_decision()  %}
-            <td>{% for t in decisions.accepted %}#{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-            <td>{% for t in decisions.damaged %}#{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-            <td>{% for t in decisions.rejected %}#{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+            <td>{% for t in decisions.accepted %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+            <td>{% for t in decisions.damaged %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+            <td>{% for t in decisions.rejected %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
           {% endwith %}
         </tr>
       {% endfor %}
