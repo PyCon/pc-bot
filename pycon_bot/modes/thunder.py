@@ -39,7 +39,7 @@ class Mode(BaseMode):
 
         # get the group that should be up next
         try:
-            self.next_group = Group.next_unreviewed_group()
+            self.next_group = Group.next_undecided_group()
         except IndexError:
             self.msg(channel, "There are no unreviewed groups remaining. Clearly, we shouldn't be here.")
             return
@@ -66,7 +66,7 @@ class Mode(BaseMode):
         if self.next_group:
             self.current_group = self.next_group
             try:
-                self.next_group = Group.next_unreviewed_group()
+                self.next_group = Group.next_undecided_group()
             except IndexError:
                 self.next_group = None
         else:
