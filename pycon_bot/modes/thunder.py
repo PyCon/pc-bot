@@ -249,6 +249,7 @@ class Mode(BaseMode):
         # actually make the decision on the given talks
         for talk in talks:
             talk.thunderdome_result = decision
+            talk.status = decision
             talk.save()
 
         # report success to the channel
