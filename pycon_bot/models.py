@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division
 from datetime import datetime
 import mongoengine
 
@@ -41,7 +41,7 @@ class ThunderdomeVotes(mongoengine.EmbeddedDocument):
     @property
     def percent(self):
         try:
-            return 100 * self.votes / self.attendees
+            return 100 * self.supporters / self.attendees
         except ZeroDivisionError:
             return None
 
@@ -134,12 +134,12 @@ class TalkProposal(mongoengine.Document):
 
     @property
     def review_url(self):
-        return 'http://us.pycon.org/2013/reviews/review/%s/' % self.talk_id
+        return 'http://us.pycon.org/2013/reviews/review/{0}/'.format(self.talk_id)
 
     @property
     def decision(self):
         if self.status == 'rejected' and self.alternative:
-            return "rejected (%s)" % self.alternative
+            return 'rejected ({0})'.format(self.alternative)
         else:
             return self.status
 
@@ -186,6 +186,7 @@ class Group(mongoengine.Document):
     name = mongoengine.StringField()
     talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
     decided = mongoengine.BooleanField(default=False)
+    transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
 
     def __unicode__(self):
         return self.name if self.name else "Group #%s" % self.number
@@ -209,12 +210,26 @@ class Group(mongoengine.Document):
             queryset = queryset.filter(id__ne=after.id)
         return queryset[0]
         
+    def add_to_transcript(self, timestamp, user, message):
+        """Log the given message to the transcript for both
+        this group and each individual talk proposal within the group."""
+
+        # create the transcript message object itself
+        t = TranscriptMessage(timestamp=timestamp, user=user, message=message)
+
+        # log the message to the transcript for the group itself
+        Group.objects(id=self.id).update_one(push__transcript=t)
+
+        # log the message for each individual talk proposal within the group
+        for talk in self.talks:
+            TalkProposal.objects(id=self.id).update_one(push__thunderdome_transcript=t)
+
     def talk_by_id(self, talk_id):
         """Return the talk represented by `talk_id`. If the talk is not
         in this group, raise ValueError."""
         talk_id = int(talk_id)
         for talk in self.talks:
-            if talk.id == talk_id:
+            if talk.talk_id == talk_id:
                 return talk
         raise ValueError, 'Talk #{0} not found in this group'.format(talk_id)
 
@@ -247,6 +262,7 @@ class Group(mongoengine.Document):
             key = talk.thunderdome_result or "undecided"
             d.setdefault(key, []).append(talk)
         return d
+
 
 def doc2dict(doc, fields=None):
     """

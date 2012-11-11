@@ -20,6 +20,13 @@ class Mode(BaseMode):
         self.segment = None
         self.unaddressed = 0
 
+        # get the group that should be up next
+        try:
+            self.next_group = Group.next_undecided_group()
+        except IndexError:
+            self.msg(channel, "There are no unreviewed groups remaining. Clearly, we shouldn't be here.")
+            return
+
     def chair_start(self, user, channel, meeting_num=None):
         """Begin a meeting. If a meeting number is given, then
         resume that meeting."""
@@ -37,20 +44,13 @@ class Mode(BaseMode):
             self.meeting = Meeting.objects.create(start=datetime.now())
             action = 'started'
 
-        # get the group that should be up next
-        try:
-            self.next_group = Group.next_undecided_group()
-        except IndexError:
-            self.msg(channel, "There are no unreviewed groups remaining. Clearly, we shouldn't be here.")
-            return
-            
         # announce that the meeting has begun
         self.msg(channel, 'THIS. IS. THUNDERDOME!')
         self.msg(channel, "And meeting #{number} has {action}. Let's do this thing!".format(number=self.meeting.number, action=action))
 
         # ask folks for their names iff this is a new meeting
         if action == 'started':
-            self.names()
+            self.names(channel)
 
     def chair_next(self, user, channel):
         """Move us to the next group."""
@@ -66,7 +66,7 @@ class Mode(BaseMode):
         if self.next_group:
             self.current_group = self.next_group
             try:
-                self.next_group = Group.next_undecided_group()
+                self.next_group = Group.next_undecided_group(after=self.current_group)
             except IndexError:
                 self.next_group = None
         else:
@@ -75,23 +75,18 @@ class Mode(BaseMode):
 
         # print out the group we're now on, and the necessary information about it
         self.msg(channel, '=== Thunderdome for "{0}" begins now! ==='.format(self.current_group.name))
-        for talk in group.talks:
-            self.msg(channel, '#{id}: {title} ({url})'.format(
-                id=talk.talk_id,
-                title=talk.title,
-                url=talk.review_url,
-            ))
+        self._report_on_group(channel, group)
         self.msg(channel, ' * - * - * - * ')
 
         # now calculate the period of silent time to give to review talks
         # before shifting to the debate period
-        silent_minutes = max(len(self.current_group) * 0.5, 2)
+        silent_minutes = max(len(self.current_group.talk_ids) * 0.5, 1.5)
         self.msg(channel, 'You now have {time} to review these talks and collect your thoughts prior to debate. Please refrain from speaking until debate begins.'.format(
             time=self._minutes_to_text(silent_minutes),
         ))
 
         # now begin the timer and count down the silent period
-        self.bot.set_timer(silent_minutes * 60, callback=self.chair_debate, callback_kwargs={
+        self.bot.set_timer(channel, silent_minutes * 60, callback=self.chair_debate, callback_kwargs={
             'channel': channel,
             'user': user,
         })
@@ -106,7 +101,7 @@ class Mode(BaseMode):
 
         # determine the debate time; it should be a function of the number
         # of talks in the group
-        debate_minutes = len(self.current_group) * 1.5
+        debate_minutes = len(self.current_group.talk_ids) * 1.5
 
         # announce that we're in debate now
         self.msg(channel, '=== General Debate ({time}) for "{name}" ==='.format(
@@ -118,7 +113,7 @@ class Mode(BaseMode):
         self.bot.state_handler = None
         
         # set the timer and status
-        self.bot.set_timer(debate_minutes * 60)
+        self.bot.set_timer(channel, debate_minutes * 60)
         self.segment = 'debate'
 
     def chair_vote(self, user, channel):
@@ -132,52 +127,52 @@ class Mode(BaseMode):
         # announce that we're shifting into voting
         self.msg(channel, '=== Voting time! ===')
         self.msg(channel, 'Enter your vote in any form I understand (details: `/msg {nick} voting`). You may vote for as many talks as you like, but remember that we are limited to roughly 110 slots.'.format(
-            nick=self.driver.nickname,
+            nick=self.bot.nickname,
         ))
 
         # wipe out the current list of votes (from the last group)
         # so that I can store the new list
         self.current_votes = {}
-        self.state_handler = self.handler_user_votes
+        self.bot.state_handler = self.handler_user_votes
 
     def chair_report(self, user, channel):
         """Report the results of the vote that was just taken to the channel."""
 
         # turn off any state handlers
-        self.state_handler = None
+        self.bot.state_handler = None
 
         # iterate over each talk in the group, and save its thunderdome
         # results to the database
-        for talk in self.group.talks:
-            supporters = sum(lambda vote: 1 if talk.talk_id in vote else 0, [i for i in self.current_votes.values()])
+        for talk in self.current_group.talks:
+            supporters = sum([(1 if talk.talk_id in vote else 0) for vote in self.current_votes.values()])
             total_voters = len(self.current_votes)
 
             # record the thunderdome votes for this talk
             talk.thunderdome_votes = ThunderdomeVotes(
                 supporters=supporters,
-                attendees=attendees,
+                attendees=total_voters,
             )
             talk.save()
 
         # now get me a sorted list of talks, sorted by the total
         # number of votes received (descending)
-        sorted_talks = sorted(self.group.talks, key=lambda t: t.thunderdome_votes, reverse=True)
+        sorted_talks = sorted(self.current_group.talks, key=lambda t: t.thunderdome_votes, reverse=True)
 
         # print out the talks to the channel, in order from
         # those voted well to those voted poorly
         for talk in sorted_talks:
-            self.msg(channel, '{status}: #{talk_id}: {talk_title} ({supporters}/{attendees}, {percent:.2f}%)'.format(
+            self.msg(channel, '{status}: #{talk_id}: {talk_title} ({supporters}/{attendees}, {percent:.2f}%%)'.format(
                 attendees=talk.thunderdome_votes.attendees,
                 percent=talk.thunderdome_votes.percent,
                 status=talk.thunderdome_votes.vote_result.upper(),
                 supporters=talk.thunderdome_votes.supporters,
                 talk_id=talk.talk_id,
                 talk_title=talk.title,
-            ))
+            ))  # damn auto-% substitution in self.msg... :-/
 
         # declare that we are in the post-report segment
         self.segment = 'post-report'
-        self.unaddressed = len(self.group)
+        self.unaddressed = len(self.current_group.talk_ids)
 
     def chair_certify(self, user, channel):
         """Certify the results as just reported."""
@@ -191,7 +186,7 @@ class Mode(BaseMode):
         accepted = []
         damaged = []
         rejected = []
-        for talk in self.group.talks:
+        for talk in self.current_group.talks:
             result = talk.thunderdome_votes.vote_result
             if result == 'accepted':
                 accepted.append(talk.talk_id)
@@ -202,9 +197,9 @@ class Mode(BaseMode):
 
         # actually perform the accepting, damaging, and rejecting
         # of the talks based on the votes
-        chair_accept(user, channel, *accepted)
-        chair_damage(user, channel, *damaged)
-        chair_reject(user, channel, *rejected)
+        self.chair_accept(user, channel, *accepted)
+        self.chair_damage(user, channel, *damaged)
+        self.chair_reject(user, channel, *rejected)
 
     def chair_accept(self, user, channel, *talk_ids):
         """Accept the talks provided as arguments."""
@@ -232,7 +227,7 @@ class Mode(BaseMode):
         for talk_id in talk_ids:
             try:
                 talk_id = int(talk_id)
-                talk = self.group.talk_by_id(talk_id)
+                talk = self.current_group.talk_by_id(talk_id)
                 talks.append(talk)
             except ValueError:
                 errors.append(talk_id)
@@ -262,9 +257,56 @@ class Mode(BaseMode):
 
         # if we don't have any more unaddressed talks, nix the segment and
         # mark the group as "done"
-        if not self.group.undecided_talks:
+        if not self.current_group.undecided_talks:
             self.segment = None
-            self.group.update(set__reviewed=True)
+            self.current_group.decided = True
+            self.current_group.save()
+
+    def _report_on_group(self, dest_output, group):
+        """Report on the contents of a group to the given user or channel."""
+        for talk in group.talks:
+            self.msg(dest_output, '#{id}: {title} ({url})'.format(
+                id=talk.talk_id,
+                title=talk.title,
+                url=talk.review_url,
+            ))
+
+    def private_current(self, user):
+        """Spit out information about the current group."""
+
+        # sanity check: is there a current group?
+        if not self.current_group:
+            self.msg(user, 'There is no current group being discussed.')
+            return
+
+        # report on the current group
+        self.msg(user, 'The current group on the plate is: {0}'.format(self.current_group.name))
+        self._report_on_group(user, self.current_group)
+
+    def private_next(self, user):
+        """Spit out information about the next group."""
+
+        # sanity check: is there an upcoming group?
+        if not self.next_group:
+            self.msg(user, 'There is no next group to be discussed.')
+            return
+
+        # report on the next group
+        self.msg(user, 'The next group on the plate is: {0}'.format(self.next_group.name))
+        self._report_on_group(user, self.next_group)
+
+    def private_voting(self, user):
+        """Explain how voting is done."""
+
+        # if there is a current group, use examples from that group
+        examples = [92, 418]
+        if self.current_group:
+            examples = list(self.current_group.talk_ids)[0:1]
+
+        # explain what voting paradigms I understand
+        self.msg(user, 'I understand two voting paradigms:')
+        self.msg(user, '1. An absolute list of talks (e.g. `{0}, {1}`)'.format(*examples))
+        self.msg(user, '2. Two special keywords ("all", "none"), and the addition/removal of talks from those keywords or from your prior vote (e.g. `all -{1}` or `+{0}`).'.format(*examples))
 
     def handler_silent_review(self, user, channel, message):
         """If a user speaks, tell them to be quiet, because it's the
@@ -301,7 +343,7 @@ class Mode(BaseMode):
             # including if they are prefixed with [+-]
             if re.match(r'^[+-]?[\d]+$', piece):
                 talk_id = int(piece.replace('-', '').replace('+', ''))
-                if talk_id not in self.group.talk_ids:
+                if talk_id not in self.current_group.talk_ids:
                     invalid_talk_ids.append(talk_id)
                 continue
             
@@ -310,37 +352,38 @@ class Mode(BaseMode):
                 continue
                 
             # I have no idea what this is
-            invalid_pieces.append(peice)
+            invalid_pieces.append(piece)
             
         # sanity check: if I have any invalid tokens or talk_ids that aren't
         #   in the talk_id list, fail out now
-        if len(invalid_pieces):
-            self.msg(channel, '{user}: I do not understand {tokens}.'.format(
-                user=user,
-                tokens=self._english_list(['"{0}"'.format(i) for i in invalid_pieces], conjunction='or'),
-            ))
+        if len(invalid_pieces) or len(invalid_talk_ids):
+            if len(invalid_pieces):
+                self.msg(channel, '{user}: I do not understand {tokens}.'.format(
+                    user=user,
+                    tokens=self._english_list(['"{0}"'.format(i) for i in invalid_pieces], conjunction='or'),
+                ))
+            if len(invalid_talk_ids):
+                self.msg(channel, '{user}: You voted for {talks}, which {to_be_verb} not part of this group. Your vote has not been recorded.'.format(
+                    talks=self._english_list(['#{0}'.format(i) for i in invalid_talk_ids]),
+                    to_be_verb='is' if len(invalid_talk_ids) == 1 else 'are',
+                    user=user,
+                ))
             return
-        if len(invalid_talk_ids):
-            self.msg(channel, '{user}: You voted for {talks}, which {to_be_verb} not part of this group. Your vote has not been recorded.'.format(
-                talks=self._english_list(['#{0}'.format(i) for i in invalid_talk_ids]),
-                to_be_verb='is' if len(invalid_talk_ids) == 1 else 'are',
-                user=user,
-            ))
         
         # the simple case is that this is a "plain" vote -- a list of
         #   integers with no specials (e.g. "none") and no modifiers (+/-)
         # this is straightforward: the vote becomes, in its entirety, the
         #   user's vote, and anything previously recorded for the user is
         #   simply dropped
-        if reduce(lambda x, y: x & y, [re.match(r'^[\d]+$', i) for i in vote]):
+        if reduce(lambda x, y: bool(x) and bool(y), [re.match(r'^[\d]+$', i) for i in vote]):
             self.current_votes[user] = set([int(i) for i in vote])
             return
             
         # sanity check: non-plain votes should not have *any* plain elements;
         #   therefore, if there are any, we should error out now
-        if reduce(lambda x, y: x | y, [re.match(r'^[\d]+$', i) for i in vote]):
+        if reduce(lambda x, y: bool(x) or bool(y), [re.match(r'^[\d]+$', i) for i in vote]):
             # use examples from the actual group to minimize confusion
-            examples = list(self.group.talk_ids)[0:2]
+            examples = list(self.current_group.talk_ids)[0:2]
             while len(examples) < 2:
                 examples.append(randint(1, 100))  # just in case
                 
@@ -372,7 +415,7 @@ class Mode(BaseMode):
             # first, is this "all" or "none"? these are the simplest
             # cases -- either a full set or no set
             if piece == 'all':
-                answer = copy(self.group.talk_ids)
+                answer = copy(self.current_group.talk_ids)
             if piece == 'none':
                 answer = set()
                 
@@ -386,4 +429,15 @@ class Mode(BaseMode):
                 
         # okay, we processed a valid vote without error; set it
         self.current_votes[user] = answer
-        self.group.update(set__reviewed=True)
+
+    def log_message(self, user, channel, message):
+        """Save the existing message to all appropriate transcripts."""
+
+        # if there is an active meeting, save this to the meeting transcript
+        if self.meeting:
+            self.meeting.add_to_transcript(datetime.now(), user, message)
+
+        # if there is a current group, save this to the transcript for each
+        # talk proposal within the group
+        if self.current_group:
+            self.current_group.add_to_transcript(datetime.now(), user, message)
