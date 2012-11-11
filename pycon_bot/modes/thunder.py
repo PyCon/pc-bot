@@ -9,7 +9,7 @@ import re
 
 class Mode(BaseMode):
     """A mdoer for handling Thunderdome sessions."""
-    
+
     def __init__(self):
         # variables that track the state of where we are right now
         self.meeting = None
@@ -21,7 +21,7 @@ class Mode(BaseMode):
     def chair_start(self, user, channel, meeting_num=None):
         """Begin a meeting. If a meeting number is given, then
         resume that meeting."""
-        
+
         # pull up the meeting itself, or if no meeting number was specified,
         # then create a new meeting record
         if meeting_num:
@@ -45,7 +45,7 @@ class Mode(BaseMode):
         # announce that the meeting has begun
         self.msg(channel, 'THIS. IS. THUNDERDOME!')
         self.msg(channel, "And meeting #{number} has {action}. Let's do this thing!".format(number=self.meeting.number, action=action))
-        
+
         # ask folks for their names iff this is a new meeting
         if action == 'started':
             self.names()
@@ -101,11 +101,11 @@ class Mode(BaseMode):
     def chair_debate(self, user, channel):
         """Shift the channel into debate mode. The time allotted for debate
         should scale with the number of talks in the group."""
-        
+
         # determine the debate time; it should be a function of the number
         # of talks in the group
         debate_minutes = len(self.current_group) * 1.5
-            
+
         # announce that we're in debate now
         self.msg(channel, '=== General Debate ({time}) for "{name}" ==='.format(
             name=self.current_group.name,
@@ -123,16 +123,16 @@ class Mode(BaseMode):
         """Shift the channel into voting mode. Accept votes in
         any reasonable / parsable format, and collect data for the
         final report."""
-        
+
         # clear any existing timer on the bot
         self.bot.clear_timer()
-        
+
         # announce that we're shifting into voting
         self.msg(channel, '=== Voting time! ===')
         self.msg(channel, 'Enter your vote in any form I understand (details: `/msg {nick} voting`). You may vote for as many talks as you like, but remember that we are limited to roughly 110 slots.'.format(
             nick=self.driver.nickname,
         ))
-        
+
         # wipe out the current list of votes (from the last group)
         # so that I can store the new list
         self.current_votes = {}
@@ -140,27 +140,27 @@ class Mode(BaseMode):
 
     def chair_report(self, user, channel):
         """Report the results of the vote that was just taken to the channel."""
-        
+
         # turn off any state handlers
         self.state_handler = None
-        
+
         # iterate over each talk in the group, and save its thunderdome
         # results to the database
         for talk in self.group.talks:
             supporters = sum(lambda vote: 1 if talk.talk_id in vote else 0, [i for i in self.current_votes.values()])
             total_voters = len(self.current_votes)
-            
+
             # record the thunderdome votes for this talk
             talk.thunderdome_votes = ThunderdomeVotes(
                 supporters=supporters,
                 attendees=attendees,
             )
             talk.save()
-            
+
         # now get me a sorted list of talks, sorted by the total
         # number of votes received (descending)
         sorted_talks = sorted(self.group.talks, key=lambda t: t.thunderdome_votes, reverse=True)
-        
+
         # print out the talks to the channel, in order from
         # those voted well to those voted poorly
         for talk in sorted_talks:
@@ -172,19 +172,19 @@ class Mode(BaseMode):
                 talk_id=talk.talk_id,
                 talk_title=talk.title,
             ))
-            
+
         # declare that we are in the post-report segment
         self.segment = 'post-report'
         self.unaddressed = len(self.group)
-        
+
     def chair_certify(self, user, channel):
         """Certify the results as just reported."""
-        
+
         # sanity check: are we in the post-report segment?
         # if not, then this command doesn't make sense
         if self.segment != 'post-report':
             self.msg(channel, 'There are no results to certify.')
-        
+
         # iterate over the talks and record the results of the voting
         accepted = []
         damaged = []
@@ -197,12 +197,12 @@ class Mode(BaseMode):
                 damaged.append(talk.talk_id)
             elif result == 'rejected':
                 rejected.append(talk.talk_id)
-                
+
         # actually perform the accepting, damaging, and rejecting
         # of the talks based on the votes
         chair_accept(user, channel, *accepted)
         chair_damage(user, channel, *damaged)
-        chair_reject(user, channel, *rejected)        
+        chair_reject(user, channel, *rejected)
 
     def chair_accept(self, user, channel, *talk_ids):
         """Accept the talks provided as arguments."""
@@ -222,7 +222,7 @@ class Mode(BaseMode):
         #   for a non-zero list), then simply do nothing
         if not talk_ids:
             return
-            
+
         # iterate over each provided talk id, get the talk from
         # the group's list of talks, and make the decision on the talk
         talks = []
@@ -234,7 +234,7 @@ class Mode(BaseMode):
                 talks.append(talk)
             except ValueError:
                 errors.append(talk_id)
-                
+
         # if there were errors on any of the talk ids given,
         # then error out now
         if errors:
@@ -245,20 +245,21 @@ class Mode(BaseMode):
             ))
             self.msg(channel, 'As some of the input is in error, and because I am a very picky robot, I am cowardly refusing to do anything.')
             return
-            
+
         # actually make the decision on the given talks
         for talk in talks:
             talk.thunderdome_result = decision
             talk.save()
-            
+
         # report success to the channel
         self.msg(channel, '=== Talk{plural} {decision}: {talk_ids} ==='.format(
             decision=decision.capitalize(),
             plural='s' if len(talks) else '',
             talk_ids=', '.join([str(i.talk_id) for i in talks]),
         ))
-        
-        # if we don't have any more unaddressed talks, nix the segment
+
+        # if we don't have any more unaddressed talks, nix the segment and
+        # mark the group as "done"
         if not self.group.undecided_talks:
             self.segment = None
             self.group.update(set__reviewed=True)
@@ -383,3 +384,4 @@ class Mode(BaseMode):
                 
         # okay, we processed a valid vote without error; set it
         self.current_votes[user] = answer
+        self.group.update(set__reviewed=True)
