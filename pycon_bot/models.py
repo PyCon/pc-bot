@@ -204,7 +204,7 @@ class Group(mongoengine.Document):
     def next_undecided_group(cls, after=None):
         """Return the next undecided group in the system."""
 
-        queryset = cls.objects.exclude(decided=True)
+        queryset = cls.objects.filter(decided__ne=True)
         if after:
             queryset = queryset.filter(id__ne=after.id)
         return queryset[0]
