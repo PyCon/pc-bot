@@ -3,14 +3,16 @@ from .base import BaseMode
 from ..models import Meeting, Group, TalkProposal, ThunderdomeVotes
 from copy import copy
 from datetime import datetime
-from random import randInt
+from random import randint
 import re
 
 
 class Mode(BaseMode):
     """A mdoer for handling Thunderdome sessions."""
 
-    def __init__(self):
+    def __init__(self, bot):
+        super(Mode, self).__init__(bot)
+
         # variables that track the state of where we are right now
         self.meeting = None
         self.current_group = None
@@ -340,7 +342,7 @@ class Mode(BaseMode):
             # use examples from the actual group to minimize confusion
             examples = list(self.group.talk_ids)[0:2]
             while len(examples) < 2:
-                examples.append(randInt(1, 100))  # just in case
+                examples.append(randint(1, 100))  # just in case
                 
             # spit out the error -- since this is long, send as much of it as possible to PMs
             self.msg(channel, '{0}: I cannot process this vote. See your private messages for details.'.format(user))
