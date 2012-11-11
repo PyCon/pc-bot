@@ -185,6 +185,7 @@ class Group(mongoengine.Document):
     number = mongoengine.SequenceField()
     name = mongoengine.StringField()
     talks = mongoengine.ListField(mongoengine.ReferenceField(TalkProposal))
+    reviewed = mongoengine.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name if self.name else "Group #%s" % self.number
@@ -198,6 +199,15 @@ class Group(mongoengine.Document):
     def undecided_talks(self):
         """Return a list of talks that do not have a `thunderdome_result` set."""
         return [i for i in self.talks if not i.thunderdome_result]
+
+    @classmethod
+    def next_unreviewed_group(cls, after=None):
+        """Return the next unreviewed group in the system."""
+
+        queryset = cls.objects.exclude(reviewed=True)
+        if after:
+            queryset = queryset.filter(id__ne=after.id)
+        return queryset[0]
         
     def talk_by_id(self, talk_id):
         """Return the talk represented by `talk_id`. If the talk is not
