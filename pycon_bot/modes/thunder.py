@@ -261,6 +261,7 @@ class Mode(BaseMode):
         # if we don't have any more unaddressed talks, nix the segment
         if not self.group.undecided_talks:
             self.segment = None
+            self.group.update(set__reviewed=True)
 
     def handler_silent_review(self, user, channel, message):
         """If a user speaks, tell them to be quiet, because it's the
