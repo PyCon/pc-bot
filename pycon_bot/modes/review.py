@@ -497,9 +497,8 @@ class Mode(BaseMode):
         self.msg(user, 'You may issue me commands via. private message if you like. Issue `help` at any time for a list.')
 
     def log_message(self, user, channel, message):
-        """
-        Save a transcript for debate along with each talk.
-        """
+        """Save a transcript for debate along with each talk."""
+        
         if self.meeting:
             self.meeting.add_to_transcript(datetime.now(), user, message)
         if self.current:

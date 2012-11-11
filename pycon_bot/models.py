@@ -222,7 +222,7 @@ class Group(mongoengine.Document):
 
         # log the message for each individual talk proposal within the group
         for talk in self.talks:
-            TalkProposal.objects(id=self.id).update_one(push__thunderdome_transcript=t)
+            TalkProposal.objects(id=talk.id).update_one(push__thunderdome_transcript=t)
 
     def talk_by_id(self, talk_id):
         """Return the talk represented by `talk_id`. If the talk is not

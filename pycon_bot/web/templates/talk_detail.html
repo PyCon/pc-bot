@@ -27,18 +27,19 @@
     {% endif %}
 
     {% if talk.kittendome_transcript %}
-      <h4>Transcripts</h4>
+      <h4>Kittendome Transcripts</h4>
       <div class="transcript">
-        {% for meeting in transcripts %}
-          {% for line in meeting %}
-            {% if loop.first %}
-              <p class="meeting-date">{{ line.timestamp.strftime('%B %e, %Y') }}</p>
-            {% endif %}
+        {% for line in talk.kittendome_transcript %}
+          <p class="speaker-{{ line.user }}">{{ line }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-            <p class="speaker-{{ line.user }}">{{ line }}</p>
-          {% endfor %}
-
-          {% if not loop.last %}<hr />{% endif %}
+    {% if talk.thunderdome_transcript %}
+      <h4>Thunderdome Transcripts</h4>
+      <div class="transcript">
+        {% for line in talk.thunderdome_transcript %}
+          <p class="speaker-{{ line.user }}">{{ line }}</p>
         {% endfor %}
       </div>
     {% endif %}
