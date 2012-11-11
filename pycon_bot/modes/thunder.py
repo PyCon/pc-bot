@@ -271,6 +271,23 @@ class Mode(BaseMode):
                 url=talk.review_url,
             ))
 
+    def chair_end(self, user, channel):
+        """Conclude the meeting."""
+        
+        self.msg(channel, "=== Th-th-th-that's all folks! ===")
+        
+        # remove any state handler that may be present
+        self.bot.state_handler = None
+        
+        # end the meeting
+        if self.meeting:
+            self.meeting.end = datetime.now()
+            self.meeting.save()
+            self.meeting = None
+
+        # pull out of this mode; ,end implies a reversion to skeleton mode
+        self.chair_mode(user, channel, 'none', _silent=True)
+
     def private_current(self, user):
         """Spit out information about the current group."""
 
