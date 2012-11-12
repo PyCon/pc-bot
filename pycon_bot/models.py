@@ -216,9 +216,9 @@ class Group(mongoengine.Document):
     def next_undecided_group(cls, after=None):
         """Return the next undecided group in the system."""
 
-        queryset = cls.objects.filter(decided__ne=True)
+        queryset = cls.objects.filter(decided__ne=True).order_by('number')
         if after:
-            queryset = queryset.filter(id__ne=after.id)
+            queryset = queryset.filter(id__ne=after.id).order_by('number')
         return queryset[0]
         
     def add_to_transcript(self, timestamp, user, message):
