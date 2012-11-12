@@ -138,6 +138,21 @@ class Mode(BaseMode):
         self.current_votes = {}
         self.bot.state_handler = self.handler_user_votes
 
+    def chair_extend(self, user, channel, extend_time=1):
+        """Extend the time on the clock. In reality, this does nothing
+        but set another clock, but it's a useful management tool within meetings."""
+
+        # if there's an active timer, just delay it
+        if self.bot.timer and self.bot.timer.active():
+            self.bot.timer.delay(float(extend_time) * 60)
+        else:
+            # clear the timer and set a new one
+            self.bot.clear_timer()
+            self.bot.set_timer(channel, float(extend_time) * 60)
+
+        # now report the extension
+        self.msg(channel, '=== Extending time by %s. Please continue. ===' % self._minutes_to_text(extend_time))
+
     def chair_report(self, user, channel):
         """Report the results of the vote that was just taken to the channel."""
 
