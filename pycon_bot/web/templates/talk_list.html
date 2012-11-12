@@ -1,5 +1,12 @@
 {% extends "base_sidebar.html" %}
 
+{% block style %}
+  {{ super() }}
+  <style type="text/css">
+    .talk-list thead th { border-top: 0px none; }
+  </style>
+{% endblock %}
+
 {% block title %}PCbot: {{ title }}{% endblock %}
 
 {% block sidebar %}
@@ -22,14 +29,20 @@
 
 {% block content %}
   <h3>{{ title }}</h3>
-  <table class="table table-striped table-condensed table-hover">
+  <table class="table table-striped table-condensed table-hover talk-list">
     <thead>
       <tr>
-        <th>Talk</th>
-        <th>Status</th>
+        <th rowspan=2>Talk</th>
+        <th rowspan=2>Status</th>
+        <th colspan=3>Kittendome</th>
+        <th colspan=3>Thunderdome</th>
+      </tr>
+      <tr>
         <th>Yea</th>
         <th>Nay</th>
         <th>Abs</th>
+        <th><i class="icon-ok"></i></th>
+        <th><i class="icon-remove"></i></th>
       </tr>
     </thead>
     <tbody>
@@ -41,6 +54,10 @@
             <td>{{ v.yay|default("-") }}</td>
             <td>{{ v.nay|default("-") }}</td>
             <td>{{ v.abstain|default("-") }}</td>
+          {% endwith %}
+          {% with v = t.thunderdome_votes %}
+            <td>{{ v.supporters|default("-") }}</td>
+            <td>{{ v.detractors|default("-") }}</td>
           {% endwith %}
         </tr>
       {% endfor %}

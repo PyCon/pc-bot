@@ -39,6 +39,10 @@ class ThunderdomeVotes(mongoengine.EmbeddedDocument):
         return u'{0:.1d}%'.format(self.percent)
 
     @property
+    def detractors(self):
+        return self.attendees - self.supporters if self.attendees else 0
+
+    @property
     def percent(self):
         try:
             return 100 * self.supporters / self.attendees
@@ -220,7 +224,7 @@ class Group(mongoengine.Document):
         if after:
             queryset = queryset.filter(id__ne=after.id).order_by('number')
         return queryset[0]
-        
+
     def add_to_transcript(self, timestamp, user, message):
         """Log the given message to the transcript for both
         this group and each individual talk proposal within the group."""
