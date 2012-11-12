@@ -34,9 +34,7 @@
       <tr>
         <th>Group</th>
         <th>Talks</th>
-        <th><i class="icon-ok"></i></th>
-        <th><i class="icon-minus"></i></th>
-        <th><i class="icon-remove"></i></th>
+        <th>Decision</th>
       </tr>
     </thead>
     <tbody>
@@ -54,17 +52,26 @@
               {% endfor %}
             </ul>
           </td>
-          {% with decisions = g.talks_by_decision()  %}
-            <td>{% for t in decisions.accepted %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-            <td>{% for t in decisions.damaged %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-            <td>{% for t in decisions.rejected %}{{ t }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-          {% endwith %}
+          <td>
+            <ul>
+              {% for t in g.talks %}
+                <li>
+                  {% if t.thunderdome_result == 'accepted' %}
+                    <span class="label label-success"><i class="icon-ok"></i> accepted</span>
+                  {% elif t.thunderdome_result == 'damaged' %}
+                    <span class="label label-warning"><i class="icon-minus"></i> damaged</span>
+                  {% elif t.thunderdome_result == 'rejected' %}
+                    <span class="label label-important"><i class="icon-remove"></i> rejected</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
 {% endblock %}
-
 
 {% block bootstrap_js_bottom %}
   {{ super() }}
