@@ -103,14 +103,14 @@ def index():
 @app.route('/meetings')
 def meeting_list():
     return flask.render_template('meeting_list.html',
-        meetings = Meeting.objects.order_by('number'),
+        meetings = Meeting.objects.order_by('-number').exclude('transcript', 'talks_decided'),
         meeting = None)
 
 
 @app.route('/meetings/<int:n>')
 def meeting_detail(n):
     return flask.render_template('meeting_detail.html',
-        meetings = Meeting.objects.order_by('number'),
+        meetings = Meeting.objects.order_by('-number').exclude('transcript', 'talks_decided'),
         meeting = get_or_404(Meeting.objects, number=n))
 
 
