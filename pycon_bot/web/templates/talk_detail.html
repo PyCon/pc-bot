@@ -15,6 +15,14 @@
       <dd>{{ talk.kittendome_votes|default("-", true) }}</dd>
       <dt>K'dome result:</dt>
       <dd>{{ talk.kittendome_decision|default("-", true) }}</dd>
+      <dt>T'dome votes:</dd>
+      <dd>
+        {% if talk.thunderdome_votes %}
+          {{ talk.thunderdome_votes.supporters }} / {{ talk.thunderdome_votes.detractors }}
+        {% else %}-{% endif %}
+      </dd>
+      <dt>T'dome result:</dd>
+      <dd>{{ talk.thunderdome_result|default("-", true) }}</dt>
     </dl>
 
     {% if talk.notes %}
