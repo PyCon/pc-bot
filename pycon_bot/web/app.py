@@ -57,10 +57,20 @@ def index():
     total = len(TalkProposal.objects)
     reviewed = len(TalkProposal.objects(status__ne='unreviewed'))
     remaining = total - reviewed
-    accepted = len(TalkProposal.objects(status__in=('thunderdome', 'accepted')))
-    rejected = len(TalkProposal.objects(status__in=('rejected', 'posted')))
+    accepted = len(TalkProposal.objects(kittendome_result='thunderdome'))
+    rejected = len(TalkProposal.objects(kittendome_result='rejected'))
     number_of_meetings = len(Meeting.objects)
     talks_per_meeting = float(reviewed) / number_of_meetings
+
+    groups_total = len(Group.objects)
+    groups_reviewed = len(Group.objects(decided=True))
+    tdome_results = {}
+    for result in ('accepted', 'damaged', 'rejected'):
+        c = len(TalkProposal.objects(thunderdome_result=result))
+        tdome_results[result] = {
+            'count': c,
+            'percent': float(c)/accepted
+        }
 
     talks_by_status = TalkProposal.objects.item_frequencies('status')
     talks_by_status.update(TalkProposal.objects.item_frequencies('alternative'))
@@ -72,6 +82,7 @@ def index():
         total = total,
         reviewed = reviewed,
         remaining = remaining,
+        kittendome_complete = (remaining == 0),
         percent_reviewed = float(reviewed) / total,
         accepted = accepted,
         percent_accepted = (float(accepted) / reviewed) if reviewed else 0,
@@ -81,20 +92,25 @@ def index():
         talks_per_meeting = talks_per_meeting,
         meetings_left = int(math.ceil(float(remaining) / talks_per_meeting)),
         talks_by_status_json = json.dumps(talks_by_status),
+        groups_total = groups_total,
+        groups_reviewed = groups_reviewed,
+        groups_remaining = groups_total - groups_reviewed,
+        groups_reviewed_percent = float(groups_reviewed) / groups_total,
+        thunderdome_results = tdome_results,
     )
 
 
 @app.route('/meetings')
 def meeting_list():
     return flask.render_template('meeting_list.html',
-        meetings = Meeting.objects.order_by('number'),
+        meetings = Meeting.objects.order_by('-number').exclude('transcript', 'talks_decided'),
         meeting = None)
 
 
 @app.route('/meetings/<int:n>')
 def meeting_detail(n):
     return flask.render_template('meeting_detail.html',
-        meetings = Meeting.objects.order_by('number'),
+        meetings = Meeting.objects.order_by('-number').exclude('transcript', 'talks_decided'),
         meeting = get_or_404(Meeting.objects, number=n))
 
 
