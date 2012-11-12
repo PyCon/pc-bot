@@ -14,22 +14,20 @@
 
 {% block content %}
     <h3>#{{ group.number }} - {{ group.name }}</h3>
-    <dl class="dl-horizontal">
-      <dt>Talks:</dt>
-      <dd>
-        <ul>
-          {% for t in group.talks %}
-            <li>{{ talklink(t) }}</li>
-          {% endfor %}
-        </ul>
-      </dd>
-      <dt>Accepted:</dt>
-      <dd>-</dd>
-      <dt>Damaged:</dt>
-      <dd>-</dd>
-      <dt>Rejected:</dt>
-      <dd>-</dd>
-    </dl>
+    <ul>
+      {% for t in group.talks %}
+        <li>
+          {{ talklink(t) }}
+          {% if t.thunderdome_result == 'accepted' %}
+            <span class="label label-success"><i class="icon-ok"></i> accepted</span>
+          {% elif t.thunderdome_result == 'damaged' %}
+            <span class="label label-warning"><i class="icon-minus"></i> damaged</span>
+          {% elif t.thunderdome_result == 'rejected' %}
+            <span class="label label-important"><i class="icon-remove"></i> rejected</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
 
     {% if group.notes %}
       <h4>Notes</h4>
@@ -43,16 +41,8 @@
     {% if group.transcript %}
       <h4>Transcripts</h4>
       <div class="transcript">
-        {% for meeting in transcripts %}
-          {% for line in meeting %}
-            {% if loop.first %}
-              <p class="meeting-date">{{ line.timestamp.strftime('%B %e, %Y') }}</p>
-            {% endif %}
-
-            <p class="speaker-{{ line.user }}">{{ line }}</p>
-          {% endfor %}
-
-          {% if not loop.last %}<hr />{% endif %}
+        {% for line in group.transcript %}
+          <p class="speaker-{{ line.user }}">{{ line }}</p>
         {% endfor %}
       </div>
     {% endif %}
