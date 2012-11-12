@@ -13,8 +13,8 @@
         <div class="nav-collapse collapse">
           <ul class="nav">
             <li><a href="{{ url_for('talk_list') }}">Talks</a></li>
-            <li><a href="{{ url_for('meeting_list') }}">Kittendome meetings</a></li>
-            <li><a href="{{ url_for('thunderdome_group_list') }}">Thunderdome groups</a></li>
+            <li><a href="{{ url_for('meeting_list') }}">Meetings</a></li>
+            <li><a href="{{ url_for('thunderdome_group_list') }}">Thunderdome</a></li>
             {% if user_is_superuser %}
                 <li><a href="{{ url_for('manage_thunderdome') }}">Manage Thunderdome</a></li>
             {% endif %}
