@@ -64,12 +64,13 @@ def index():
 
     groups_total = len(Group.objects)
     groups_reviewed = len(Group.objects(decided=True))
+    total_tdome_talks = sum(Group.objects.filter(decided=True).item_frequencies('talks').values())
     tdome_results = {}
     for result in ('accepted', 'damaged', 'rejected'):
         c = len(TalkProposal.objects(thunderdome_result=result))
         tdome_results[result] = {
             'count': c,
-            'percent': float(c)/accepted
+            'percent': float(c)/total_tdome_talks
         }
 
     talks_by_status = TalkProposal.objects.item_frequencies('status')
