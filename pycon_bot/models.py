@@ -150,6 +150,10 @@ class TalkProposal(mongoengine.Document):
         else:
             return self.kittendome_result
 
+    @property
+    def agenda_format(self):
+        return "#%s - %s - %s\n%s\n" % (self.talk_id, self.title, self.speaker, self.review_url)
+
     @classmethod
     def next_unreviewed_talk(cls, after=None):
         qs = cls.objects(status__in=('unreviewed', 'hold')).order_by('talk_id')
@@ -200,6 +204,13 @@ class Group(mongoengine.Document):
     def undecided_talks(self):
         """Return a list of talks that do not have a `thunderdome_result` set."""
         return [i for i in self.talks if not i.thunderdome_result]
+
+    @property
+    def agenda_format(self):
+        answer = '"{name}"\n\n'.format(name=self.name)
+        for talk in self.talks:
+            answer += '    {0}\n'.format(talk.agenda_format.replace('\n', '\n    '))
+        return answer
 
     @classmethod
     def next_undecided_group(cls, after=None):
