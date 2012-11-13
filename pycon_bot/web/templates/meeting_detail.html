@@ -7,30 +7,62 @@
 {% block content %}
   <h3>Meeting #{{ meeting.number }} - {{ meeting.start.strftime('%B %d') }}</h3>
   <h4>Summary</h4>
-  <table class="table table-striped table-condensed">
-    <thead>
-      <tr>
-        <th>Talk</th>
-        <th>Decision</th>
-        <th>Yea</th>
-        <th>Nay</th>
-        <th>Abs</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in meeting.talks_decided %}
+  {% if meeting.type == "kittendome" %}
+    <table class="table table-striped table-condensed">
+      <thead>
         <tr>
-          <td>{{ talklink(t) }}</td>
-          <td>{{ t.kittendome_decision }}</td>
-          {% with v = t.kittendome_votes %}
-            <td>{{ v.yay|default("-") }}</td>
-            <td>{{ v.nay|default("-") }}</td>
-            <td>{{ v.abstain|default("-") }}</td>
-          {% endwith %}
+          <th>Talk</th>
+          <th>Decision</th>
+          <th>Yea</th>
+          <th>Nay</th>
+          <th>Abs</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for t in meeting.talks_decided %}
+          <tr>
+            <td>{{ talklink(t) }}</td>
+            <td>{{ t.kittendome_decision }}</td>
+            {% with v = t.kittendome_votes %}
+              <td>{{ v.yay|default("-") }}</td>
+              <td>{{ v.nay|default("-") }}</td>
+              <td>{{ v.abstain|default("-") }}</td>
+            {% endwith %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% elif meeting.type == "thunderdome" %}
+    <table class="table table-striped table-condensed">
+      <thead>
+        <tr>
+          <th>Talk</th>
+          <th>Decision</th>
+          <th>Votes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in meeting.talks_decided %}
+          <tr>
+            <td>{{ talklink(t) }}</td>
+            <td>
+              {% if t.thunderdome_result == 'accepted' %}
+                <span class="label label-success"><i class="icon-ok"></i> accepted</span>
+              {% elif t.thunderdome_result == 'damaged' %}
+                <span class="label label-warning"><i class="icon-minus"></i> damaged</span>
+              {% elif t.thunderdome_result == 'rejected' %}
+                <span class="label label-important"><i class="icon-remove"></i> rejected</span>
+              {% endif %}
+            </td>
+            <td>
+              {{ t.thunderdome_votes.supporters }}/{{ t.thunderdome_votes.attendees }}
+              ({{ "%.0f"|format(t.thunderdome_votes.percent) }}%)
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 
   <h4>Transcript</h4>
   <div class="transcript">

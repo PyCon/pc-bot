@@ -18,7 +18,8 @@
       <dt>T'dome votes:</dd>
       <dd>
         {% if talk.thunderdome_votes %}
-          {{ talk.thunderdome_votes.supporters }} / {{ talk.thunderdome_votes.detractors }}
+          {{ talk.thunderdome_votes.supporters }}/{{ talk.thunderdome_votes.attendees }}
+          ({{ "%.0f"|format(t.thunderdome_votes.percent) }}%)
         {% else %}-{% endif %}
       </dd>
       <dt>T'dome result:</dd>

@@ -266,6 +266,9 @@ class Mode(BaseMode):
             talk.thunderdome_result = decision
             talk.status = decision
             talk.save()
+            # Record the talk to the list of talks decided in this meeting
+            if self.meeting:
+                self.meeting.update(add_to_set__talks_decided=talk)
 
         # report success to the channel
         self.msg(channel, '=== Talk{plural} {decision}: {talk_ids} ==='.format(
@@ -273,6 +276,7 @@ class Mode(BaseMode):
             plural='s' if len(talks) else '',
             talk_ids=', '.join([str(i.talk_id) for i in talks]),
         ))
+
 
         # if we don't have any more unaddressed talks, nix the segment and
         # mark the group as "done"
