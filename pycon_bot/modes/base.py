@@ -245,7 +245,7 @@ class BaseMode(SkeletonMode):
         
         # if this user is in the non-voter list, fix that
         if user in self.nonvoters and user not in self.bot.superusers:
-            self.chair_voter(user, channel)
+            self.chair_voter(user, channel, user)
         
     def _seconds_to_text(self, seconds):
         """Convert a number of seconds, specified as an int or string,
