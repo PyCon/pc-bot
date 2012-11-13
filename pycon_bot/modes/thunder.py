@@ -231,6 +231,59 @@ class Mode(BaseMode):
         """Damage the talks provided as arguments."""
         self._make_decision(user, channel, 'damaged', *talk_ids)
 
+    def chair_suggest(self, user, channel, talk_alternative, *talk_ids):
+        """Set the given talk alternative (poster, open space, etc.) on
+        the given talk. This does *not* change its main status, since it
+        may be either damaged or rejected."""
+
+        # make sure that each talk ID I was given is a damaged
+        # or rejected talk in this group; if not, complain loudly and quit
+        not_found = []
+        wrong_status = []
+        talk_objects = []
+        for talk_id in talk_ids:
+            try:
+                talk = self.current_group.talk_by_id(talk_id)
+                if talk.status not in ('damaged', 'rejected'):
+                    wrong_status.append(talk_id)
+                else:
+                    talk_objects.append(talk)
+            except ValueError:
+                not_found.append(talk_id)
+
+        # print out any errata
+        if len(not_found):
+            self.msg(channel, 'The following talk{plural} is not part of the current group: {missing}.'.format(
+                missing=', '.join([str(i) for i in not_found]),
+                plural='s' if len(not_found) != 1 else '',
+            ))
+        if len(wrong_status):
+            self.msg(channel, 'The following talk{plural} has a status that is not "damaged" or "rejected": {wrong_status}. Please damage or reject {pronoun} before giving {pronoun} a suggested talk alternative.'.format(
+                plural='s' if len(wrong_status) != 1 else '',
+                pronoun='it' if len(wrong_status) == 1 else 'them',
+                wrong_status=', '.join([str(i) for i in wrong_status]),
+            ))
+
+        # if there were any errata, hard stop
+        if len(not_found) or len(wrong_status):
+            self.msg(channel, 'Since I cannot process all of the given input, I am cowardly refusing to do anything. Please try again.')
+            return
+
+        # sanity check: is this an alternative I understand?
+        if talk_alternative not in [i[0] for i in TalkProposal.TALK_ALTERNATIVES]:
+            self.msg(channel, 'I do not recognize the talk alternative "{0}". Sorry.'.format(talk_alternative))
+            return
+
+        # okay, apply the alternative status to every requested talk
+        for talk in talk_objects:
+            talk.alternative = talk_alternative
+            talk.save()
+        self.msg(channel, '== Suggested {alternative} for talk{plural} {talks}. ==='.format(
+            alternative=talk_alternative.replace('_', ' '),
+            plural='s' if len(talk_objects) != 1 else '',
+            talks=', '.join(talk_ids)
+        ))
+
     def _make_decision(self, user, channel, decision, *talk_ids):
         # sanity check: if there is an empty list of talk ids
         #   (which could happen, since `chair_certify` doesn't check
