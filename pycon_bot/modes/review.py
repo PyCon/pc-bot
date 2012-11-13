@@ -24,14 +24,14 @@ class Mode(BaseMode):
         # where we are in the review process for the current talk on the plate
         self.segment = None
         self.champions = []
-        
+
         # some private things
         self._delayed_vote_timer = None
 
     def chair_start(self, user, channel, meeting_num=None):
         """Start a meeting. If a meeting number is given, resume the
         meeting instead."""
-        
+
         # get the next talk in queue
         try:
             self.next = TalkProposal.next_unreviewed_talk()
@@ -39,13 +39,13 @@ class Mode(BaseMode):
         except IndexError:
             self.msg(channel, "Out of talks!")
             return
-            
+
         # now pull up the meeting itself
         try:
             self.meeting = Meeting.objects.get(number=meeting_num)
             action = "resumed"
         except Meeting.DoesNotExist:
-            self.meeting = Meeting.objects.create(start=datetime.now())
+            self.meeting = Meeting.objects.create(start=datetime.now(), type="kittendome")
             action = "started"
         self.msg(channel, '=== Meeting #%s %s. Next talk will be #%s ===',
                  self.meeting.number, action, self.next.talk_id)
@@ -56,18 +56,18 @@ class Mode(BaseMode):
 
     def chair_end(self, user, channel):
         """Conclude the meeting."""
-        
+
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
-        
+
         # remove any state handler that may be present
         self.bot.state_handler = None
-        
+
         # end the meeting
         if self.meeting:
             self.meeting.end = datetime.now()
             self.meeting.save()
             self.meeting = None
-            
+
         # pull out of this mode; ,end implies a reversion to skeleton mode
         self.chair_mode(user, channel, 'none', _silent=True)
 
@@ -94,7 +94,7 @@ class Mode(BaseMode):
         if self.segment == 'post-report':
             self.msg(channel, 'We just had a report on the current talk. I am stubbornly refusing to move to the next talk until the current one has been officially accepted or rejected.')
             return
-            
+
         # if we were told, now or previously, how many talks remain
         # in this meeting, then track that accordingly
         if talks_remaining is not None:
@@ -199,10 +199,10 @@ class Mode(BaseMode):
 
     def chair_vote(self, user, channel, defer=None):
         """Call for a vote.
-        
+
         If an argument (`defer`) is specified, wait `defer` seconds before calling
         the vote, and if anyone in the channel says "wait", then cancel the countdown."""
-        
+
         # the basic idea here is that if any defer is called that is >= some number,
         #   there should be a second announcement saying that time is almost up
         # so, if voting will commence in 15 seconds, give the initial warning and then a second
@@ -211,10 +211,10 @@ class Mode(BaseMode):
         #   but I'm pretty sure 10 and 5 are where I want them
         _DOUBLE_MESSAGE_BOUNDARY = 10
         _DOUBLE_MESSAGE_SECOND_CALL = 5
-        
+
         if defer:
             defer = int(defer)
-            
+
             # first, delay the timer currently on the bot by the amount of the deferral;
             # do this in lieu of clearing the timer because if we are asked to wait; we still need it
             if self.bot.timer and self.bot.timer.active():
@@ -226,7 +226,7 @@ class Mode(BaseMode):
                 # there is no timer; this is an odd case, but I don't know how to automate it;
                 # the chair will have to handle this as he/she sees fit.
                 self.msg(user, 'Note: You called a deferred vote called with no active timer on the channel. I am doing as I am told, but am not sure what you are intending. FYI.')
-                
+
             # now set up our own timer for the vote delay; note that we need to *not* use
             #   `self.bot.set_timer` because it will wipe out the "main" timer that we need back;
             #   therefore; set this one off to the side
@@ -235,29 +235,29 @@ class Mode(BaseMode):
             else:
                 self._delayed_vote_timer = reactor.callLater(defer, self.chair_vote, user, channel)
             self.msg(channel, 'Voting in %d seconds unless someone objects (type "wait").' % defer)
-            
+
             # set the state handler so the bot actually listens to wait calls
             self.bot.state_handler = self.handler_voting_soon
-            
+
         else:
             # clear any timer that may exist now
             self.bot.clear_timer()
-            
+
             # clear out the votes
             self.current_votes = {}
-            
+
             # tell the channel that we're switching segments
             self.msg(channel, "=== Voting time! yay/nay votes for talk #%d ===", self.current.talk_id)
             self.msg(channel, "Please do not speak after voting until we've gotten our report.")
             self.segment = 'voting'
-        
+
             # set the state handler
             self.bot.state_handler = self.handler_user_vote
 
     def chair_report(self, user, channel):
         if not self.current:
             return
-            
+
         # turn off the state handler
         self.bot.state_handler = None
 
@@ -270,14 +270,14 @@ class Mode(BaseMode):
                 nay += 1
             elif vote == 'abstain':
                 abstain += 1
-                
+
         # cobble together the report on the talk votes
         report = '=== Votes on #%d: %d in favor, %d opposed' % (self.current.talk_id, yay, nay)
         if abstain > 0:
             report += ', with %d abstention%s' % (abstain, 's' if abstain != 1 else '')
         report += ' ==='
         self.msg(channel, report)
-        
+
         # Save the votes for posterity
         self.current.kittendome_votes = KittendomeVotes(yay=yay, nay=nay, abstain=abstain)
         self.current.save()
@@ -292,7 +292,7 @@ class Mode(BaseMode):
 
     def chair_reject(self, user, channel, alternative=None):
         """Reject the current talk."""
-        
+
         # if we got an argument, and there was a rejection type that we
         # recognize, then reject the talk, but in a special way
         if alternative == 'poster':
@@ -301,12 +301,12 @@ class Mode(BaseMode):
             return self._make_decision(user, channel, 'rejected', 'Talk #%d rejected (suggest submission of lightning talk).', alternative='lightning')
         if alternative == 'open_space':
             return self._make_decision(user, channel, 'rejected', 'Talk #%d rejected (suggest submission of open space).', alternative='open_space')
-            
+
         # if we got a rejection type, but we don't understand it, then
         # error out -- probably the chair meant something else
         if alternative:
             return self.msg(channel, '%s, I do not understand what kind of rejection you want.' % user)
-            
+
         # okay, perform a standard rejection
         self._make_decision(user, channel, 'rejected', 'Talk #%d rejected.')
 
@@ -319,16 +319,16 @@ class Mode(BaseMode):
 
         self.msg(user, "Meeting rules: http://bit.ly/pycon-pc-rules")
         self.msg(user, "Notes about process: http://bit.ly/pycon-pc-format")
-        
+
     def private_current(self, user):
         """Report on the current talk, and provide the link to view the talk
         on the PyCon PC website. Also, report where we are in the proceedings."""
-        
+
         # sanity check: are we on a talk at all?
         if not self.current or not self.segment:
             self.msg(user, 'There is no current talk in the system.')
             return
-    
+
         # okay, there is a current talk; show it
         self.msg(user, 'We are currently reviewing:')
         self.msg(user, '    #%d: %s (%s)' % (self.current.talk_id, self.current.title, self.current.speaker))
@@ -339,11 +339,11 @@ class Mode(BaseMode):
             self.msg(user, 'Currently, we are in debate. Feel free to participate.')
         elif self.segment == 'voting':
             self.msg(user, 'Currently, we are voting.')
-        
+
     def private_next(self, user):
         """Report the next talk, and provide the link to view the talk
         on the PyCon PC website."""
-        
+
         # sanity check: is there a next talk in the system?
         if not self.next:
             message = 'There is no upcoming talk.'
@@ -351,21 +351,21 @@ class Mode(BaseMode):
                 message += ' We will be done after this talk.'
             self.msg(user, message)
             return
-        
+
         # report on the talk coming next
         self.msg(user, 'The next talk to be discussed will be:')
         self.msg(user, '    #%d: %s (%s)' % (self.next.talk_id, self.next.title, self.next.speaker))
         self.msg(user, '    %s' % self.next.review_url)
-    
+
     def private_agenda(self, user):
         """Print out the agenda. Attempt to assess how many talks are left
         and print out the expected agenda appropriately."""
-                    
+
         # determine how many talks we expect to be left
         # first, we start with the expected number of talks; we'll be
         #   pessimistic and go with 12
         talk_count = 12
-        
+
         # now, if we're more than 15 minutes into the meeting, then
         #   we can use the number of talks decided to guess how many we think
         #   will actually be left
@@ -375,30 +375,30 @@ class Mode(BaseMode):
             meeting_end = self.meeting.start + timedelta(minutes=70)
             time_left = meeting_end - datetime.now()
             talk_count = int(round(time_left.seconds / 300))
-    
+
         # get the list of talks
         talks = TalkProposal.objects.filter(status__in=('unreviewed', 'hold')).order_by('talk_id')[0:talk_count]
-    
+
         # sanity check: do we have any talks up to bat at all?
         if not talks:
             self.msg(user, 'There are no talks on the agenda. Clearly, we shouldn\'t be here.')
             return
-    
+
         # okay, show the talks coming next
         next_up = talks[0]
         subsequent_talks = talks[1:talk_count]
-    
+
         # print out the current/next talk to the channel
         self.msg(user, 'The %s talk on the table is:' % ('current' if (self.current and self.current.talk_id == next_up.talk_id) else 'next'))
         self.msg(user, next_up.review_url)
-        
+
         # what about later talks? print them too
         upcoming_talks = ", ".join([str(t.talk_id) for t in subsequent_talks])
         if upcoming_talks:
             self.msg(user, 'Subsequent talks will be: %s.' % upcoming_talks)
         else:
             self.msg(user, 'The are no subsequent talks for today.')
-        
+
     def handler_user_vote(self, user, channel, message):
         message = message.strip().lower()
         if message == 'y' or message.startswith(('yes', 'yay', 'yea', 'aye', '+1')):
@@ -409,24 +409,24 @@ class Mode(BaseMode):
             self.current_votes[user] = "abstain"
         else:
             self.msg(channel, "%s: please vote yay, nay, or abstain.", user)
-            
+
     def handler_voting_soon(self, user, channel, message):
         """Handle the case where we're counting down to a premature vote. If anyone
         says "wait", call off the countdown."""
-        
+
         # if the message is (or even just begins with) "wait", that's our signal to hold off
         message = message.strip().lower()
         if message.startswith('wait'):
             self._delayed_vote_timer.cancel()
             self._delayed_vote_timer = None
-            
+
             # print that we're holding off
             self.msg(channel, 'Request to wait acknowledged. Holding off.')
-    
+
     def handler_user_champion(self, user, channel, message):
         """Handle the baton pass where a user declares that he/she will champion a talk,
         and give him time to do it. Gripe at anyone who goes off script unless it's a superuser."""
-    
+
         # if this message is "me", add the person to the champion list
         # and address appropriately
         message = message.lower().strip().rstrip('.')
@@ -434,7 +434,7 @@ class Mode(BaseMode):
             # add this user to the champion queue
             if user not in self.champions:
                 self.champions.append(user)
-    
+
                 # should this user champion immediately, or is he/she
                 # in queue behind someone?
                 if len(self.champions) == 1:
@@ -450,41 +450,41 @@ class Mode(BaseMode):
                 if user in self.champions:
                     instructions = '%s: You are in line to champion #%d, but please be quiet until it is your turn.'
                 self.msg(channel, instructions % (user, self.current.talk_id))
-    
+
             # if this is the championing user, check to see if he/she's done
             if self.champions and user == self.champions[0]:
                 if message.rstrip().endswith(('done', 'done.', 'done!')):
                     # okay, this person is done. pop him off the champion list
                     self.msg(channel, '%s: Thank you.' % user)
-    
+
                     # is there anyone else in line to champion? if so, move on
                     # to that person, otherwise move to debate
                     if len(self.champions) > 1:
                         self.chair_next_champion(user, channel)
                     else:
                         self.chair_debate(user, channel, debate_time=2 if self.current.status == 'hold' else 3)
-                        
+
     def event_user_joined(self, user, channel):
         """React to a user's joining the channel when a meeting is
         already in progress."""
-        
+
         # sanity check: if we're not in a meeting, then no need
         # to do anything at all
         if not self._in_meeting:
             return
-            
+
         # sanity check: if the user is already in the non-voter list,
         # then this is a red herring; ignore it
         if user in self.nonvoters:
             return
-            
+
         # spit out a welcome, and a request for a name, to the meeting channel,
         # but tailor the request to where we are
         if self.segment in ('champion', 'voting'):
             self.msg(channel, 'Howdy %s. Right now we are in the %s segment on talk #%d. Please print your name for the record, but wait until this segment concludes.' % (user, self.segment, self.current.talk_id))
         else:
             self.msg(channel, 'Howdy %s; name for the record, please?' % user)
-        
+
         # also, send the user a welcome with information about
         # where we are and what's going on
         self.msg(user, 'Thanks for coming, %s! This meeting has already begun.' % user)
@@ -492,13 +492,13 @@ class Mode(BaseMode):
             self.msg(user, 'Currently, we are on talk #%d (%s). We are in the %s segment.' % (self.current.talk_id, self.current.review_url, self.segment))
         else:
             self.msg(user, 'There is no current talk under consideration at this moment.')
-            
+
         # now give a quick overview of bot abilities
         self.msg(user, 'You may issue me commands via. private message if you like. Issue `help` at any time for a list.')
 
     def log_message(self, user, channel, message):
         """Save a transcript for debate along with each talk."""
-        
+
         if self.meeting:
             self.meeting.add_to_transcript(datetime.now(), user, message)
         if self.current:
@@ -506,12 +506,12 @@ class Mode(BaseMode):
 
     def _make_decision(self, user, channel, decision, message, alternative=None):
         """Make a given decision, and save it to the database."""
-        
+
         # clear any timer and any user mode
         self.bot.clear_timer()
         self.bot.state_handler = None
         self.segment = None
-        
+
         # actually make the decision
         if not self.current:
             return
@@ -521,7 +521,7 @@ class Mode(BaseMode):
         if decision == 'rejected' and alternative:
             self.current.alternative = alternative
         self.current.save()
-        
+
         # place the talk into the meeting's `talks_decided` list
         if self.meeting:
             # don't push the same talk onto a meeting twice
@@ -529,7 +529,7 @@ class Mode(BaseMode):
             meeting_copy = Meeting.objects.get(id=self.meeting.id)
             if self.current not in meeting_copy.talks_decided:
                 Meeting.objects(id=self.meeting.id).update_one(push__talks_decided=self.current)
-                
+
             # if this is the last talk, end
             if hasattr(self, '_talks_remaining') and self._talks_remaining == 0:
                 self.chair_end(user, channel)

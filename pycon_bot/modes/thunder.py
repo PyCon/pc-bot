@@ -41,7 +41,7 @@ class Mode(BaseMode):
                 self.msg(channel, 'There is no meeting in the system with that number.')
                 return
         else:
-            self.meeting = Meeting.objects.create(start=datetime.now())
+            self.meeting = Meeting.objects.create(start=datetime.now(), type="thunderdome")
             action = 'started'
 
         # announce that the meeting has begun
@@ -114,7 +114,7 @@ class Mode(BaseMode):
 
         # remove any state handler that is currently on the channel
         self.bot.state_handler = None
-        
+
         # set the timer and status
         self.bot.set_timer(channel, debate_minutes * 60)
         self.segment = 'debate'
@@ -292,12 +292,12 @@ class Mode(BaseMode):
 
     def chair_end(self, user, channel):
         """Conclude the meeting."""
-        
+
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
-        
+
         # remove any state handler that may be present
         self.bot.state_handler = None
-        
+
         # end the meeting
         if self.meeting:
             self.meeting.end = datetime.now()
@@ -354,20 +354,20 @@ class Mode(BaseMode):
 
     def handler_user_votes(self, user, channel, message):
         """Record a user's vote."""
-        
+
         # parse out the vote into individual tokens, separated by commas,
         # spaces, or both -- make this into a purely comma-separated vote
         message = re.sub(r'/[\s]+/', ' ', message)
         message = message.replace(', ', ',').replace(' ', ',')
         vote = message.split(',')
-        
+
         # copy the user's former vote, if any
         # we will modify `answer` instead of writing his vote directly to self.current_votes,
         #   so that if there's an error, we don't save only half the vote somehow
         answer = set()
         if user in self.current_votes:
             answer = self.current_votes[user]
-            
+
         # ensure that every sub-piece of this vote is individually valid
         # I currently understand:
         #   - integers on the talk_id list, optionally prefixed with [+-]
@@ -383,14 +383,14 @@ class Mode(BaseMode):
                 if talk_id not in self.current_group.talk_ids:
                     invalid_talk_ids.append(talk_id)
                 continue
-            
+
             # I understand "all" and "none"
             if piece == 'all' or piece == 'none':
                 continue
-                
+
             # I have no idea what this is
             invalid_pieces.append(piece)
-            
+
         # sanity check: if I have any invalid tokens or talk_ids that aren't
         #   in the talk_id list, fail out now
         if len(invalid_pieces) or len(invalid_talk_ids):
@@ -406,7 +406,7 @@ class Mode(BaseMode):
                     user=user,
                 ))
             return
-        
+
         # the simple case is that this is a "plain" vote -- a list of
         #   integers with no specials (e.g. "none") and no modifiers (+/-)
         # this is straightforward: the vote becomes, in its entirety, the
@@ -415,7 +415,7 @@ class Mode(BaseMode):
         if reduce(lambda x, y: bool(x) and bool(y), [re.match(r'^[\d]+$', i) for i in vote]):
             self.current_votes[user] = set([int(i) for i in vote])
             return
-            
+
         # sanity check: non-plain votes should not have *any* plain elements;
         #   therefore, if there are any, we should error out now
         if reduce(lambda x, y: bool(x) or bool(y), [re.match(r'^[\d]+$', i) for i in vote]):
@@ -423,7 +423,7 @@ class Mode(BaseMode):
             examples = list(self.current_group.talk_ids)[0:2]
             while len(examples) < 2:
                 examples.append(randint(1, 100))  # just in case
-                
+
             # spit out the error -- since this is long, send as much of it as possible to PMs
             self.msg(channel, '{0}: I cannot process this vote. See your private messages for details.'.format(user))
             self.msg(user, 'I cannot process this vote. I understand two voting paradigms:')
@@ -431,7 +431,7 @@ class Mode(BaseMode):
             self.msg(user, '2. Two special keywords ("all", "none"), and the addition/removal of talks from those keywords or from your prior vote (e.g. `all -{1}` or `+{0}`).'.format(*examples))
             self.msg(user, 'Your vote mixes these two paradigms together, and I don\'t know how to process that, so I am cowardly giving up.')
             return
-            
+
         # sanity check: exclusive modifier votes only make sense if either
         #   1. "all" or "none" is included in the vote -or-
         #   2. the user has voted already
@@ -445,7 +445,7 @@ class Mode(BaseMode):
         if 'all' in vote[1:] or 'none' in vote[1:]:
             self.msg(channel, '{0}: If using "all" or "none" in a complex vote, please use them exclusively at the beginning.'.format(user))
             return
-            
+
         # okay, this is a valid vote with modifiers; parse it from left to right
         # and process each of the modifiers
         for piece in vote:
@@ -455,7 +455,7 @@ class Mode(BaseMode):
                 answer = copy(self.current_group.talk_ids)
             if piece == 'none':
                 answer = set()
-                
+
             # add or remove votes with operators from the set
             if piece.startswith('+'):
                 talk_id = int(piece[1:])
@@ -463,31 +463,31 @@ class Mode(BaseMode):
             if piece.startswith('-'):
                 talk_id = int(piece[1:])
                 answer.remove(talk_id)
-                
+
         # okay, we processed a valid vote without error; set it
         self.current_votes[user] = answer
 
     def event_user_joined(self, user, channel):
         """React to a user's joining the channel when a meeting is
         already in progress."""
-        
+
         # sanity check: if we're not in a meeting, then no need
         # to do anything at all
         if not self._in_meeting:
             return
-            
+
         # sanity check: if the user is already in the non-voter list,
         # then this is a red herring; ignore it
         if user in self.nonvoters:
             return
-            
+
         # spit out a welcome, and a request for a name, to the meeting channel,
         # but tailor the request to where we are
         if self.segment == 'selent_review':
             self.msg(channel, 'Howdy %s. Right now we are in the %s segment on talk #%d. Please print your name for the record, but wait until this segment concludes.' % (user, self.segment.replace('_', ' '), self.current.talk_id))
         else:
             self.msg(channel, 'Howdy %s; name for the record, please?' % user)
-        
+
         # also, send the user a welcome with information about
         # where we are and what's going on
         self.msg(user, 'Thanks for coming, %s! This meeting has already begun.' % user)
@@ -495,7 +495,7 @@ class Mode(BaseMode):
             self.private_current(user)
         else:
             self.msg(user, 'There is no current talk under consideration at this moment.')
-            
+
         # now give a quick overview of bot abilities
         self.msg(user, 'You may issue me commands via. private message if you like. Issue `help` at any time for a list.')
 
