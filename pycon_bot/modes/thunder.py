@@ -487,7 +487,7 @@ class Mode(BaseMode):
 
         # spit out a welcome, and a request for a name, to the meeting channel,
         # but tailor the request to where we are
-        if self.segment == 'selent_review':
+        if self.segment == 'silent_review':
             self.msg(channel, 'Howdy %s. Right now we are in the %s segment on talk #%d. Please print your name for the record, but wait until this segment concludes.' % (user, self.segment.replace('_', ' '), self.current.talk_id))
         else:
             self.msg(channel, 'Howdy %s; name for the record, please?' % user)
