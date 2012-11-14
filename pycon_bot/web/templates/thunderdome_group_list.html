@@ -3,8 +3,8 @@
 {% block style %}
   {{ super() }}
   <style type="text/css">
-    table td ul { margin-left: 0px; }
-    table td ul li { list-style-type: none; }
+    table.group-table td { border-top: 0px none; }
+    table.group-table td:nth-child(1) { padding-left: 20px; }
   </style>
 {% endblock %}
 
@@ -29,45 +29,30 @@
 
 {% block content %}
   <h3>Thunderdome: {{ title }}</h3>
-  <table class="table table-striped table-condensed table-hover">
-    <thead>
-      <tr>
-        <th>Group</th>
-        <th>Talks</th>
-        <th>Decision</th>
-      </tr>
-    </thead>
+  <table class="table table-condensed group-table">
     <tbody>
       {% for g in groups %}
         <tr>
-          <td>
+          <th colspan=2>
             <a href="{{ url_for('thunderdome_group_detail', g=g.number) }}">
               #{{ g.number }} - {{ g.name }}
             </a>
-          </td>
-          <td>
-            <ul>
-              {% for t in g.talks %}
-                <li>{{ talklink(t) }}</li>
-              {% endfor %}
-            </ul>
-          </td>
-          <td>
-            <ul>
-              {% for t in g.talks %}
-                <li>
-                  {% if t.thunderdome_result == 'accepted' %}
-                    <span class="label label-success"><i class="icon-ok"></i> accepted</span>
-                  {% elif t.thunderdome_result == 'damaged' %}
-                    <span class="label label-warning"><i class="icon-minus"></i> damaged</span>
-                  {% elif t.thunderdome_result == 'rejected' %}
-                    <span class="label label-important"><i class="icon-remove"></i> rejected</span>
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          </td>
+          </th>
         </tr>
+        {% for t in g.talks %}
+          <tr>
+            <td>{{ talklink(t) }}</td>
+            <td>
+              {% if t.thunderdome_result == 'accepted' %}
+                <span class="label label-success"><i class="icon-ok"></i> accepted</span>
+              {% elif t.thunderdome_result == 'damaged' %}
+                <span class="label label-warning"><i class="icon-minus"></i> damaged</span>
+              {% elif t.thunderdome_result == 'rejected' %}
+                <span class="label label-important"><i class="icon-remove"></i> rejected</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
       {% endfor %}
     </tbody>
   </table>
