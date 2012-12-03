@@ -7,7 +7,7 @@ PyCon 2013 - congratulations! Please check that the details below are
 correct, and read through this email for your next steps.
 
   Title: {title}
-  URL: FIXME
+  URL: {public_url}
 
 We'll be announcing the list of accepted talks immediately, so if
 you can no longer give this talk, please contact me right away so I

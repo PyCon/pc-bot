@@ -127,6 +127,7 @@ class TalkProposal(mongoengine.Document):
     thunderdome_transcript = mongoengine.ListField(mongoengine.EmbeddedDocumentField(TranscriptMessage))
     thunderdome_result = mongoengine.StringField(choices=THUNDERDOME_RESULT_CHOICES)
     grouped = mongoengine.BooleanField(default=False)
+    public_url = mongoengine.StringField()
 
     def __unicode__(self):
         return u"#%s: %s" % (self.talk_id, self.title)
