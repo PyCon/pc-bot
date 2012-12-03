@@ -86,6 +86,6 @@ for talk in talks:
         print "OK - sent test email instead."
         break
     if not args.dry_run:
-        mail.send_mail(subject=subject, message=message, from_email=args.from_email, recipient_list=talk.speaker_email)
+        mail.send_mail(subject=subject, message=message, from_email=args.from_email, recipient_list=[talk.speaker_email])
     print "OK"
     time.sleep(args.sleep)
