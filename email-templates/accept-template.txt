@@ -2,7 +2,7 @@ Subject: PyCon 2013: Talk acceptance - {title}
 
 Dear {speaker},
 
-I'm very pleased tell you that your talk has been accepted for PyCon
+I'm very pleased to tell you that your talk has been accepted for PyCon
 2013 - congratulations! Please check that the details below are
 correct, and read through this email for your next steps.
 
