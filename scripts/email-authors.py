@@ -78,7 +78,7 @@ subject_template = subject_line.replace('Subject:', '').strip()
 # Send ye olde emailes.
 for talk in talks:
     t = doc2dict(talk)
-    sys.stdout.write("Emailing {speaker_email} about #{talk_id} - {title} ... ".format(**t))
+    sys.stdout.write(u"Emailing {speaker_email} about #{talk_id} - {title} ... ".format(**t))
     sys.stdout.flush()
     subject = subject_template.format(**t)
     message = body_template.format(**t)
@@ -88,5 +88,5 @@ for talk in talks:
         break
     if not args.dry_run:
         mail.send_mail(subject=subject, message=message, from_email=args.from_email, recipient_list=[talk.speaker_email])
+        time.sleep(args.sleep)
     print "OK"
-    time.sleep(args.sleep)
