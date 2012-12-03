@@ -25,9 +25,9 @@ proposals and discussions). See https://us.pycon.org/2013/about/what-
 is-pycon/ for more information.
 
 If you plan to come, you should register at
-https://us.pycon.org/2013/registration/ as soon as possible; early-
-bird registration is limited to 1,000 tickets, and I understand we're
-close to selling those out.
+https://us.pycon.org/2013/registration/ as soon as possible; we have a limit of
+2,500 tickets, and we expect to sell out. Please don't delay in picking up your
+tickets!
 
 If you need assistance with visas or immigration documents, please
 contact Rami Chowdhury (rami.chowdhury@gmail.com).
