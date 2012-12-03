@@ -57,9 +57,9 @@ settings.configure(
 if args.talk_ids and args.status:
     p.error("Can't pass both --id and --status.")
 if args.talk_ids:
-    talks = TalkProposal.objects.filter(talk_id__in=args.talk_ids)
+    talks = TalkProposal.objects.filter(talk_id__in=args.talk_ids).order_by('talk_id')
 elif args.status:
-    talks = TalkProposal.objects.filter(status=args.status)
+    talks = TalkProposal.objects.filter(status=args.status).order_by('talk_id')
 else:
     p.error("Pass either --id or --status; I won't email all authors.")
 
