@@ -19,6 +19,7 @@ it should be and I'm lazy.
 """
 
 import argparse
+import io
 import os
 import sys
 import time
@@ -64,7 +65,7 @@ else:
 
 # Read and parse the template.
 try:
-    template = open(args.template).read()
+    template = io.open(args.template, encoding='utf8').read()
     subject_line, body_template = template.split('\n\n', 1)
 except IOError:
     p.error("Template doesn't exist.")
