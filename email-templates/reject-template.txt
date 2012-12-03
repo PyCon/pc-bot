@@ -1,0 +1,48 @@
+Subject: PyCon 2013: Proposal decision - {title}
+
+Dear {speaker},
+
+Thank you very much for your PyCon 2013 talk proposal, "{title}".
+Unfortunately, your talk was not one of the ones selected to appear at
+PyCon 2013.
+
+As you may know, we once again had record-breaking levels of talk
+submissions -- over 450 proposals were submitted. Both the quantity
+and the quality of proposals were breathtaking. Sadly, we have just
+over 100 spots on the schedule, so many excellent talks couldn't be
+accommodated.
+
+I know you spent a lot of time working on your proposal, and receiving
+a form letter rejection stings. If you'd like specific feedback on why
+your talk was rejected, please contact me (jacob@jacobian.org). I'll
+be happy to look through the committee's notes and give you a
+
+I do hope you'll choose to come to PyCon regardless. It's an amazing
+conference, and we do have several venues in which you could still
+deliver your material: lightning talks (quick, five-minute talks on
+any topic) and open spaces (dedicated rooms for informal, unscheduled
+proposals and discussions). See https://us.pycon.org/2013/about/what-
+is-pycon/ for more information.
+
+If you plan to come, you should register at
+https://us.pycon.org/2013/registration/ as soon as possible; early-
+bird registration is limited to 1,000 tickets, and I understand we're
+close to selling those out.
+
+If you need assistance with visas or immigration documents, please
+contact Rami Chowdhury (rami.chowdhury@gmail.com).
+
+If you have any other questions, comments, or feedback, please feel
+free to contact me (jacob@jacobian.org), my co-chair, Luke Sneeringer
+(luke@sneeringer.com), or the conference chair, Jesse Noller
+(jnoller@python.org).
+
+On behalf of the PyCon staff, I want to thank you again for your
+submission. You made our job picking talks very hard, and the
+conference will be better for it.
+
+I hope to see you in Santa Clara!
+
+Jacob Kaplan-Moss
+Program Chair, PyCon 2013
+jacob@jacobian.org

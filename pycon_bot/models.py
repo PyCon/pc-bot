@@ -113,6 +113,7 @@ class TalkProposal(mongoengine.Document):
 
     talk_id = mongoengine.IntField(unique=True)
     speaker = mongoengine.StringField()
+    speaker_email = mongoengine.StringField()
     title = mongoengine.StringField()
     category = mongoengine.StringField()
     status = mongoengine.StringField(choices=STATUSES)
