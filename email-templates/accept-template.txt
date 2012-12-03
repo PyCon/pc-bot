@@ -16,7 +16,7 @@ abstract, please contact me.
 
 We haven't yet completed the schedule, so we don't yet know whether
 you've been allocated a 30 or a 45 minute time slot. We'll be
-announcing the schedule shortly after the New Years, so please stay
+announcing the schedule shortly after the New Year, so please stay
 tuned.
 
 If you have particular scheduling requirements (if you plan to come to
@@ -53,7 +53,7 @@ free to contact me (jacob@jacobian.org), my co-chair, Luke Sneeringer
 
 On behalf of the PyCon staff, I want to thank you for your submission.
 We're really looking forward to seeing you at the conference: PyCon 2013
-promises to be the best PyCon yet, and that'sbecause of our amazing
+promises to be the best PyCon yet, and that's because of our amazing
 speakers. We're thrilled that you're one of them.
 
 See you in Santa Clara!

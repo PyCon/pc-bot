@@ -15,7 +15,7 @@ accommodated.
 I know you spent a lot of time working on your proposal, and receiving
 a form letter rejection stings. If you'd like specific feedback on why
 your talk was rejected, please contact me (jacob@jacobian.org). I'll
-be happy to look through the committee's notes and give you a
+be happy to look through the committee's notes and give you a summary.
 
 I do hope you'll choose to come to PyCon regardless. It's an amazing
 conference, and we do have several venues in which you could still
