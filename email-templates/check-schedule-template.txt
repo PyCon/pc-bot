@@ -1,0 +1,49 @@
+Subject: PyCon 2013 draft schedule - please review!
+
+Dear {speaker},
+
+Please take a moment to review your talk's scheduled time:
+
+    Title: {title}
+    Date: {day}
+    Time: {start} - {stop} ({length})
+
+You can see the overall schedule at:
+
+    https://us.pycon.org/2013/schedule/talks/
+
+Please check that your talk is scheduled for a time you'll be able
+to give it! If anything's wrong, please let me know *right away*:
+I plan to publish this schedule tomorrow.
+
+I've tried my best to accommodate every speakers' preferences for
+talk length, day of conference, time of day, etc. In some cases,
+however, this wasn't possible: in particular, we had more speakers
+requesting 45 minute slots than we had 45 minute slots available, so
+you may not have been allocated the time you requested. If you're in
+that camp, please do try to make the talk fit  within the shorter
+time slot. If you absolutely can't, please let me know  right away.
+
+I also want to remind you of a couple other things:
+
+* If you haven't already registered for PyCon, please contact me
+  immediately. Early-bird registration sold out a couple of weeks
+  ago, but if you contact me I can still get you a ticket at
+  early-bird prices. But please don't delay - we *will* sell out,
+  and you need to have a ticket before we do.
+
+* The deadline to apply for financial aid is December 31, 2012. If
+  you need financial assistance to attend PyCon, PLEASE apply
+  (and mention that you're a speaker). We don't want money to stand
+  in the way of your talk!
+
+Thanks, and as always if you have any questions please feel free to
+contact me (jacob@jacobian.org), my co-chair, Luke Sneeringer
+(luke@sneeringer.com), or the conference chair, Jesse Noller
+(jnoller@python.org).
+
+See you in Santa Clara!
+
+Jacob Kaplan-Moss
+Program Chair, PyCon 2013
+jacob@jacobian.org
