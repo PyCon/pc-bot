@@ -20,6 +20,7 @@ it should be and I'm lazy.
 
 import argparse
 import io
+import json
 import os
 import sys
 import time
@@ -41,6 +42,7 @@ p.add_argument('--from-email', default='jacob@jacobian.org', help='From email ad
 p.add_argument('--sleep', type=float, default=1, help='Amount of time (seconds) to sleep in between sending (to avoid getting throttled).')
 p.add_argument('--id', metavar='ID', dest='talk_ids', type=int, nargs='*', help='Only email specific talk IDs')
 p.add_argument('--status', choices=[c[0] for c in TalkProposal.STATUSES], help='Only email talks with status of STATUS')
+p.add_argument('--data', help='Extra data in a JSON file to feed to the template. Format should be a dict of {talk_id: {extra: data}}')
 args = p.parse_args()
 
 # Configure...
@@ -75,9 +77,21 @@ if not subject_line.startswith('Subject:'):
     p.error("Template doesn't start with 'Subject: ...")
 subject_template = subject_line.replace('Subject:', '').strip()
 
+# If there's extra data then load it up.
+if args.data:
+    try:
+        extra_data = json.load(open(args.data))
+    except IOError:
+        p.error("Extra data file doesn't exist.")
+    except ValueError:
+        p.error("Extra data file is invalid JSON.")
+else:
+    extra_data = {}
+
 # Send ye olde emailes.
 for talk in talks:
     t = doc2dict(talk)
+    t.update(extra_data.get(str(talk.talk_id), {}))
     sys.stdout.write(u"Emailing {speaker_email} about #{talk_id} - {title} ... ".format(**t))
     sys.stdout.flush()
     subject = subject_template.format(**t)
