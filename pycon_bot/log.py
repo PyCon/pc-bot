@@ -1,7 +1,7 @@
 from datetime import datetime
 from json import JSONEncoder
 from treq import post
-from twisted.internet import defer
+from twisted.internet import defer, task, reactor
 from zope import interface
 
 
@@ -21,6 +21,9 @@ class ILogTarget(interface.Interface):
         This should return a deferred that fires when the messages have been
         flushed. If this log target doesn't require flushing, it should return
         a deferred that is already fired.
+
+        Implementations should be resilient against this method being called
+        repeatedly.
 
         """
 
@@ -70,3 +73,28 @@ class JSONDateTimeEncoder(JSONEncoder):
             return obj.strftime(DATETIME_FORMAT)
         else:
             return JSONEncoder.encode(self, obj)
+
+
+class AutoFlushingLogTarget(object):
+    """A log target that takes a log target and flushes it periodically.
+    """
+    def __init__(self, log_target, interval=10, _clock=reactor):
+        self.log_target = log_target
+
+        self.looping_call = task.LoopingCall(self.flush)
+        self.looping_call.clock = _clock
+        self.looping_call.start(interval, now=False)
+
+    def log(self, proposal, nickname, message):
+        """
+        Logs using the underlying target.
+        """
+        self.log_target.log(proposal, nickname, message)
+
+    def flush(self):
+        """
+        Flushes the underlying log target.
+
+        This is called automatically every several seconds.
+        """
+        return self.log_target.flush()

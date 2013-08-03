@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from json import dumps, loads
 from pycon_bot import log
 from treq import post
-from twisted.internet import defer
+from twisted.internet import defer, task
 from twisted.trial import unittest
 from zope.interface import verify
 
@@ -131,3 +131,50 @@ class JSONDateTimeEncoderTests(unittest.TestCase):
         encoded = self.encoder.encode({"datetime": EPOCH})
         expected = dumps({"datetime": ENCODED_EPOCH})
         self.assertEqual(encoded, expected)
+
+
+class AutoFlushingLogTargetTests(unittest.TestCase):
+    def setUp(self):
+        self.wrapped_target = w = DummyLogTarget()
+        self.clock = task.Clock()
+        self.target = log.AutoFlushingLogTarget(w, _clock=self.clock)
+
+    def test_log(self):
+        """The log method is dispatched to the wrapped log target.
+        """
+        self.assertEqual(self.wrapped_target.logged_messages, [])
+        args = 1, "nickname", "message"
+        self.target.log(*args)
+        self.assertEqual(self.wrapped_target.logged_messages, [args])
+
+    def test_flush(self):
+        """The flush method is dispatched to the wrapped log target.
+        """
+        self.assertEqual(self.wrapped_target.flushes, 0)
+        d = self.target.flush()
+        self.assertEqual(self.successResultOf(d), None)
+        self.assertEqual(self.wrapped_target.flushes, 1)
+
+    def test_autoflush(self):
+        """The wrapped target is flushed automatically every 10 seconds.
+        """
+        self.assertEqual(self.wrapped_target.flushes, 0)
+        self.clock.advance(10)
+        self.assertEqual(self.wrapped_target.flushes, 1)
+        self.clock.advance(5)
+        self.assertEqual(self.wrapped_target.flushes, 1)
+        self.clock.advance(5)
+        self.assertEqual(self.wrapped_target.flushes, 2)
+
+
+class DummyLogTarget(object):
+    def __init__(self):
+        self.logged_messages = []
+        self.flushes = 0
+
+    def log(self, proposal, nickname, message):
+        self.logged_messages.append((proposal, nickname, message))
+
+    def flush(self):
+        self.flushes += 1
+        return defer.succeed(None)
