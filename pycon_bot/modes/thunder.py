@@ -567,3 +567,6 @@ class Mode(BaseMode):
         # talk proposal within the group
         if self.current_group:
             self.current_group.add_to_transcript(datetime.now(), user, message)
+
+        for talk_id in self.current_group.talk_ids:
+            self.bot.log_target.log(talk_id, user, message)
