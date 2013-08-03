@@ -503,6 +503,7 @@ class Mode(BaseMode):
             self.meeting.add_to_transcript(datetime.now(), user, message)
         if self.current:
             self.current.add_to_transcript(datetime.now(), user, message)
+            self.bot.log_target.log(self.current.talk_id, user, message)
 
     def _make_decision(self, user, channel, decision, message, alternative=None):
         """Make a given decision, and save it to the database."""
