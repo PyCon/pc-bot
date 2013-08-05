@@ -1,7 +1,7 @@
 from datetime import datetime
 from json import JSONEncoder
 
-from treq import post
+import treq
 from twisted.internet import defer, task, reactor
 from zope import interface
 
@@ -33,7 +33,7 @@ class PyConSiteLogTarget(object):
     """A log target that logs to the PyCon site.
     """
     _utcnow = staticmethod(datetime.utcnow)
-    _post = staticmethod(post)
+    _post = staticmethod(treq.post)
 
     def __init__(self, host, auth_key):
         """Initializes the PyCon site log target.
