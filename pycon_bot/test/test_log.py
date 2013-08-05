@@ -135,7 +135,7 @@ class JSONDateTimeEncoderTests(unittest.TestCase):
 
 class AutoFlushingLogTargetTests(unittest.TestCase):
     def setUp(self):
-        self.wrapped_target = w = DummyLogTarget()
+        self.wrapped_target = w = FakeLogTarget()
         self.clock = task.Clock()
         self.target = log.AutoFlushingLogTarget(w, _clock=self.clock)
 
@@ -167,7 +167,7 @@ class AutoFlushingLogTargetTests(unittest.TestCase):
         self.assertEqual(self.wrapped_target.flushes, 2)
 
 
-class DummyLogTarget(object):
+class FakeLogTarget(object):
     def __init__(self):
         self.logged_messages = []
         self.flushes = 0
