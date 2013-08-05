@@ -8,3 +8,4 @@ Twisted==12.1.0
 Werkzeug==0.8.3
 zope.interface==4.0.1
 treq=0.2.0
+PyOpenSSL==0.13
