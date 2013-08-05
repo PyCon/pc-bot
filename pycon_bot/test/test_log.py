@@ -3,6 +3,7 @@ Tests for IRC bot logging.
 """
 from datetime import datetime, timedelta
 from json import dumps, loads
+
 from pycon_bot import log
 from treq import post
 from twisted.internet import defer, task
