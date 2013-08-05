@@ -8,7 +8,7 @@ class ThunderdomeLogTests(unittest.TestCase):
     def setUp(self):
         self.target = DummyLogTarget()
         self.mode = review.Mode(Bot(self.target))
-        self.mode.current = FakeTalkProposal(1)
+        self.mode.current = DummyTalkProposal(1)
 
     def test_log(self):
         """Messages are logged to the right proposal.
@@ -20,7 +20,7 @@ class ThunderdomeLogTests(unittest.TestCase):
         self.assertEqual(message, "message")
 
 
-class FakeTalkProposal(object):
+class DummyTalkProposal(object):
     def __init__(self, talk_id):
         self.talk_id = talk_id
 
