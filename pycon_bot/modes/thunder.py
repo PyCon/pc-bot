@@ -20,16 +20,15 @@ class Mode(BaseMode):
         self.segment = None
         self.unaddressed = 0
 
-        # get the group that should be up next
+    def chair_start(self, user, channel, meeting_num=None):
+        """Begin a meeting. If a meeting number is given, then
+        resume that meeting. Initializes the next group."""
         try:
             self.next_group = Group.next_undecided_group()
         except IndexError:
-            self.msg(channel, "There are no unreviewed groups remaining. Clearly, we shouldn't be here.")
+            self.msg(channel, "There are no unreviewed groups remaining. "
+                     "Clearly, we shouldn't be here.")
             return
-
-    def chair_start(self, user, channel, meeting_num=None):
-        """Begin a meeting. If a meeting number is given, then
-        resume that meeting."""
 
         # pull up the meeting itself, or if no meeting number was specified,
         # then create a new meeting record
@@ -568,3 +567,6 @@ class Mode(BaseMode):
         # talk proposal within the group
         if self.current_group:
             self.current_group.add_to_transcript(datetime.now(), user, message)
+
+        for talk_id in self.current_group.talk_ids:
+            self.bot.log_target.log(talk_id, user, message)
