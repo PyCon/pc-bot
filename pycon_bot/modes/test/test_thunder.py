@@ -1,12 +1,12 @@
 from pycon_bot.modes import thunder
 from pycon_bot.modes.test.dummy_bot import Bot
-from pycon_bot.test.test_log import DummyLogTarget
+from pycon_bot.test.test_log import FakeLogTarget
 from twisted.trial import unittest
 
 
 class ThunderdomeLogTests(unittest.TestCase):
     def setUp(self):
-        self.target = DummyLogTarget()
+        self.target = FakeLogTarget()
         self.mode = thunder.Mode(Bot(self.target))
         self.mode.current_group = Group(set([1, 2, 3, 4]))
 
