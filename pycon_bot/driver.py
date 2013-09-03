@@ -10,6 +10,7 @@ import importlib
 from twisted.internet import defer, protocol, reactor
 from twisted.python import log
 from twisted.words.protocols import irc
+from pycon_bot import settings
 
 class PyConBot(irc.IRCClient):
     def __init__(self):
@@ -19,7 +20,7 @@ class PyConBot(irc.IRCClient):
         self.state_handler = None
         
         # variables storing superuser information
-        self.potential_superusers = os.environ.get('PYCONBOT_SUPERUSERS', '').split(',')
+        self.potential_superusers = settings.IRC_SUPERUSERS
         self.superusers = set()
         self._namescallback = {}
         
