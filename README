@@ -1,7 +1,7 @@
 Tools for PyCon-PC IRC meetings
 ===============================
 
-Helpful tools for running the PyCon Program Commitee process. This runs and IRC
+Helpful tools for running the PyCon Program Commitee process. This runs an IRC
 bot we use during meetings, and a web interface to the review data.
 
 Setup
