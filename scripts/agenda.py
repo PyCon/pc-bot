@@ -2,12 +2,11 @@
 """Generate an agenda for the next meeting.
 
 Skips over any talks already reviewed, then prints out a simple agenda of the
-next [number] talks."""
-
+next [number] talks.
+"""
 import sys
 import argparse
-import pycon_bot.mongo
-from pycon_bot.models import TalkProposal, Group
+from pycon_bot.models import Proposal  #, Group
 
 class Command(object):
     def __init__(self, args):
@@ -23,43 +22,62 @@ class Command(object):
         return answer
 
     def run(self):
-        """Actually run the command. Find the appropriate handler, run it, and return the result."""
-
-        # sanity check: do I have a mode at all?
+        """Actually run the command. Find the appropriate handler,
+        run it, and return the result.
+        """
+        # Sanity check: Do I have a mode at all?
         if not self.args.mode:
-            print >> sys.stderr, 'You must print an agenda for a particular mode. Modes are: {modes}\n'.format(
-                modes=', '.join(self._modes),
-            )
+            print >> sys.stderr, ' '.join((
+                'You must print an agenda for a particular mode.',
+                'Modes are: {modes}\n',
+            )).format(modes=', '.join(self._modes))
 
-        # sanity check: does the mode I was asked to run have a handler?
+        # Sanity check: does the mode I was asked to run have a handler?
         method = 'handle_{mode}'.format(mode=self.args.mode)
         if not hasattr(self, method):
-            print >> sys.stderr, 'No handler for {mode}. Modes are: {modes}\n'.format(
-                mode=self.args.mode,
-                modes=', '.join(self._modes),
-            )
+            print >> sys.stderr, ' '.join((
+                'No handler for {mode}.',
+                'Modes are: {modes}\n'
+            )).format(mode=self.args.mode, modes=', '.join(self._modes))
 
-        # run the appropriate handler
+        # Run the appropriate handler.
         return getattr(self, method)()
 
-    def handle_review(self):
+    def handle_kitten(self):
         """Print out an agenda for a single kittendome meeting."""
 
-        talks = TalkProposal.objects(status__in=('unreviewed', 'hold')).order_by('talk_id')[:self.args.num]
-        overflow = TalkProposal.objects(status__in=('unreviewed', 'hold')).order_by('talk_id')[self.args.num:self.args.num + self.args.overflow]
+        # Get a list of talks.
+        talks = Proposal.objects.talks()
+        counter = 0
 
-        print "=== AGENDA ==="
-        print
-        for t in talks:
-            print t.agenda_format
-        if overflow:
-            print "=== OVERFLOW ==="
-            print
-            for t in overflow:
-                print t.agenda_format
+        # Iterate over talks until we either run out of talks,
+        # or have hit the number we are supposed to be reviewing.
+        for talk in talks:
+            # Sanity check: Does this talk belong?
+            if self.args.start and talk.id < self.args.start:
+                continue
+
+            # If this is the first talk, print out an agenda header; if it's
+            # the first talk of overflow, print out an overflow header.
+            if counter == 0:
+                print '=== AGENDA ==='
+            if counter == self.args.num:
+                print '=== OVERFLOW ==='
+
+            # Okay, now print out the talk information.
+            print talk.agenda_format
+
+            # Increment the counter, so we know how far to go.
+            # If we've printed out enough talks, stop.
+            counter += 1
+            if counter == self.args.num + self.args.overflow:
+                return
 
     def handle_thunder(self):
         """Print out an agenda for a single thunderdome meeting."""
+
+        # FIXME!
+        return NotImplemented
 
         # get the agenda and the overflow groups
         agenda = Group.objects.filter(decided__ne=True).order_by('number')[:self.args.num]
@@ -77,16 +95,10 @@ class Command(object):
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('mode', type=str)
-    p.add_argument('--dsn')
-    p.add_argument('-n', '--num', type=int, default=6)
-    p.add_argument('-o', '--overflow', type=int, default=2)
+    p.add_argument('-s', '--start', type=int, default=None)
+    p.add_argument('-n', '--num', type=int, default=8)
+    p.add_argument('-o', '--overflow', type=int, default=4)
     args = p.parse_args()
-
-    # sanity check: do we have a MONGO_DSN -- this is the database to connect
-    # to; it doesn't make sense to run the script without it
-    if not pycon_bot.mongo.connect(args.dsn):
-        sys.stderr.write("Need to pass --dsn or set env[MONGO_DSN].")
-        sys.exit(1)
 
     # run my agenda commnad
     command = Command(args)

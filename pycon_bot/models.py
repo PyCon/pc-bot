@@ -111,6 +111,15 @@ class Proposal(object):
         return repr(self.data)
 
     @property
+    def agenda_format(self):
+        return '#{id} - {title} - {author}\n{review_url}\n'.format(
+            author=self.speakers[0]['name'],
+            id=self.id,
+            title=self.title,
+            review_url=self.review_url,
+        )
+
+    @property
     def review_url(self):
         return 'http://us.pycon.org/2014/reviews/review/%d/' % self.id
 
