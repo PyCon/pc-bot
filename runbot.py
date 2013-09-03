@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Run the bot, as well as the web server."""
+"""Run the bot."""
 import argparse
 import sys
 import os
@@ -12,11 +12,11 @@ from twisted.web.server import Site
 from twisted.web.wsgi import WSGIResource
 
 import pycon_bot.driver
-import pycon_bot.mongo
-from pycon_bot.web.app import app as webapp
+
+from pycon_bot import settings
 
 
-def run_bot(irc_server, irc_port, irc_channel, bot_name, http_port, run_pinger, logfile):
+def run_bot(irc_server, irc_port, irc_channel, bot_name, logfile):
     log.startLogging(logfile)
     if irc_server is not None:
         bot = pycon_bot.driver.PyConBotFactory([irc_channel], bot_name)
@@ -29,12 +29,12 @@ if __name__ == '__main__':
     p.add_argument('--irc-server', default='irc.freenode.net')
     p.add_argument('--irc-port', type=int, default=6667)
     p.add_argument('--irc-channel', default=settings.IRC_CHANNEL),
-    p.add_argument('--irc-nickname', default=settings.IRC_NICK(,))
+    p.add_argument('--irc-nickname', default=settings.IRC_NICK),
     args = p.parse_args()
 
     # Run ze bot!
     run_bot(
-        irc_server=args.irc_server if args.run_irc else None,
+        irc_server=args.irc_server,
         irc_port=args.irc_port,
         irc_channel=args.irc_channel,
         bot_name=args.irc_nickname,

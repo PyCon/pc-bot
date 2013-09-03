@@ -42,10 +42,6 @@ class API(object):
         signature = self._sign_request(url, method, body)
 
         # Make the actual request to the PyCon website.
-        print url
-        print method
-        print body
-        print signature
         r = requests.request(method, url, data=body, headers=signature)
 
         # Sanity check: Did we get a bad request of some kind?
@@ -54,9 +50,11 @@ class API(object):
             exc_class = APIError
             if r.status_code == 403:
                 exc_class = AuthenticationError
+            if r.status_code == 404:
+                exc_class = NotFound
 
             # Create and raise the exception
-            ex = exc_class(r.json().get['error'])
+            ex = exc_class(r.json()['error'])
             ex.request = r
             raise ex
 

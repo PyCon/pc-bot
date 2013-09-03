@@ -1,5 +1,6 @@
-from pycon_bot.utils.api import API
 from pycon_bot import settings
+from pycon_bot.utils.api import API
+from pycon_bot.utils.exceptions import NotFound
 
 
 class ProposalManager(object):
@@ -19,8 +20,43 @@ class ProposalManager(object):
         """Return back a single proposal given the following ID.
         We do not filter on anything other than ID here.
         """
-        response = self.api.get('proposals/%d' % int(id))
+        try:
+            response = self.api.get('proposals/%d' % int(id))
+        except NotFound:
+            raise Proposal.DoesNotExist('No proposal with ID %d.' % int(id))
         return Proposal(**response['data'])
+
+    def next(self, type=None, status=None, after=None):
+        """Return the next talk that should be reviewed.
+
+        Right now the API has some limitations, so this is super bonus janky.
+        It basically gets all the talks and then iterates until it finds
+        the right one.
+        """
+        # First, what kind of talk are we looking at?
+        manager_method = 'all'
+        if type:
+            manager_method = type + 's'
+
+        # Get the list of talks.
+        proposals = getattr(self, manager_method)()
+
+        # Iterate over the proposals we got back until we get
+        # the one we want.
+        for proposal in proposals:
+            # If the status isn't what I expect, keep going.
+            if proposal.status != status:
+                continue
+
+            # If the proposal ID is too low, keep going.
+            if proposal.id <= after:
+                continue
+
+            # Return this talk!
+            return proposal
+
+        # Whups, we didn't find what we wanted; complain.
+        raise Proposal.DoesNotExist('No more talks!')
 
     def all(self):
         return self.filter()
@@ -44,6 +80,9 @@ class Proposal(object):
     """
     objects = ProposalManager()
 
+    class DoesNotExist(Exception):
+        pass
+
     def __init__(self, id, **kwargs):
         """Create a new proposal instance. This MUST have an ID
         to be valid; we do not create new proposals from nowhere
@@ -58,6 +97,7 @@ class Proposal(object):
     def __getattr__(self, key):
         if key in self.data:
             return self.data[key]
+        raise KeyError('No key %s in proposal #%d.' % (key, self.id))
 
     def __setattr__(self, key, value):
         raise AttributeError(''.join((
@@ -69,6 +109,10 @@ class Proposal(object):
 
     def __repr__(self):
         return repr(self.data)
+
+    @property
+    def review_url(self):
+        return 'http://us.pycon.org/2014/reviews/review/%d/' % self.id
 
     def write(self, data=None):
         """Write the given data to the PyCon API. If nothing is specified,

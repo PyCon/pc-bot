@@ -3,3 +3,6 @@ class APIError(Exception):
 
 class AuthenticationError(APIError):
     pass
+
+class NotFound(APIError):
+    pass

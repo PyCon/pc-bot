@@ -35,10 +35,13 @@ class PyConBot(irc.IRCClient):
     def nickname(self):
         return self.factory.nickname
 
-    def set_timer(self, channel, seconds, message='Time has ended.', callback=None, callback_kwargs={}):
-        """Set a timer. By default, simply say `message` after `seconds` have elapsed.
-        Additionally, if a callback is provided, run it."""
-        
+    def set_timer(self, channel, seconds, message='Time has ended.',
+                        callback=None, callback_kwargs={}):
+        """Set a timer. By default, simply say `message` after
+        `seconds` have elapsed.
+
+        Additionally, if a callback is provided, run it.
+        """
         seconds = int(seconds)
         
         def say_time(channel):
@@ -103,8 +106,8 @@ class PyConBot(irc.IRCClient):
             return
 
         # Now add or remove superusers depending on the response. A code of "3"
-        # means the user's identiied with services, so if they're in the allowed
-        # SUs and NickServ gives us a "3", then that user is auth'd.
+        # means the user's identiied with services, so if they're in the
+        # allowed SUs and NickServ gives us a "3", then that user is auth'd.
         if username in self.potential_superusers and status == '3':
             self.superusers.add(username)
         elif username in self.superusers and status != '3':
@@ -135,9 +138,12 @@ class PyConBot(irc.IRCClient):
             self.join(channel)
 
     def joined(self, channel):
-        log.msg("Joined %s" % channel)
-        self.msg(channel, "Hello, denizens of %s, I am your god." % channel)
-        self.msg(channel, "To contribute to me: https://github.com/alex/THUNDERDOME-BOT")
+        log.msg('Joined %s' % channel)
+        self.msg(channel, 'Hello, denizens of %s!' % channel)
+        self.msg(channel, ' '.join((
+            'To contribute to me:',
+            'https://github.com/PyCon/pc-bot',
+        )))
         self.check_auth()
         
     def userJoined(self, user, channel):
