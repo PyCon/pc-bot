@@ -7,7 +7,7 @@ an IRC bot we use during meetings, and a web interface to the review data.
 Setup
 =====
 
-First, the usual:
+First, the usual::
 
     pip install -r requirements.txt
 
@@ -23,16 +23,17 @@ The web app can be run in debug mode::
 
     export PYCONBOT_DEBUG=1
 
-Then to run the bot:
+Then to run the bot::
 
     python runbot.py
 
-The script needs to be able to import stuff from `pycon_bot`, so I usually
+The script needs to be able to import stuff from `pycon_bot`, so I usually::
 
     export PYTHONPATH=`pwd`
     python scripts/agenda.py
 
 Or somesuch.
+
 
 Architecture
 ============
@@ -50,6 +51,7 @@ Some brief notes on how all the bits fit together:
   `pycon_bot.driver.PyConBot.handle_mode`. Giving invalid modes fails in
   predictable ways, and since it imports arbitrary code you probably want to
   be careful about where you run this and who gets SU!
+
 
 Running IN THE CLOUDS!
 ======================
