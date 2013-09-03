@@ -1,9 +1,9 @@
-## Tools for PyCon-PC IRC meetings
+### Tools for PyCon-PC IRC meetings
 
 Helpful tools for running the PyCon Program Commitee process. This runs
 an IRC bot we use during meetings, and a web interface to the review data.
 
-### Setup
+#### Setup
 
 First, the usual:
 
@@ -33,7 +33,7 @@ The script needs to be able to import stuff from `pycon_bot`, so I usually:
 Or somesuch.
 
 
-### Architecture 
+#### Architecture 
 
 Some brief notes on how all the bits fit together:
 
@@ -48,7 +48,7 @@ Some brief notes on how all the bits fit together:
     be careful about where you run this and who gets SU!
 
 
-### Running IN THE CLOUDS!
+#### Running IN THE CLOUDS!
 
 You can run this bad boy on Heroku:
 
