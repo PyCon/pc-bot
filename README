@@ -1,8 +1,8 @@
 Tools for PyCon-PC IRC meetings
 ===============================
 
-Helpful tools for running the PyCon Program Commitee process. This runs an IRC
-bot we use during meetings, and a web interface to the review data.
+Helpful tools for running the PyCon Program Commitee process. This runs
+an IRC bot we use during meetings, and a web interface to the review data.
 
 Setup
 =====
@@ -46,9 +46,9 @@ Architecture
 
 Some brief notes on how all the bits fit together:
 
-* `runbot.py` launches an IRC "driver" (`pycon_bot.driver.PyConBot`). This bot
-  doesn't do much itself besides provide some utilities. Instead, almost all
-  bot commands get delegated down to a "mode" object.
+* `runbot.py` launches an IRC "driver" (`pycon_bot.driver.PyConBot`). This
+  bot doesn't do much itself besides provide some utilities. Instead,
+  almost all bot commands get delegated down to a "mode" object.
 
 * A "mode" lives in `pycon_bot.modes.<whatever>` It should subclass
   `pycon_bot.modes.base.BaseMode`, and the mode class itself is named `Node`.
