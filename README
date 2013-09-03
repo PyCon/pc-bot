@@ -14,14 +14,10 @@ First, the usual:
 Then, the best way to configure this thing is through some environ variables
 (there are flags, but env is easier)::
 
-    export MONGO_DSN=mongodb://...
+    export PYCON_API_KEY='00000000-0000-0000-0000-000000000000'
+    export PYCON_API_SECRET='00000000-0000-0000-0000-000000000000'
+    export PYCON_WEBSITE_HOST='staging-pycon.python.org'
     export PYCONBOT_SUPERUSERS=list,of,irc,superusers
-
-If you want to protect the web interface with (basic) auth::
-
-    export PYCONBOT_BASIC_AUTH=username:password
-
-(Yeah it's kinda janky. What. Ev. Er.)
 
 The web app can be run in debug mode::
 
@@ -31,10 +27,7 @@ Then to run the bot:
 
     python runbot.py
 
-This runs both the IRC client and the web server. See the `--help` for
-connecting to other channels, listening on other HTTP ports, etc.
-
-The scripts need to be able to import stuff from `pycon_bot`, so I usually
+The script needs to be able to import stuff from `pycon_bot`, so I usually
 
     export PYTHONPATH=`pwd`
     python scripts/agenda.py
