@@ -471,8 +471,10 @@ class Mode(BaseMode):
 
         # Okay, there is a current talk; show it.
         self.msg(user, 'We are currently reviewing:')
-        self.msg(user, '    #%d: %s (%s)' % (
-            self.current.id, self.current.title, self.current.speaker,
+        self.msg(user, '    #{id}: {title} ({speaker})'.format(
+            id=self.current.id,
+            title=self.current.title,
+            speaker=self.current.speakers[0]['name'],
         ))
         self.msg(user, '    %s' % self.current.review_url)
         if self.segment == 'champion':
@@ -502,8 +504,10 @@ class Mode(BaseMode):
 
         # Report on the talk coming next.
         self.msg(user, 'The next talk to be discussed will be:')
-        self.msg(user, '    #%d: %s (%s)' % (
-            self.next.id, self.next.title, self.next.speaker,
+        self.msg(user, '    #{id}: {title} ({speaker})'.format(
+            id=self.next.id,
+            title=self.next.title,
+            speaker=self.next.speakers[0]['name'],
         ))
         self.msg(user, '    %s' % self.next.review_url)
 
@@ -527,9 +531,17 @@ class Mode(BaseMode):
             talk_count = int(round(time_left.seconds / 300))
 
         # Get the list of talks.
-        talks = Proposal.objects.filter(
-            status__in=('unreviewed', 'hold'),
-        )[0:talk_count]
+        # Hodge-podge it together from the full list that
+        # the API provides.
+        talks_from_api = Proposal.objects.filter(status='undecided',
+                                                 type='talk')
+        talks = []
+        for talk in talks_from_api:
+            if talk.id <= (self.current.id if self.current else self.next.id):
+                continue
+            talks.append(talk)
+            if len(talks) >= talk_count:
+                break
 
         # Sanity check: do we have any talks up to bat at all?
         if not talks:
@@ -550,7 +562,7 @@ class Mode(BaseMode):
 
         # Print out the current/next talk to the channel.
         self.msg(user, 'The {0} talk on the table is:'.format(status))
-        self.msg(user, next_up.preview_url)
+        self.msg(user, next_up.review_url)
 
         # What about later talks? print them too.
         upcoming_talks = ", ".join([str(t.id) for t in subsequent_talks])

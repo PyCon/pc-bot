@@ -60,9 +60,9 @@ class Command(object):
             # If this is the first talk, print out an agenda header; if it's
             # the first talk of overflow, print out an overflow header.
             if counter == 0:
-                print '=== AGENDA ==='
+                print '=== AGENDA ===\n'
             if counter == self.args.num:
-                print '=== OVERFLOW ==='
+                print '=== OVERFLOW ===\n'
 
             # Okay, now print out the talk information.
             print talk.agenda_format
