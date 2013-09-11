@@ -42,7 +42,8 @@ class API(object):
         signature = self._sign_request(url, method, body)
 
         # Make the actual request to the PyCon website.
-        r = requests.request(method, url, data=body, headers=signature)
+        r = requests.request(method, url, data=body, headers=signature,
+                                          verify=False)
 
         # Sanity check: Did we get a bad request of some kind?
         if r.status_code >= 400:
