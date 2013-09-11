@@ -112,10 +112,10 @@ class Proposal(object):
 
     @property
     def agenda_format(self):
-        return '#{id} - {title} - {author}\n{review_url}\n'.format(
-            author=self.speakers[0]['name'],
+        return u'#{id} - {title} - {author}\n{review_url}\n'.format(
+            author=unicode(self.speakers[0]['name']),
             id=self.id,
-            title=self.title,
+            title=unicode(self.title),
             review_url=self.review_url,
         )
 
