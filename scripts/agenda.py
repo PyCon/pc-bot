@@ -57,6 +57,10 @@ class Command(object):
             if self.args.start and talk.id < self.args.start:
                 continue
 
+            # If this talk is decided, don't include it.
+            if talk.status != 'undecided':
+                continue
+
             # If this is the first talk, print out an agenda header; if it's
             # the first talk of overflow, print out an overflow header.
             if counter == 0:
