@@ -100,8 +100,8 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('mode', type=str)
     p.add_argument('-s', '--start', type=int, default=None)
-    p.add_argument('-n', '--num', type=int, default=8)
-    p.add_argument('-o', '--overflow', type=int, default=4)
+    p.add_argument('-n', '--num', type=int, default=12)
+    p.add_argument('-o', '--overflow', type=int, default=6)
     args = p.parse_args()
 
     # run my agenda commnad
