@@ -1,3 +1,4 @@
+from __future__ import division
 from pycon_bot import settings
 from pycon_bot.utils.api import API
 from pycon_bot.utils.exceptions import NotFound
@@ -89,6 +90,8 @@ class Proposal(object):
         for our purposes.
         """
         kwargs['id'] = int(id)
+        kwargs['thunderdome_votes'] = None
+        kwargs['decided'] = False
         self.__dict__.update({
             'api': API(),
             'data': kwargs,
@@ -100,12 +103,7 @@ class Proposal(object):
         raise KeyError('No key %s in proposal #%d.' % (key, self.id))
 
     def __setattr__(self, key, value):
-        raise AttributeError(''.join((
-            'Attribute setting is not allowed.',
-            'Write data with Proposal.write(). Note that, as of this writing,',
-            'the *entire* data you save will replace what was in the "extra"',
-            'dictionary before.',
-        )))
+        raise AttributeError('Attribute setting is not allowed.')
 
     def __repr__(self):
         return repr(self.data)
@@ -123,15 +121,167 @@ class Proposal(object):
     def review_url(self):
         return 'http://us.pycon.org/2014/reviews/review/%d/' % self.id
 
-    def write(self, data=None):
-        """Write the given data to the PyCon API. If nothing is specified,
-        the current value of self.extra is used.
-        """
-        data = data or self.extra
-        if not isinstance(data, dict):
-            raise TypeError(''.join((
-                'Only JSON-serializable dictionaries may be written',
-                'to the extra slot.',
-            )))
-        self.api.post('proposals/%d' % self.id, data)
+    def set_status(self, status):
+        # Sanity check: Is this a valid status?
+        if status not in ('accepted', 'standby', 'rejected', 'undecided'):
+            raise ValueError('Bad status: %s.' % status)
 
+        # Set the status on the PyCon site.
+        self.api.post('proposals/%d' % self.id, {'status': status})
+
+        # Denote that this talk has been decided.
+        self.data['status'] = status
+        self.data['decided'] = True
+
+    def set_thunderdome_votes(self, supporters, total_voters):
+        self.data['thunderdome_votes'] = ThunderdomeVotes(
+            supporters=supporters,
+            total_voters=total_voters,
+        )
+
+    def accept(self):
+        return self.set_status('accepted')
+
+    def reject(self):
+        return self.set_status('rejected')
+
+    def standby(self):
+        return self.set_status('standby')
+
+    def undecide(self):
+        return self.set_status('undecided')
+
+
+class ThunderdomeGroupManager(object):
+    """Class that understands how to retrieve and filter thunderdome groups,
+    acquired from the PyCon website.
+    """
+    def __init__(self):
+        self.api = API()
+
+    def filter(self, undecided=False):
+        """Return a list of thunderdome groups, optionally filtering out
+        groups that have already been decided.
+        """
+        kwargs = {}
+        if undecided:
+            kwargs['undecided'] = undecided
+
+        response = self.api.get('thunderdome_groups', **kwargs)
+        return [ThunderdomeGroup(**i) for i in response['data']]
+
+    def get(self, code):
+        """Return back a single proposal given the following code.
+        We do not filter on anything other than code here.
+        """
+        try:
+            response = self.api.get('thunderdome_groups/%s' % code)
+        except NotFound:
+            raise ThunderdomeGroup.DoesNotExist('No group with code %s.'
+                                                % code)
+        return ThunderdomeGroup(**response['data'])
+
+    def next(self, undecided=True):
+        """Return the next thunderdome group that should be decided."""
+
+        try:
+            return self.filter(undecided=True)[1]
+        except KeyError:
+            return None
+
+
+class ThunderdomeGroup(object):
+    """Object to represent proposal objects, which can be acted upon
+    and saved back to the PyCon website.
+    """
+    objects = ThunderdomeGroupManager()
+
+    class DoesNotExist(Exception):
+        pass
+
+    def __init__(self, code, talks=(), **kwargs):
+        """Create a new thunderdome group instance. This MUST have a code
+        to be valid; we do not create new groups or proposals from nowhere
+        for our purposes.
+        """
+        # Iterate over the talks and make Proposal objects from each.
+        talks_ = []
+        for t in talks:
+            talks_.append(Proposal(**t))
+        kwargs['talks'] = talks_
+
+        # Set the code.
+        kwargs['code'] = code
+
+        # Set an empty decision object.
+        kwargs['decision'] = {}
+
+        # Write the things to the object.
+        self.__dict__.update({
+            'api': API(),
+            'data': kwargs,
+        })
+
+    def __getattr__(self, key):
+        if key in self.data:
+            return self.data[key]
+        raise KeyError('No key %s in proposal #%d.' % (key, self.id))
+
+    def __setattr__(self, key, value):
+        raise AttributeError('Attribute setting is not allowed.')
+
+    def __repr__(self):
+        return repr(self.data)
+
+    @property
+    def agenda_format(self):
+        answer = u'  --- {label} ---\n'.format(label=self.label)
+        for talk in self.talks:
+            answer += '\n    ' + talk.agenda_format.replace('\n', '\n    ')
+        return answer
+
+    @property
+    def talk_ids(self):
+        return [i.id for i in self.talks]
+
+    @property
+    def undecided_talks(self):
+        decided_talks = set(self.decision.keys())
+        return set(self.talk_ids).difference(decided_talks)
+
+    def certify(self):
+        """Send the results to the PyCon server."""
+        self.api.post('thunderdome_groups/%s' % self.code, {
+            'talks': [[id, status.replace('damaged', 'standby')]
+                      for id, status in self.decision.items()],
+        })
+
+    def decide_talk(self, talk_id, status):
+        """Record a decision for a particular talk within this
+        thunderdome group.
+        """
+        # Sanity check: Does this talk exist in this group?
+        if talk_id not in self.talk_ids:
+            raise ValueError('Invalid talk ID.')
+
+        # Save the decision.
+        self.data['decision'][talk_id] = status
+
+
+class ThunderdomeVotes(object):
+    def __init__(self, supporters, total_voters):
+        self.supporters = supporters
+        self.total_voters = total_voters
+
+    @property
+    def percent(self):
+        return (self.supporters / self.total_voters) * 100
+
+    @property
+    def vote_result(self):
+        if self.percent >= 80:
+            return 'accepted'
+        if self.percent >= 60:
+            return 'damaged'
+        else:
+            return 'rejected'
