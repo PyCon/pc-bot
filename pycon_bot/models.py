@@ -159,6 +159,9 @@ class ThunderdomeGroupManager(object):
     def __init__(self):
         self.api = API()
 
+    def all(self):
+        return self.filter()
+
     def filter(self, undecided=False):
         """Return a list of thunderdome groups, optionally filtering out
         groups that have already been decided.

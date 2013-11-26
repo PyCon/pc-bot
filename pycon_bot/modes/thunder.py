@@ -43,6 +43,12 @@ class Mode(BaseMode):
         self.msg(channel, 'THIS. IS. THUNDERDOME!')
         self.msg(channel, "And the meeting has started. Let's do this thing!")
 
+        # Get some statistics.
+        self.msg(channel, '* - * - * - * - *')
+        self.msg(channel, 'First, some statistics thus far:')
+        self.chair_progress(user, channel)
+        self.msg(channel, '* - * - * - * - *')
+
         # Tell the mode that the meting has begun.
         self._in_meeting = True
         self.segment = 'intro'
@@ -392,8 +398,85 @@ class Mode(BaseMode):
         self.bot.state_handler = None
         self._in_meeting = False
 
+        # Show the progress thus far.
+        self.chair_progress(user, channel)
+
         # Pull out of this mode; ,end implies a reversion to skeleton mode.
         self.chair_mode(user, channel, 'none', _silent=True)
+
+    def chair_progress(self, user, channel):
+        """Report on the total progress of thunderdome."""
+
+        # Get a full list of thunderdome groups.
+        # Iterate over it to determine how many have been decided.
+        td_groups = ThunderdomeGroup.objects.all()
+        decided = 0
+        total = len(td_groups)
+
+        # Sanity check: Dividing by zero is bad.
+        if not total:
+            return
+
+        # Get the total number of decided talks.
+        for group in td_groups:
+            if group.decided:
+                decided += 1
+
+        # Print how many groups have been decided thus far.
+        self.msg(channel, '{decided} of {total} groups decided. '
+                          '({percent:.2f}%%)'.format(
+            decided=decided,
+            percent=decided * 100 / total,
+            total=total,
+        ))
+
+        # Iterate over the talks in each group and determine how many
+        # were accepted.
+        accepted = 0
+        decided = 0
+        total = 0
+        for group in td_groups:
+            total += len(group.talks)
+
+            # If this group has been decided, it follows that every talk
+            # within this group has also been decided.
+            if group.decided:
+                decided += len(group.talks)
+
+            # For every accepted talk within this group, increment the
+            # accepted counter.
+            for talk in group.talks:
+                if talk.status == 'accepted':
+                    accepted += 1
+
+        # Sanity check: Dividing by zero is still bad.
+        if not total:
+            return
+
+        # Report on the total number of decided talks.
+        self.msg(channel, '{decided} of {total} talks decided. '
+                          '({percent:.2f}%%)'.format(
+            decided=decided,
+            percent=decided * 100 / total,
+            total=total,
+        ))
+
+        # Sanity check: Dividing by zero...yup, just checked, still bad.
+        if not decided:
+            return
+
+        # Report on the total number of accepted talks.
+        self.msg(channel, '{accepted} talks accepted thus far '
+                          '(rate: {percent:.2f}%%).'.format(
+            accepted=accepted,
+            percent=accepted * 100 / decided,
+        ))
+
+        # Display a warning if our acceptance rate gets too high.
+        if (accepted * 100 / decided) > 32.5:
+            self.msg(channel, 'As a reminder, we have only 90 talk slots, and '
+                              'therefore must have an acceptance rate no '
+                              'higher than 30%%.')
 
     def private_current(self, user):
         """Spit out information about the current group."""
