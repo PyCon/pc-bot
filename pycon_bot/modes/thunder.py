@@ -492,7 +492,7 @@ class Mode(BaseMode):
         # in the talk_id list, fail out now.
         if len(invalid_pieces) or len(invalid_talk_ids):
             if len(invalid_pieces) > 3:
-                self.msg(channel, '{user}: I do not believe that was intended '
+                self.msg(channel, '%s: I do not believe that was intended '
                                   'to be a vote.' % user)
             elif len(invalid_pieces):
                 self.msg(channel, '{user}: I do not understand {tok}.'.format(
