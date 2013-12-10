@@ -375,7 +375,7 @@ class Mode(BaseMode):
 
         # Report success to the channel.
         self.msg(channel, '=== Talk{plural} {decision}: {talk_ids} ==='.format(
-            decision=decision.capitalize(),
+            decision=decision.replace('undecided', 'accepted').capitalize(),
             plural='s' if len(talk_ids) else '',
             talk_ids=', '.join([str(i) for i in talk_ids]),
         ))
@@ -445,8 +445,11 @@ class Mode(BaseMode):
 
             # For every accepted talk within this group, increment the
             # accepted counter.
+            #
+            # Note: Due to the fact that marking a talk accepted makes
+            # this immediately public, we use "undecided" instead.
             for talk in group.talks:
-                if talk.status == 'accepted':
+                if talk.status == 'undecided':
                     accepted += 1
 
         # Sanity check: Dividing by zero is still bad.
