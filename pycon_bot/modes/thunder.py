@@ -99,7 +99,7 @@ class Mode(BaseMode):
 
         # Calculate the period of silent time to give to review talks
         # before shifting to the debate period.
-        silent_minutes = max(len(self.current_group.talk_ids) * 0.25, 1)
+        silent_minutes = min(len(self.current_group.talk_ids) * 0.25, 1)
         self.msg(channel, 'You now have {time} to review these talks and '
                           'collect your thoughts prior to debate. Please '
                           'refrain from speaking until debate begins.'.format(
