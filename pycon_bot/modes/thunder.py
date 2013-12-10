@@ -99,7 +99,7 @@ class Mode(BaseMode):
 
         # Calculate the period of silent time to give to review talks
         # before shifting to the debate period.
-        silent_minutes = max(len(self.current_group.talk_ids) * 0.5, 1.5)
+        silent_minutes = max(len(self.current_group.talk_ids) * 0.25, 1)
         self.msg(channel, 'You now have {time} to review these talks and '
                           'collect your thoughts prior to debate. Please '
                           'refrain from speaking until debate begins.'.format(
@@ -268,7 +268,7 @@ class Mode(BaseMode):
 
     def chair_accept(self, user, channel, *talk_ids):
         """Accept the talks provided as arguments."""
-        self._make_decision(user, channel, 'accepted', *talk_ids)
+        self._make_decision(user, channel, 'undecided', *talk_ids)
 
     def chair_reject(self, user, channel, *talk_ids):
         """Reject the talks provided as arguments."""
