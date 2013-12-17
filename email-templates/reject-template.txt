@@ -2,7 +2,8 @@ Subject: PyCon 2014: Proposal Decision – {title}
 
 Dear {speaker},
 
-Thank you very much for your PyCon 2014 talk proposal, "{title}".
+Thank you very much for your PyCon 2014 talk proposal,
+"{title}".
 
 Unfortunately, your talk was not one of the ones selected to appear at
 PyCon 2014.
@@ -10,7 +11,8 @@ PyCon 2014.
 As you may know, we once again had record-breaking levels of talk
 submissions -- over 650 proposals were submitted. Both the quantity
 and the quality of proposals were breathtaking. Sadly, we have just
-95 spots on the schedule, so many excellent talks couldn't be accommodated.
+95 spots on the schedule, so many excellent talks couldn't be
+accommodated.
 
 I know you spent a lot of time working on your proposal, and receiving
 a form letter rejection stings. If you'd like specific feedback on why
@@ -21,13 +23,14 @@ I do hope you'll choose to come to PyCon regardless. It's an amazing
 conference, and we do have several venues in which you could still
 deliver your material: lightning talks (quick, five-minute talks on
 any topic) and open spaces (dedicated rooms for informal, unscheduled
-proposals and discussions). See https://us.pycon.org/2014/about/what-
-is-pycon/ for more information.
+proposals and discussions).
+
+See https://us.pycon.org/2014/about/what-is-pycon/ for more information.
 
 If you plan to come, you should register at
-https://us.pycon.org/2014/registration/ as soon as possible; we have a limit of
-2,500 tickets, and we expect to sell out. Please don't delay in picking up your
-tickets!
+https://us.pycon.org/2014/registration/ as soon as possible; we have a
+limit of 2,000 tickets, and we expect to sell out. Please don't delay
+in picking up your tickets!
 
 If you need assistance with visas or immigration documents, please
 contact Rami Chowdhury (rami.chowdhury@gmail.com).
