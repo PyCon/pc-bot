@@ -3,6 +3,7 @@ Subject: PyCon 2014: Proposal Decision – {title}
 Dear {speaker},
 
 Thank you very much for your PyCon 2014 talk proposal, "{title}".
+
 Unfortunately, your talk was not one of the ones selected to appear at
 PyCon 2014.
 
