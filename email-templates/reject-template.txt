@@ -1,31 +1,30 @@
-Subject: PyCon 2013: Proposal decision - {title}
+Subject: PyCon 2014: Proposal Decision – {title}
 
 Dear {speaker},
 
-Thank you very much for your PyCon 2013 talk proposal, "{title}".
+Thank you very much for your PyCon 2014 talk proposal, "{title}".
 Unfortunately, your talk was not one of the ones selected to appear at
-PyCon 2013.
+PyCon 2014.
 
 As you may know, we once again had record-breaking levels of talk
-submissions -- over 450 proposals were submitted. Both the quantity
+submissions -- over 650 proposals were submitted. Both the quantity
 and the quality of proposals were breathtaking. Sadly, we have just
-over 100 spots on the schedule, so many excellent talks couldn't be
-accommodated.
+95 spots on the schedule, so many excellent talks couldn't be accommodated.
 
 I know you spent a lot of time working on your proposal, and receiving
 a form letter rejection stings. If you'd like specific feedback on why
-your talk was rejected, please contact me (jacob@jacobian.org). I'll
+your talk was rejected, please contact me (luke@sneeringer.com). I'll
 be happy to look through the committee's notes and give you a summary.
 
 I do hope you'll choose to come to PyCon regardless. It's an amazing
 conference, and we do have several venues in which you could still
 deliver your material: lightning talks (quick, five-minute talks on
 any topic) and open spaces (dedicated rooms for informal, unscheduled
-proposals and discussions). See https://us.pycon.org/2013/about/what-
+proposals and discussions). See https://us.pycon.org/2014/about/what-
 is-pycon/ for more information.
 
 If you plan to come, you should register at
-https://us.pycon.org/2013/registration/ as soon as possible; we have a limit of
+https://us.pycon.org/2014/registration/ as soon as possible; we have a limit of
 2,500 tickets, and we expect to sell out. Please don't delay in picking up your
 tickets!
 
@@ -33,16 +32,16 @@ If you need assistance with visas or immigration documents, please
 contact Rami Chowdhury (rami.chowdhury@gmail.com).
 
 If you have any other questions, comments, or feedback, please feel
-free to contact me (jacob@jacobian.org), my co-chair, Luke Sneeringer
-(luke@sneeringer.com), or the conference chair, Jesse Noller
-(jnoller@python.org).
+free to contact me (luke@sneeringer.com), my co-chair, Alex Gaynor
+(alex.gaynor@gmail.com), or the conference chair, Diana Clarke
+(diana.joan.clarke@gmail.com).
 
 On behalf of the PyCon staff, I want to thank you again for your
 submission. You made our job picking talks very hard, and the
 conference will be better for it.
 
-I hope to see you in Santa Clara!
+I hope to see you in Montréal!
 
-Jacob Kaplan-Moss
-Program Chair, PyCon 2013
-jacob@jacobian.org
+Luke Sneeringer
+Program Chair, PyCon 2014
+luke@sneeringer.com

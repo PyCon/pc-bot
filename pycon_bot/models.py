@@ -118,8 +118,20 @@ class Proposal(object):
         )
 
     @property
+    def public_url(self):
+        return 'https://us.pycon.org/2014/schedule/presentation/%d/' % self.id
+
+    @property
     def review_url(self):
         return 'http://us.pycon.org/2014/reviews/review/%d/' % self.id
+
+    @property
+    def template_context(self):
+        answer = {}
+        answer.update(self.data)
+        answer['public_url'] = self.public_url
+        answer['speaker'] = self.speakers[0]['name']
+        return answer
 
     def set_status(self, status):
         # Sanity check: Is this a valid status?

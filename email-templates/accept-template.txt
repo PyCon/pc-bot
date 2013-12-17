@@ -1,9 +1,9 @@
-Subject: PyCon 2013: Talk acceptance - {title}
+Subject: PyCon 2014: Talk Acceptance – {title}
 
 Dear {speaker},
 
 I'm very pleased to tell you that your talk has been accepted for
-PyCon 2013 - congratulations! Please check that the details below are
+PyCon 2014 - congratulations! Please check that the details below are
 correct, and read through this email for your next steps.
 
   Title: {title}
@@ -24,8 +24,8 @@ PyCon late or leave early, for example), please let me know as soon as
 possible so that I can take your requirements into account.
 
 You should register for the conference at
-https://us.pycon.org/2013/registration/ as soon as possible; early-
-bird (discounted) registration ends once 1,000 tickets have been
+https://us.pycon.org/2014/registration/ as soon as possible; early-
+bird (discounted) registration ends once 800 tickets have been
 sold, and I understand we're reaching that limit quickly. Please don't
 delay in picking up your tickets!
 
@@ -39,25 +39,27 @@ at PyCon! So, if you can't afford a ticket and/or travel expenses,
 please apply for financial aid.
 
 More information about financial aid can be found at
-https://us.pycon.org/2013/assistance/. If you're applying, make sure
+https://us.pycon.org/2014/assistance/. If you're applying, make sure
 to mention that you're an accepted speaker.  Please contact Peter
 Kropf (pkropf@gmail.com) if you've got any questions.
 
 If you need assistance with visas or immigration documents, please
-contact Rami Chowdhury (rami.chowdhury@gmail.com).
+contact Rami Chowdhury (rami.chowdhury@gmail.com). Additionally, we're
+going to be sending a followup e-mail with a form to fill out to ease
+crossing at the Canadian border.
 
 If you have any other questions, comments, or feedback, please feel
-free to contact me (jacob@jacobian.org), my co-chair, Luke Sneeringer
-(luke@sneeringer.com), or the conference chair, Jesse Noller
-(jnoller@python.org).
+free to contact me (luke@sneeringer.com), my co-chair, Alex Gaynor
+(alex.gaynor@gmail.com), or the conference chair, Diana Clarke
+(diana.joan.clarke@gmail.com).
 
 On behalf of the PyCon staff, I want to thank you for your submission.
-We're really looking forward to seeing you at the conference: PyCon 2013
+We're really looking forward to seeing you at the conference: PyCon 2014
 promises to be the best PyCon yet, and that's because of our amazing
 speakers. We're thrilled that you're one of them.
 
-See you in Santa Clara!
+See you in Montréal!
 
-Jacob Kaplan-Moss
-Program Chair, PyCon 2013
-jacob@jacobian.org
+Luke Sneeringer
+Program Chair, PyCon 2014
+luke@sneeringer.com
