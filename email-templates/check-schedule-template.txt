@@ -1,19 +1,14 @@
-Subject: PyCon 2013 draft schedule - please review!
+Subject: PyCon 2014 draft schedule - please review!
 
 Dear {speaker},
 
-Please take a moment to review your talk's scheduled time:
+We now have what we believe will be a final schedule. Please take a
+moment to review your talk's scheduled time:
 
-    Title: {title}
-    Date: {day}
-    Time: {start} - {stop} ({length})
-
-You can see the overall schedule at:
-
-    https://us.pycon.org/2013/schedule/talks/
+    https://us.pycon.org/2014/schedule/talks/
 
 Please check that your talk is scheduled for a time you'll be able
-to give it! If anything's wrong, please let me know *right away*:
+to give it! If anything's wrong, please let me know **right away**:
 I plan to publish this schedule tomorrow.
 
 I've tried my best to accommodate each speaker's preference for
@@ -24,26 +19,19 @@ you may not have been allocated the time you requested. If you're in
 that camp, please do try to make the talk fit  within the shorter
 time slot. If you absolutely can't, please let me know right away.
 
-I also want to remind you of a couple other things:
+I also want to remind you that, if you haven't already, **please**
+fill out the form regarding Canadian border crossing, in order to ensure
+that we don't have any issues with immigration.
 
-* If you haven't already registered for PyCon, please contact me
-  immediately. Early-bird registration sold out a couple of weeks
-  ago, but if you contact me I can still get you a ticket at
-  early-bird prices. But please don't delay - we *will* sell out,
-  and you need to have a ticket before we do.
-
-* The deadline to apply for financial aid is December 31, 2012. If
-  you need financial assistance to attend PyCon, PLEASE apply
-  (and mention that you're a speaker). We don't want money to stand
-  in the way of your talk!
+   https://pycon2014.wufoo.com/forms/pycon-2014-speaker-information-talks/
 
 Thanks, and as always if you have any questions please feel free to
-contact me (jacob@jacobian.org), my co-chair, Luke Sneeringer
-(luke@sneeringer.com), or the conference chair, Jesse Noller
-(jnoller@python.org).
+contact me (luke@sneeringer.com), my co-chair, Alex Gaynor,
+(alex.gaynor@gmail.com), or the conference chair, Diana Clarke
+(diana.joan.clarke@gmail.com).
 
-See you in Santa Clara!
+See you in Montréal!
 
-Jacob Kaplan-Moss
-Program Chair, PyCon 2013
-jacob@jacobian.org
+Luke Sneeringer
+Program Committee Chair, PyCon 2014
+luke@sneeringer.com
