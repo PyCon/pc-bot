@@ -1,0 +1,33 @@
+Subject: PyCon 2014 Bookstore and Print Program
+
+Dear {speaker},
+
+I'm sending you this message because you have a talk for PyCon 2014 that has
+been accepted.  I wanted to let you know about a couple things:
+
+1. Bookstore
+
+If you've written a book that is for sale, particularly if it's about the
+topic on which you are speaker, we want to be sure that it's available
+at the bookstore at PyCon.
+
+Therefore, if you have an available book, please let us know by filling
+out this form:
+
+    https://pycon2014.wufoo.eu/forms/pycon-2014-bookstore/
+
+
+2. The Print Program
+
+We're just over a week away from doing a final export for the print program.
+If you want to make any last-minute changes to what will appear in the
+program for your talk, please send them to me within the next couple of days.
+
+
+Thanks again for giving your time to speak at PyCon.
+
+
+See you in Montréal!
+
+Luke Sneeringer
+Program Committee Chair, PyCon 2014

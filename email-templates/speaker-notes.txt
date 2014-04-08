@@ -1,0 +1,63 @@
+Subject: PyCon 2014 Speaker Notes
+
+Dear {speaker},
+I hope you are all ready for PyCon, and as excited about it as I am!
+I wanted to make you all aware of a few important notes:
+
+
+===============
+CRITICAL THINGS
+===============
+
+  * Speaker orientation will be Thursday, April 9, at 7:00 PM, in
+    room 514C.  As in previous years, it will last roughly 30 minutes.
+    Please attend even if you have spoken at PyCon before (procedures
+    always change slightly from year to year).
+  * If you are unable to attend orientation for whatever reason, please
+    ensure that you arrive in the Green Room no less than 30 minutes
+    before your talk.
+  * Before your talk occurs, please arrive in the Green Room (room 448)
+    at least 15 minutes before your talk's scheduled start time to meet up
+    with your session runner. DO NOT go directly to your talk's room!!
+
+
+===========
+NICE THINGS
+===========
+
+  * There will be an optional tutorial/orientation for new speakers
+    immediately after the first orientation.
+  * The Green Room (room 448) is yours for the weekend, and can be used
+    to find a quiet space, hang out with others, etc.
+
+
+================
+TECHNICAL THINGS
+================
+
+  * The projectors operate at 1024x768
+  * Use high contrast colors and large fonts (minimum 24pt) for slides.
+    Especially remember this for code samples, which can be more difficult
+    to read.
+  * Each podium will have a single power outlet and A/V adapters for VGA,
+    HDML, DVI, Mini-DVI, and Mini-HDMI.
+  * If you need any special equipment or support beyond this, please fill
+    out [this form][1].
+
+
+============
+FINAL THINGS
+============
+
+  * Here are some [tips for giving programming talks][2].
+  * Your session runner will help you test your equipment just before your
+    talk.
+  * Finally, it would be helpful (but not required) if you could add
+    your phone number to [your speaker profile][3] — this is only accessable
+    to a handful of PyCon staff members, and will only be used if we can’t
+    find you before your talk, or some other emergency.
+
+
+  [1]: https://docs.google.com/forms/d/1La56N9A_CbGkrDctS-1kF5JcSYbxfinEwkZuUUkyd58/viewform
+  [2]: http://weareallaweso.me/for_speakers/practical-tips-for-creating-great-slides.html
+  [3]: https://us.pycon.org/2014/profile/edit/

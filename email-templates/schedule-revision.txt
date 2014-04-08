@@ -1,0 +1,26 @@
+Subject: PyCon 2014 Draft Schedule Revisions
+
+Dear {speaker},
+
+Due to feedback from the e-mail blast yesterday, I've moved several talks
+around to accomodate needs (usually travel concerns) of various speakers.
+
+I have what I believe to be a final edit, available here:
+
+    https://us.pycon.org/2014/schedule/talks/
+
+Please check that your talk is still scheduled for a time you'll be able
+to give it! If anything's wrong, please let me know **right away**:
+Again, I plan to publish this schedule tomorrow (for real this time).
+There is no need to reply unless there is a problem.
+
+Thanks, and as always if you have any questions please feel free to
+contact me (luke@sneeringer.com), my co-chair, Alex Gaynor,
+(alex.gaynor@gmail.com), or the conference chair, Diana Clarke
+(diana.joan.clarke@gmail.com).
+
+See you in Montréal!
+
+Luke Sneeringer
+Program Committee Chair, PyCon 2014
+luke@sneeringer.com

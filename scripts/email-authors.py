@@ -37,7 +37,8 @@ p.add_argument('--test', metavar="EMAIL", default=False, help="Instead of sendin
 p.add_argument('--smtp-host', default='localhost', help='SMTP host')
 p.add_argument('--smtp-user', default=os.getlogin(), help='SMTP username')
 p.add_argument('--smtp-password', default='', help='SMTP password')
-p.add_argument('--smtp-no-tls', dest='smtp_tls', action='store_false', default=True, help="Don't use SMTP TLS")
+p.add_argument('--smtp-ssl', dest='smtp_ssl', action='store_true', default=False, help="Use implicit SMTP TLS (SSL)")
+p.add_argument('--smtp-tls', dest='smtp_tls', action='store_true', default=False, help="Use explicit SMTP TLS")
 p.add_argument('--from-email', default='Luke Sneeringer <luke@sneeringer.com>', help='From email address')
 p.add_argument('--cc', default='', nargs='*', help='CC e-mail address. Can be used multiple times.')
 p.add_argument('--sleep', type=float, default=1, help='Amount of time (seconds) to sleep in between sending (to avoid getting throttled).')
@@ -47,10 +48,11 @@ args = p.parse_args()
 
 # Configure...
 settings.configure(
-    EMAIL_HOST = args.smtp_host,
-    EMAIL_USE_TLS = args.smtp_tls,
-    EMAIL_HOST_USER = args.smtp_user,
-    EMAIL_HOST_PASSWORD = args.smtp_password
+    EMAIL_HOST=args.smtp_host,
+    EMAIL_HOST_USER=args.smtp_user,
+    EMAIL_HOST_PASSWORD=args.smtp_password,
+    EMAIL_USE_SSL=args.smtp_ssl,
+    EMAIL_USE_TLS=args.smtp_tls,
 )
 
 # Figure out which talks to send emails about.

@@ -1,0 +1,23 @@
+Subject: Speaker Information for Canadian Border Crossing
+
+Dear {speaker},
+
+In an effort to ease any border crossing concerns for PyCon 2014, we have contacted a legal team for help registering our speakers at the Canadian border. They have asked us to collect certain information from our speakers, which we will provide to the appropriate Canadian authorities.
+
+This is mostly a formality. That said, it's still important that we collect this information; we want to ensure that you don't have any trouble making it to PyCon.
+
+Please to to this link and fill out the form:
+
+   https://pycon2014.wufoo.com/forms/pycon-2014-speaker-information-talks/
+
+Note that this step unfortunately requires that you to upload a résumé. One page should be sufficient. Don't worry too much about how polished said résumé is; it's just important that it exists.
+
+The form does have some conditional logic, particularly for Canadian citizens, who don't need to fill in all the fields. Even if you are a Canadian citizen, please still complete the relevant portions of the form. This is for the sake of the PyCon administrators, because we need to know who hasn't filled out the form yet.
+
+Thanks, and as always if you have any questions please feel free to contact me (luke@sneeringer.com), my co-chair, Alex Gaynor (alex.gaynor@gmail.com), or the conference chair, Diana Clarke (diana.joan.clarke@gmail.com).
+
+See you in Montréal!
+
+Luke Sneeringer
+Program Committee Chair, PyCon 2014
+luke@sneeringer.com

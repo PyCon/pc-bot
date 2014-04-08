@@ -1,0 +1,16 @@
+Subject: No Work Permit Requirement
+
+Hello {speaker},
+
+In a previous e-mail, we asked you to fill out a small form with border
+crossing information, due to a concern about Canadian border restrictions
+regarding conferences.
+
+Now that a schedule has been finalized and we've had a chance to have our
+lawyers look over everything, said lawyers have determined that no work
+permit will be required to enter Canada, and we do not anticipate any
+issues.
+
+Thank you!
+Luke Sneeringer
+Program Committee Chair, PyCon 2014
