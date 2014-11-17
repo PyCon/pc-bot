@@ -71,8 +71,20 @@ class Mode(BaseMode):
         # Ask folks for their names iff this is a new meeting.
         self.names(channel)
 
+    def chair_current(self, user, channel):
+        """Dump information about the current group."""
+        # Sanity check.
+        if not self.current_group:
+            self.msg(channel, 'No current group.')
+            return
+
+        # Report on the current group.
+        self._report_on_group(channel, self.current_group)
+
     def chair_next(self, user, channel):
         """Move us to the next group."""
+
+        self.bot.clear_timer()
 
         # Sanity check: Ensure we've started the meeting.
         if self.segment is None:
@@ -467,6 +479,12 @@ class Mode(BaseMode):
 
     def _report_on_group(self, dest_output, group):
         """Report on the contents of a group to the given user or channel."""
+        # Print an overview, so we see mistakes.
+        talk_ids = ', '.join([str(talk.id) for talk in group.talks])
+        self.msg(dest_output,
+                 'Talks: %d (%s)' % (len(group.talks), talk_ids))
+
+        # Print details on each talk.
         for talk in group.talks:
             self.msg(dest_output, '#{id}: {title} ({url})'.format(
                 id=talk.id,
