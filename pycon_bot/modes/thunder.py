@@ -4,6 +4,7 @@ from ..models import ThunderdomeGroup, ThunderdomeVotes
 from copy import copy
 from datetime import datetime
 from random import randint
+from twisted.internet import reactor
 import re
 
 
