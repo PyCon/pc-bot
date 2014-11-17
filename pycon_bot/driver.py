@@ -172,6 +172,9 @@ class PyConBot(irc.IRCClient):
 
         user = user.split("!")[0]
 
+        # Kill all Unicode. Seriously.
+        message = message.encode('ascii', 'ignore')
+
         # if this is a private message, then it uses the
         # private messaging commands rather than the chair commands
         if not channel.startswith('#'):
