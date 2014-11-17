@@ -211,6 +211,8 @@ class PyConBot(irc.IRCClient):
         self.mode.exec_command(command, 'chair', user, channel, *command_args)
 
     def msg(self, channel, message):
+        message = message.encode('ascii', 'ignore')
+        
         # Make sure things I say go into the transcript, too.
         if channel.startswith('#') and hasattr(self.mode, 'log_message'):
             self.mode.log_message(self.nickname, channel, message)
