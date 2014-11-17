@@ -99,7 +99,10 @@ class Proposal(object):
 
     def __getattr__(self, key):
         if key in self.data:
-            return self.data[key]
+            value = self.data[key]
+            if isinstance(value, unicode):
+                value = value.encode('ascii', 'ignore')
+            return value
         raise KeyError('No key %s in proposal #%d.' % (key, self.id))
 
     def __setattr__(self, key, value):
