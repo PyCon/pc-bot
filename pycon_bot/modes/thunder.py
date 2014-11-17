@@ -480,6 +480,7 @@ class Mode(BaseMode):
         self.msg(channel, "=== Th-th-th-that's all folks! ===")
 
         # Remove any state handler that may be present.
+        self.bot.clear_timer()
         self.bot.state_handler = None
         self._in_meeting = False
 
