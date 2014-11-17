@@ -119,11 +119,11 @@ class Proposal(object):
 
     @property
     def public_url(self):
-        return 'https://us.pycon.org/2014/schedule/presentation/%d/' % self.id
+        return 'https://us.pycon.org/2015/schedule/presentation/%d/' % self.id
 
     @property
     def review_url(self):
-        return 'http://us.pycon.org/2014/reviews/review/%d/' % self.id
+        return 'http://us.pycon.org/2015/reviews/review/%d/' % self.id
 
     @property
     def template_context(self):

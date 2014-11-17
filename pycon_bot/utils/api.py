@@ -32,7 +32,7 @@ class API(object):
             protocol = 'http'
 
         # Construct the base URI.
-        uri = '/2014/pycon_api/%s/' % endpoint
+        uri = '/2015/pycon_api/%s/' % endpoint.strip('/')
 
         # If keyword arguments are provided, append them to
         # the URI.
