@@ -599,9 +599,11 @@ class Mode(BaseMode):
         """Explain how voting is done."""
 
         # if there is a current group, use examples from that group
-        examples = [92, 418]
+        examples = []
         if self.current_group:
             examples = list(self.current_group.talk_ids)[0:1]
+        if len(examples) != 2:
+            examples = [92, 418]
 
         # explain what voting paradigms I understand
         self.msg(user, 'I understand two voting paradigms:')
