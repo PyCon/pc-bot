@@ -25,9 +25,8 @@ class SkeletonMode(object):
     def msg(self, channel, msg, *args):
         """Send a message to the given channel."""
         
-        # FIXME: is hardcoded utf8 OK?
-        self.bot.msg(channel, (msg % args).encode('utf-8'))
-        time.sleep(0.1)
+        # Unicode makes Twisted (or SOMETHING) sad. ASCII.
+        self.bot.msg(channel, (msg % args).encode('ascii', 'ignore'))
         
     def exec_command(self, command, command_type, user, channel, *args):
         """Execute an arbitrary command, provided it is found on the mode."""
@@ -35,7 +34,8 @@ class SkeletonMode(object):
         # if this is a command beginning with a comma,
         # then inform the user that the comma is superfluous
         if command.startswith(','):
-            self.msg(user, 'A leading comma is only necessary for chair commands.')
+            self.msg(user, 'A leading comma is only necessary for chair '
+                           'commands.')
             return
         
         # find the correct command and execute it
