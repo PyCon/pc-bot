@@ -1,6 +1,7 @@
 from __future__ import division
 import importlib
 import re
+import time
 
 
 class SkeletonMode(object):
@@ -26,6 +27,7 @@ class SkeletonMode(object):
         
         # FIXME: is hardcoded utf8 OK?
         self.bot.msg(channel, (msg % args).encode('utf-8'))
+        time.sleep(0.1)
         
     def exec_command(self, command, command_type, user, channel, *args):
         """Execute an arbitrary command, provided it is found on the mode."""
