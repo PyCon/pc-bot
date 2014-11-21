@@ -297,7 +297,7 @@ class ThunderdomeVotes(object):
 
     @property
     def vote_result(self):
-        if self.percent >= 80:
+        if self.percent >= 75:
             return 'accepted'
         if self.percent >= 60:
             return 'damaged'
