@@ -1,4 +1,4 @@
-Subject: PyCon 2014: Proposal Decision – {title}
+Subject: PyCon 2015: Proposal Decision – {title}
 
 Dear {speaker},
 
@@ -14,21 +14,16 @@ and the quality of proposals were breathtaking. Sadly, we have just
 95 spots on the schedule, so many excellent talks couldn't be
 accommodated.
 
-I know you spent a lot of time working on your proposal, and receiving
-a form letter rejection stings. If you'd like specific feedback on why
-your talk was rejected, please contact me (luke@sneeringer.com). I'll
-be happy to look through the committee's notes and give you a summary.
-
 I do hope you'll choose to come to PyCon regardless. It's an amazing
 conference, and we do have several venues in which you could still
 deliver your material: lightning talks (quick, five-minute talks on
 any topic) and open spaces (dedicated rooms for informal, unscheduled
 proposals and discussions).
 
-See https://us.pycon.org/2014/about/what-is-pycon/ for more information.
+See https://us.pycon.org/2015/about/what-is-pycon/ for more information.
 
 If you plan to come, you should register at
-https://us.pycon.org/2014/registration/ as soon as possible; we have a
+https://us.pycon.org/2015/registration/ as soon as possible; we have a
 limit of 2,000 tickets, and we expect to sell out. Please don't delay
 in picking up your tickets!
 
@@ -47,5 +42,5 @@ conference will be better for it.
 I hope to see you in Montréal!
 
 Luke Sneeringer
-Program Chair, PyCon 2014
+Program Chair, PyCon 2015
 luke@sneeringer.com

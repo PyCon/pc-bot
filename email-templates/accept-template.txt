@@ -1,9 +1,9 @@
-Subject: PyCon 2014: Talk Acceptance – {title}
+Subject: PyCon 2015: Talk Acceptance – {title}
 
 Dear {speaker},
 
 I'm very pleased to tell you that your talk has been accepted for
-PyCon 2014 - congratulations! Please check that the details below are
+PyCon 2015 - congratulations! Please check that the details below are
 correct, and read through this email for your next steps.
 
   Title: {title}
@@ -24,9 +24,7 @@ PyCon late or leave early, for example), please let me know as soon as
 possible so that I can take your requirements into account.
 
 You should register for the conference at
-https://us.pycon.org/2014/registration/ as soon as possible; early-
-bird (discounted) registration ends once 800 tickets have been
-sold, and I understand we're reaching that limit quickly. Please don't
+https://us.pycon.org/2015/registration/ as soon as possible. Please don't
 delay in picking up your tickets!
 
 Unlike many conferences, PyCon doesn't give free tickets to speakers,
@@ -39,9 +37,9 @@ at PyCon! So, if you can't afford a ticket and/or travel expenses,
 please apply for financial aid.
 
 More information about financial aid can be found at
-https://us.pycon.org/2014/assistance/. If you're applying, make sure
-to mention that you're an accepted speaker.  Please contact Peter
-Kropf (pkropf@gmail.com) if you've got any questions.
+https://us.pycon.org/2015/assistance/. If you're applying, make sure
+to mention that you're an accepted speaker.  Please contact Laurens Van Houtven
+(_@lvh.io) if you've got any questions.
 
 If you need assistance with visas or immigration documents, please
 contact Rami Chowdhury (rami.chowdhury@gmail.com). Additionally, we're
@@ -54,12 +52,12 @@ free to contact me (luke@sneeringer.com), my co-chair, Alex Gaynor
 (diana.joan.clarke@gmail.com).
 
 On behalf of the PyCon staff, I want to thank you for your submission.
-We're really looking forward to seeing you at the conference: PyCon 2014
+We're really looking forward to seeing you at the conference: PyCon 2015
 promises to be the best PyCon yet, and that's because of our amazing
 speakers. We're thrilled that you're one of them.
 
 See you in Montréal!
 
 Luke Sneeringer
-Program Chair, PyCon 2014
+Program Chair, PyCon 2015
 luke@sneeringer.com
