@@ -2,11 +2,11 @@ Subject: PyCon 2015: Proposal Decision – {title}
 
 Dear {speaker},
 
-Thank you very much for your PyCon 2014 talk proposal,
+Thank you very much for your PyCon 2015 talk proposal,
 "{title}".
 
 Unfortunately, your talk was not one of the ones selected to appear at
-PyCon 2014.
+PyCon 2015.
 
 As you may know, we once again had record-breaking levels of talk
 submissions -- over 650 proposals were submitted. Both the quantity
