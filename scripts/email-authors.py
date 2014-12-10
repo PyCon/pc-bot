@@ -25,7 +25,6 @@ import json
 import os
 import sys
 import time
-import pycon_bot.mongo
 from pycon_bot.models import Proposal
 from django.conf import settings
 from django.core import mail
@@ -41,9 +40,10 @@ p.add_argument('--smtp-ssl', dest='smtp_ssl', action='store_true', default=False
 p.add_argument('--smtp-no-tls', dest='smtp_tls', action='store_false', default=True, help="Do not use explicit SMTP TLS")
 p.add_argument('--from-email', default='Luke Sneeringer <luke@sneeringer.com>', help='From email address')
 p.add_argument('--cc', default='', nargs='*', help='CC e-mail address. Can be used multiple times.')
-p.add_argument('--sleep', type=float, default=1, help='Amount of time (seconds) to sleep in between sending (to avoid getting throttled).')
+p.add_argument('--sleep', type=float, default=2, help='Amount of time (seconds) to sleep in between sending (to avoid getting throttled).')
 p.add_argument('--id', metavar='ID', dest='talk_ids', type=int, nargs='*', help='Only email specific talk IDs')
 p.add_argument('--status', choices=['accepted', 'rejected', 'undecided', 'standby'], help='Only email talks with status of STATUS')
+p.add_argument('--start-at', dest='start_at', default=None, type=int, help='Do not mail talks below the given ID. Useful if you get rate limited.')
 args = p.parse_args()
 
 # Configure...
@@ -53,6 +53,7 @@ settings.configure(
     EMAIL_HOST_PASSWORD=args.smtp_password,
     EMAIL_USE_SSL=args.smtp_ssl,
     EMAIL_USE_TLS=args.smtp_tls,
+    EMAIL_PORT=587 if args.smtp_tls else 25,
 )
 
 # Figure out which talks to send emails about.
@@ -80,6 +81,12 @@ subject_template = subject_line.replace('Subject:', '').strip()
 
 # Send ye olde emailes.
 for talk in talks:
+    # Sanity check: If there is a --start-at above this number,
+    # skip this one.
+    if args.start_at and args.start_at > talk.id:
+        continue
+
+    # Put together the template.
     t = talk.template_context
     sys.stdout.write(u'Emailing {speaker} about #{id} - {title}...'.format(**t))
     sys.stdout.flush()
