@@ -1,29 +1,23 @@
-Subject: PyCon 2014 draft schedule - please review!
+Subject: PyCon 2015 draft schedule - please review!
 
 Dear {speaker},
 
-We now have what we believe will be a final schedule. Please take a
-moment to review your talk's scheduled time:
+I have written a draft schedule, which I have placed on Google Docs
+at this address:
 
-    https://us.pycon.org/2014/schedule/talks/
+    https://docs.google.com/spreadsheets/d/1Nlzs9iXy9G5YHbl046gxzlRcyuOelQD0bZ74RP-7s2M/edit?usp=sharing
 
 Please check that your talk is scheduled for a time you'll be able
 to give it! If anything's wrong, please let me know **right away**:
-I plan to publish this schedule tomorrow.
+We plan to publish this schedule very soon.
 
 I've tried my best to accommodate each speaker's preference for
 talk length, day of conference, time of day, etc. In some cases,
 however, this wasn't possible. In particular, we had more speakers
 requesting 45 minute slots than we had 45 minute slots available, so
 you may not have been allocated the time you requested. If you're in
-that camp, please do try to make the talk fit  within the shorter
+that camp, please do try to make the talk fit within the shorter
 time slot. If you absolutely can't, please let me know right away.
-
-I also want to remind you that, if you haven't already, **please**
-fill out the form regarding Canadian border crossing, in order to ensure
-that we don't have any issues with immigration.
-
-   https://pycon2014.wufoo.com/forms/pycon-2014-speaker-information-talks/
 
 Thanks, and as always if you have any questions please feel free to
 contact me (luke@sneeringer.com), my co-chair, Alex Gaynor,
@@ -33,5 +27,5 @@ contact me (luke@sneeringer.com), my co-chair, Alex Gaynor,
 See you in Montréal!
 
 Luke Sneeringer
-Program Committee Chair, PyCon 2014
+Program Committee Chair, PyCon 2015
 luke@sneeringer.com
